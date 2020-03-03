@@ -3,7 +3,12 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System;
+using System.Collections.Frozen;
+using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.ObjectPool;
 
 namespace SqlQueryAnalyzer.Utilities;
 
@@ -12,8 +17,72 @@ namespace SqlQueryAnalyzer.Utilities;
 /// Removes redundant whitespace, standardizes capitalization, expands abbreviations.
 /// Normalization is SAFE - does not change query logic or semantics.
 /// </summary>
-public class QueryNormalizer
+public partial class QueryNormalizer
 {
+    // FrozenSet gives O(1) lookup with a read-only perfect hash — faster than array iteration.
+    private static readonly FrozenSet<string> s_sqlKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "SELECT", "FROM", "WHERE", "JOIN", "INNER", "LEFT", "RIGHT", "FULL", "CROSS",
+        "ON", "AND", "OR", "NOT", "IN", "EXISTS", "BETWEEN", "LIKE", "IS", "NULL",
+        "ORDER", "BY", "GROUP", "HAVING", "LIMIT", "OFFSET", "UNION", "ALL", "DISTINCT",
+        "INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "ALTER", "TABLE", "INDEX",
+        "AS", "WITH", "CASE", "WHEN", "THEN", "ELSE", "END", "CAST", "CONVERT"
+    }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+
+    // Pooled StringBuilders avoid repeated GC pressure in RestoreStringLiterals.
+    private static readonly ObjectPool<StringBuilder> s_sbPool =
+        new DefaultObjectPoolProvider().Create(new StringBuilderPooledObjectPolicy
+        {
+            InitialCapacity = 512,
+            MaximumRetainedCapacity = 4096,
+        });
+
+    // [GeneratedRegex] emits a source-generated, AOT-safe state machine — no runtime compilation.
+    [GeneratedRegex(@"'(?:''|[^'])*'")]
+    private static partial Regex StringLiteralRegex();
+
+    // Single alternation pattern replaces 40+ individual per-keyword regex passes.
+    [GeneratedRegex(
+        @"\b(SELECT|FROM|WHERE|JOIN|INNER|LEFT|RIGHT|FULL|CROSS|ON|AND|OR|NOT|IN|EXISTS" +
+        @"|BETWEEN|LIKE|IS|NULL|ORDER|BY|GROUP|HAVING|LIMIT|OFFSET|UNION|ALL|DISTINCT" +
+        @"|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TABLE|INDEX|AS|WITH|CASE|WHEN|THEN" +
+        @"|ELSE|END|CAST|CONVERT)\b",
+        RegexOptions.IgnoreCase)]
+    private static partial Regex SqlKeywordsRegex();
+
+    [GeneratedRegex(@" +")]
+    private static partial Regex MultipleSpacesRegex();
+
+    [GeneratedRegex(@" *(,|;|\(|\)) *")]
+    private static partial Regex PunctuationSpacingRegex();
+
+    [GeneratedRegex(@" *(=|<>|<=|>=|<|>) *")]
+    private static partial Regex OperatorSpacingRegex();
+
+    [GeneratedRegex(@"[\r\n]+")]
+    private static partial Regex LineBreaksRegex();
+
+    [GeneratedRegex(@"--.*?(?=\n|$)")]
+    private static partial Regex LineCommentsRegex();
+
+    [GeneratedRegex(@"/\*.*?\*/", RegexOptions.Singleline)]
+    private static partial Regex BlockCommentsRegex();
+
+    [GeneratedRegex(@"FROM\s+([a-zA-Z_][a-zA-Z0-9_]*)", RegexOptions.IgnoreCase)]
+    private static partial Regex FromTableRegex();
+
+    [GeneratedRegex(@"JOIN\s+([a-zA-Z_][a-zA-Z0-9_]*)", RegexOptions.IgnoreCase)]
+    private static partial Regex JoinTableRegex();
+
+    [GeneratedRegex(@"INTO\s+([a-zA-Z_][a-zA-Z0-9_]*)", RegexOptions.IgnoreCase)]
+    private static partial Regex IntoTableRegex();
+
+    [GeneratedRegex(@"SELECT\s+(.*?)\s+FROM", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
+    private static partial Regex SelectColumnsRegex();
+
+    [GeneratedRegex(@"([a-zA-Z_][a-zA-Z0-9_]*)\s+AS\s+([a-zA-Z_][a-zA-Z0-9_]*)", RegexOptions.IgnoreCase)]
+    private static partial Regex ColumnAliasRegex();
+
     /// <summary>
     /// Normalizes a SQL query by applying multiple transformations.
     /// Returns normalized query that's logically identical to input.
@@ -23,147 +92,89 @@ public class QueryNormalizer
         if (string.IsNullOrWhiteSpace(query))
             return query;
 
-        // Preserve string literals during normalization
-        var stringLiterals = ExtractStringLiterals(query);
-        var working = ReplaceStringLiteralsWithPlaceholders(query, stringLiterals);
+        // Single-pass extraction+replacement — previously done in two separate Regex scans.
+        var (working, literals) = ExtractAndReplaceLiterals(query);
 
-        // Apply normalizations
         working = NormalizeWhitespace(working);
         working = StandardizeKeywordCapitalization(working);
         working = NormalizeLineBreaks(working);
         working = RemoveTrailingComments(working);
 
-        // Restore string literals
-        working = RestoreStringLiterals(working, stringLiterals);
+        working = RestoreStringLiterals(working, literals);
 
         return working.Trim();
     }
 
     /// <summary>
-    /// Extracts all string literals to protect them from modification.
-    /// String literals are replaced with placeholders during normalization.
+    /// Combines literal extraction and placeholder substitution into one regex pass,
+    /// eliminating the second full scan that the original two-method approach required.
     /// </summary>
-    private Dictionary<string, string> ExtractStringLiterals(string query)
+    private static (string result, Dictionary<string, string> literals) ExtractAndReplaceLiterals(string query)
     {
         var literals = new Dictionary<string, string>();
-        var regex = new Regex(@"'(?:''|[^'])*'", RegexOptions.Compiled);
         int index = 0;
 
-        foreach (Match match in regex.Matches(query))
+        var result = StringLiteralRegex().Replace(query, match =>
         {
-            var placeholder = $"__STRING_LITERAL_{index}__";
+            var placeholder = $"__SL{index}__";
             literals[placeholder] = match.Value;
             index++;
-        }
+            return placeholder;
+        });
 
-        return literals;
+        return (result, literals);
     }
 
     /// <summary>
-    /// Replaces string literals with placeholders to prevent modification.
+    /// Restores string literals using a pooled StringBuilder to avoid
+    /// per-literal string allocations from repeated string.Replace calls.
     /// </summary>
-    private string ReplaceStringLiteralsWithPlaceholders(string query, Dictionary<string, string> literals)
+    private static string RestoreStringLiterals(string query, Dictionary<string, string> literals)
     {
-        var result = query;
-        int index = 0;
+        if (literals.Count == 0)
+            return query;
 
-        var regex = new Regex(@"'(?:''|[^'])*'", RegexOptions.Compiled);
-        foreach (Match match in regex.Matches(query))
+        var sb = s_sbPool.Get();
+        try
         {
-            var placeholder = $"__STRING_LITERAL_{index}__";
-            result = result.Replace(match.Value, placeholder, StringComparison.Ordinal);
-            index++;
+            sb.Append(query);
+            foreach (var (placeholder, literal) in literals)
+                sb.Replace(placeholder, literal);
+            return sb.ToString();
         }
-
-        return result;
-    }
-
-    /// <summary>
-    /// Restores string literals after normalization.
-    /// </summary>
-    private string RestoreStringLiterals(string query, Dictionary<string, string> literals)
-    {
-        var result = query;
-
-        foreach (var literal in literals)
+        finally
         {
-            result = result.Replace(literal.Key, literal.Value, StringComparison.Ordinal);
+            s_sbPool.Return(sb);
         }
+    }
 
+    private static string NormalizeWhitespace(string query)
+    {
+        var result = MultipleSpacesRegex().Replace(query, " ");
+        result = PunctuationSpacingRegex().Replace(result, "$1");
+        result = OperatorSpacingRegex().Replace(result, " $1 ");
         return result;
     }
 
     /// <summary>
-    /// Normalizes whitespace: removes excess spaces, tabs, and aligns indentation.
+    /// Uses a single alternation regex instead of one Regex.Replace call per keyword,
+    /// reducing keyword capitalization from O(k) passes to O(1).
     /// </summary>
-    private string NormalizeWhitespace(string query)
+    private static string StandardizeKeywordCapitalization(string query)
     {
-        // Replace multiple spaces with single space
-        var result = Regex.Replace(query, @" +", " ");
-
-        // Remove spaces around common operators
-        result = Regex.Replace(result, @" *(,|;|\(|\)) *", "$1");
-
-        // Remove spaces around certain operators
-        result = Regex.Replace(result, @" *(=|<|>|<>|<=|>=) *", " $1 ");
-
-        return result;
+        return SqlKeywordsRegex().Replace(query, static m => m.Value.ToUpperInvariant());
     }
 
-    /// <summary>
-    /// Standardizes SQL keywords to uppercase for consistency.
-    /// Preserves case within identifiers and string literals.
-    /// </summary>
-    private string StandardizeKeywordCapitalization(string query)
+    private static string NormalizeLineBreaks(string query)
     {
-        var keywords = new[]
-        {
-            "SELECT", "FROM", "WHERE", "JOIN", "INNER", "LEFT", "RIGHT", "FULL", "CROSS",
-            "ON", "AND", "OR", "NOT", "IN", "EXISTS", "BETWEEN", "LIKE", "IS", "NULL",
-            "ORDER", "BY", "GROUP", "HAVING", "LIMIT", "OFFSET", "UNION", "ALL", "DISTINCT",
-            "INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "ALTER", "TABLE", "INDEX",
-            "AS", "WITH", "CASE", "WHEN", "THEN", "ELSE", "END", "CAST", "CONVERT"
-        };
-
-        var result = query;
-        foreach (var keyword in keywords)
-        {
-            // Use word boundaries to match whole words only
-            var pattern = $@"\b{keyword}\b";
-            result = Regex.Replace(result, pattern, keyword, RegexOptions.IgnoreCase);
-        }
-
-        return result;
+        var result = LineBreaksRegex().Replace(query, " ");
+        return MultipleSpacesRegex().Replace(result, " ");
     }
 
-    /// <summary>
-    /// Normalizes line breaks and removes excessive newlines.
-    /// Useful for single-line storage and comparison.
-    /// </summary>
-    private string NormalizeLineBreaks(string query)
+    private static string RemoveTrailingComments(string query)
     {
-        // Replace all newlines with space
-        var result = Regex.Replace(query, @"[\r\n]+", " ");
-
-        // Remove multiple spaces created by line break replacement
-        result = Regex.Replace(result, @" +", " ");
-
-        return result;
-    }
-
-    /// <summary>
-    /// Removes SQL comments (-- line comments and /* */ block comments).
-    /// Comments don't affect query logic but add noise.
-    /// </summary>
-    private string RemoveTrailingComments(string query)
-    {
-        // Remove -- line comments (but only if at start of line or after whitespace)
-        var result = Regex.Replace(query, @"--.*?(?=\n|$)", "");
-
-        // Remove /* */ block comments
-        result = Regex.Replace(result, @"/\*.*?\*/", "", RegexOptions.Singleline);
-
-        return result;
+        var result = LineCommentsRegex().Replace(query, "");
+        return BlockCommentsRegex().Replace(result, "");
     }
 
     /// <summary>
@@ -172,26 +183,18 @@ public class QueryNormalizer
     /// </summary>
     public List<string> ExtractTableNames(string query)
     {
-        var tables = new HashSet<string>();
+        var tables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        // Match table names after FROM and JOIN keywords
-        var patterns = new[]
-        {
-            @"FROM\s+([a-zA-Z_][a-zA-Z0-9_]*)",
-            @"JOIN\s+([a-zA-Z_][a-zA-Z0-9_]*)",
-            @"INTO\s+([a-zA-Z_][a-zA-Z0-9_]*)"
-        };
+        foreach (Match m in FromTableRegex().Matches(query))
+            tables.Add(m.Groups[1].Value);
 
-        foreach (var pattern in patterns)
-        {
-            var regex = new Regex(pattern, RegexOptions.IgnoreCase);
-            foreach (Match match in regex.Matches(query))
-            {
-                tables.Add(match.Groups[1].Value);
-            }
-        }
+        foreach (Match m in JoinTableRegex().Matches(query))
+            tables.Add(m.Groups[1].Value);
 
-        return tables.ToList();
+        foreach (Match m in IntoTableRegex().Matches(query))
+            tables.Add(m.Groups[1].Value);
+
+        return [.. tables];
     }
 
     /// <summary>
@@ -199,38 +202,37 @@ public class QueryNormalizer
     /// </summary>
     public List<string> ExtractColumnNames(string query)
     {
-        var columns = new HashSet<string>();
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        // Match SELECT column_name pattern
-        var selectMatch = Regex.Match(query, @"SELECT\s+(.*?)\s+FROM", RegexOptions.IgnoreCase);
-        if (selectMatch.Success)
+        var selectMatch = SelectColumnsRegex().Match(query);
+        if (!selectMatch.Success)
+            return [];
+
+        var columnList = selectMatch.Groups[1].Value;
+        foreach (var part in columnList.Split(','))
         {
-            var columnList = selectMatch.Groups[1].Value;
-            var parts = columnList.Split(',');
+            var col = part.Trim();
+            if (col == "*") continue;
 
-            foreach (var part in parts)
+            var asMatch = ColumnAliasRegex().Match(col);
+            if (asMatch.Success)
             {
-                var col = part.Trim();
-                if (col == "*") continue;
-
-                // Handle alias syntax: column AS alias
-                var asMatch = Regex.Match(col, @"([a-zA-Z_][a-zA-Z0-9_]*)\s+AS\s+([a-zA-Z_][a-zA-Z0-9_]*)", RegexOptions.IgnoreCase);
-                if (asMatch.Success)
-                {
-                    columns.Add(asMatch.Groups[1].Value);
-                }
-                else
-                {
-                    // Extract last identifier (rightmost word)
-                    var words = col.Split(new[] { ' ', '.', '(' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (words.Length > 0)
-                    {
-                        columns.Add(words.Last());
-                    }
-                }
+                columns.Add(asMatch.Groups[1].Value);
+            }
+            else
+            {
+                var words = col.Split([' ', '.', '('], StringSplitOptions.RemoveEmptyEntries);
+                if (words.Length > 0)
+                    columns.Add(words[^1]);
             }
         }
 
-        return columns.ToList();
+        return [.. columns];
     }
+
+    /// <summary>
+    /// Returns whether the given token is a recognized SQL keyword.
+    /// Uses FrozenSet for O(1) lookup — suitable for hot-path validation.
+    /// </summary>
+    public static bool IsSqlKeyword(string token) => s_sqlKeywords.Contains(token);
 }
