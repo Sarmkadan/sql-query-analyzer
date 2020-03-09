@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace SqlQueryAnalyzer.Models;
 /// <summary>
 /// Represents a database query with metadata and lineage
 /// </summary>
-public class DatabaseQuery
+public sealed class DatabaseQuery
 {
     public string QueryId { get; set; } = Guid.NewGuid().ToString();
     public string QueryText { get; set; } = string.Empty;
@@ -168,7 +169,7 @@ public class DatabaseQuery
 /// <summary>
 /// Represents a query parameter
 /// </summary>
-public class ParameterInfo
+public sealed class ParameterInfo
 {
     public string ParameterName { get; set; } = string.Empty;
     public string DataType { get; set; } = string.Empty;

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace SqlQueryAnalyzer.Models;
 /// <summary>
 /// Represents the complete analysis result of a SQL query
 /// </summary>
-public class QueryAnalysisResult
+public sealed class QueryAnalysisResult
 {
     public string QueryId { get; set; } = Guid.NewGuid().ToString();
     public string Query { get; set; } = string.Empty;
