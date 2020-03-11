@@ -371,11 +371,18 @@ Releases follow [Semantic Versioning](https://semver.org/):
 - **MINOR**: New features (backwards compatible)
 - **PATCH**: Bug fixes
 
+## License
+
+By contributing to SQL Query Analyzer, you agree that your contributions will be licensed under the MIT License. See [LICENSE](./LICENSE) file for details.
+
 ## Questions?
 
 - **Issues**: [GitHub Issues](https://github.com/sarmkadan/sql-query-analyzer/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/sarmkadan/sql-query-analyzer/discussions)
-- **Email**: Check repository for contact info
+
+## Security
+
+For security concerns, please see [SECURITY.md](./SECURITY.md) - do not open public issues for security vulnerabilities.
 
 ## Thank You!
 
@@ -383,4 +390,4 @@ Your contributions make this project better. Thank you for investing time to imp
 
 ---
 
-**Last Updated**: 2026-05-04
+**Last Updated**: 2026-05-06
