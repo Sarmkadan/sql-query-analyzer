@@ -56,3 +56,9 @@ node_modules/
 .env
 .env.local
 .env.*.local
+
+# appsettings
+appsettings.Development.json
+
+# JetBrains IDE
+*.DotSettings.user
