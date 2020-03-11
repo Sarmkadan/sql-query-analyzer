@@ -1,0 +1,63 @@
+# =============================================================================
+# Author: Vladyslav Zaiets | https://sarmkadan.com
+# CTO & Software Architect
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # SQL Server database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sql-query-analyzer-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourPassword123!"
+      MSSQL_PID: Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - analyzer-network
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourPassword123!", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # SQL Query Analyzer application
+  analyzer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sql-query-analyzer-app
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      DB_SERVER: sqlserver
+      DB_PORT: 1433
+      DB_USER: sa
+      DB_PASSWORD: "YourPassword123!"
+      DB_NAME: QueryAnalyzer
+      DB_TIMEOUT: 30
+      ANALYZER_LOG_LEVEL: Information
+      ANALYZER_ENABLE_CACHE: "true"
+      ANALYZER_CACHE_TTL: 3600
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+    networks:
+      - analyzer-network
+    restart: unless-stopped
+
+networks:
+  analyzer-network:
+    driver: bridge
+
+volumes:
+  sqlserver-data:
+    driver: local
