@@ -8,11 +8,17 @@
     <TrimMode>partial</TrimMode>
     <AssemblyName>SqlQueryAnalyzer</AssemblyName>
     <RootNamespace>SqlQueryAnalyzer</RootNamespace>
+    <PackageId>Zaiets.sql.query.analyzer</PackageId>
     <Version>1.0.0</Version>
     <Authors>Vladyslav Zaiets</Authors>
-    <Description>Advanced SQL query analyzer for performance optimization and issue detection</Description>
-    <RepositoryUrl>https://github.com/sarmkadan/sql-query-analyzer</RepositoryUrl>
+    <Description>Analyze SQL queries for performance issues - missing indexes, N+1 detection, explain plan parser</Description>
+    <PackageTags>sql;query;analyzer;performance;index;optimization;database</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/sarmkadan/sql-query-analyzer</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sarmkadan/sql-query-analyzer</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,6 +29,10 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
     <PackageReference Include="Npgsql" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
