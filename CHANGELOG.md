@@ -10,148 +10,184 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - 2026-05-04
+## [1.0.0] - 2025-12-22
 
 ### Added
-- **PostgreSQL Query Plan Support**: Parse EXPLAIN (ANALYZE, BUFFERS) output
-- **Real-time Analysis Web Dashboard**: Live query analysis with WebSocket updates
-- **Webhook Notifications**: Integrate with Slack/Teams for critical issues
-- **Batch Processing API**: Analyze 1000+ queries in single request
-- **Performance Baselines**: Track performance over time and detect regressions
-- **Custom Issue Rules**: Define organization-specific detection patterns
-- **Multi-language Output**: French, German, Spanish, Chinese translations
-- **Query Fingerprinting**: Group identical queries across different parameters
+- **Stable Public Release**: All core features production-ready
+- **REST API**: ASP.NET Core endpoints for remote analysis integration
+- **Background Queue Processing**: Async batch analysis via hosted service
+- **Docker Compose**: Multi-database profiles (SQL Server, PostgreSQL)
+- **Full Documentation**: API reference, architecture guide, deployment docs
+- **Unit Tests**: 150+ test cases covering analyzers, validators, and formatters
+- **Rate Limiting Middleware**: Protect API endpoints from abuse
+- **Health Check Endpoint**: Kubernetes readiness/liveness probe support
+- **NuGet Package**: Published `Zaiets.sql.query.analyzer` to NuGet gallery
 
 ### Changed
-- Performance improvement: 40% faster analysis on large queries
-- Index suggestion algorithm now considers write/read ratios
-- Improved N+1 detection accuracy from 92% to 98%
-- Documentation expanded with 50+ code examples
-- CI/CD pipeline now runs on .NET 10 stable release
+- Performance scoring algorithm refined based on beta feedback
+- Index suggestion ROI calculation accounts for write/read ratio
+- CLI output improved with color-coded severity levels
+- Error messages made more actionable with suggested fixes
 
 ### Fixed
-- Fixed false positive "LeadingWildcard" detection for ESCAPE clause
-- Corrected fragmentation calculation for partitioned indexes
-- Resolved memory leak in batch processing for 10K+ query sets
-- Fixed edge case in subquery optimization detection with CTEs
+- False positive `LeadingWildcard` detection when ESCAPE clause is present
+- Fragmentation percentage calculation off-by-one for partitioned indexes
+- Subquery detection incorrectly flagging CTEs as optimization candidates
+- Cache key collision for queries differing only in whitespace
 
-### Deprecated
-- `GetAnalysisHistoryAsync()` with string parameter (use DatabaseQuery overload)
-- XML-based plan parsing (transitioning to native database APIs)
-
-## [1.1.0] - 2026-04-15
+## [0.9.0] - 2025-11-17
 
 ### Added
-- **MySQL 8.0 Execution Plan Support**: Full analysis of MySQL EXPLAIN output
-- **Docker Compose Profiles**: Separate configs for SQL Server/PostgreSQL/MySQL
-- **Performance Metrics Dashboard**: Visual charts and trend analysis
-- **Index Maintenance Script Generation**: Auto-REBUILD/REORGANIZE SQL
-- **Query Normalization**: Group similar queries for pattern analysis
-- **Extended Statistics**: Detailed metrics on CPU, I/O, row counts
-- **Health Check Endpoint**: Kubernetes readiness/liveness probes
+- **SQL Injection Detector**: Pattern-based security analysis on query input
+- **Input Validation Layer**: `QueryValidator` rejects malformed or oversized input
+- **Webhook Notifications**: `WebhookNotificationService` posts critical issues to external URLs
+- **Export Formats**: CSV and JSON export via `ExportService`
+- **`BatchAnalysisProcessor`**: Parallel processing with configurable `MaxDegreeOfParallelism`
 
 ### Changed
-- Unified database abstraction layer for multi-vendor support
-- Service registration moved to extension methods for cleaner DI
-- Logging now uses structured logging with semantic properties
-- Report generation refactored to pluggable formatter system
+- `IQueryAnalyzerService` interface finalized — no further breaking changes planned
+- Analysis pipeline hardened against null inputs and empty query strings
+- Logging now emits structured properties for all severity levels
 
 ### Fixed
-- Resolved index suggestion conflicts on overlapping columns
-- Fixed query parser to handle nested parentheses correctly
-- Corrected estimated cost calculations for APPLY operations
-- Fixed rare crash when parsing malformed execution plans
+- `PerformanceMetricsCalculator` division by zero on empty query lists
+- `ReportGenerator` HTML output escaped special characters incorrectly
+- Configuration binding ignored `CacheTtlSeconds` when set via environment variable
 
-## [1.0.0] - 2026-03-20
-
-### Added
-- **Core Query Analysis**: Performance scoring and complexity assessment
-- **Issue Detection (15 types)**: Patterns for common SQL anti-patterns
-- **Index Analysis**: Fragmentation, unused index, and suggestion engine
-- **Execution Plan Parsing**: SQL Server XML plan analysis with cost breakdown
-- **Report Generation**: Text, HTML, JSON, CSV output formats
-- **Caching System**: Performance optimization with configurable TTL
-- **Docker Support**: Complete containerization with docker-compose
-- **CLI Interface**: Command-line tool for batch processing
-- **REST API**: ASP.NET Core endpoints for integration
-- **Background Processing**: Queue-based batch analysis service
-- **Configuration Management**: Environment variables and appsettings.json
-- **Error Handling**: Comprehensive exception hierarchy and logging
-- **Unit Tests**: 150+ test cases covering core functionality
-- **Documentation**: Complete API reference and usage examples
-
-### Security
-- Input validation on all query text
-- SQL injection detection analyzer
-- Connection string encryption in configuration
-- Rate limiting middleware for API endpoints
-
-## [0.5.0] - 2026-02-20
+## [0.8.0] - 2025-10-13
 
 ### Added
-- Beta release for testing
-- Core analysis engine (incomplete)
-- Basic issue detection (8 types)
-- SQL Server support only
-- CLI prototype
+- **N+1 Query Detection**: `DetectNPlusOneAsync` identifies repeated parameterized patterns
+- **Extended Issue Types**: 18 total — added `OrCondition`, `ImplicitConversion`, `IneffectiveJoin`
+- **Query Normalization**: `QueryNormalizer` strips literals for pattern grouping and cache keying
+- **`StatisticsAggregator`**: Summarize issue frequency across batches
+- **`PerformanceMetricCollector`**: Collects CPU, I/O, and row-count metrics per analysis run
 
-### Known Issues
-- High false positive rate in N+1 detection
-- Index suggestions not optimized for write-heavy workloads
-- Memory usage grows with query complexity
-- No support for parameterized queries
+### Changed
+- `SqlPatternAnalyzer` regex patterns reviewed for correctness and performance
+- Issue severity thresholds tuned: cross-joins now always Critical
+- `AnalyzerSettings` supports environment variable overrides for all properties
+
+### Fixed
+- `IndexAnalyzerService` returned duplicate suggestions for compound indexes
+- N+1 detection fired on single-query inputs with no repetition context
+
+## [0.7.0] - 2025-09-01
+
+### Added
+- **Caching Layer**: `QueryAnalysisCache` with configurable TTL avoids redundant analysis
+- **`QueryCacheKeyGenerator`**: Deterministic fingerprint from normalized query text
+- **Rate Limiting**: Sliding-window middleware for HTTP API endpoints
+- **`AnalysisBuilder`**: Fluent API for constructing analysis requests programmatically
+- **`DtoMapper`**: Clean separation between internal models and API response DTOs
+
+### Changed
+- `IQueryAnalyzerService.AnalyzeQueryAsync` overload accepts both `string` and `DatabaseQuery`
+- Dependency injection wiring moved to extension methods (`AddSqlQueryAnalyzer()`)
+- Reduced allocations in hot-path pattern matching by pre-compiling regexes
+
+### Fixed
+- Cache TTL was always read as zero when loaded from `appsettings.json`
+- `AnalysisPipeline` middleware swallowed exceptions instead of re-throwing
+
+## [0.6.0] - 2025-07-28
+
+### Added
+- **CLI Interface**: `CommandLineParser` and `CliApplicationHost` for terminal-driven analysis
+- **`SampleQueryProvider`**: Built-in test queries for demos and integration testing
+- **`DatabaseConnectionValidator`**: Validate connection strings before running analysis
+- **`StringExtensions`**: Shared helpers used across formatters and validators
+
+### Changed
+- `ReportGenerator` split into pluggable `IResultFormatter` implementations
+- Configuration consolidated into `AnalyzerSettings` loaded from `appsettings.json`
+- Dockerfile updated to multi-stage build; image size reduced by 60%
+
+### Fixed
+- CLI argument parser crashed on unknown flags instead of printing usage
+- HTML report contained unescaped `<` and `>` in query text blocks
+
+## [0.5.0] - 2025-06-09
+
+### Added
+- **Report Generation**: Text, HTML, JSON, and CSV output via `ReportGenerator`
+- **Execution Plan Analysis**: `QueryPlanAnalyzerService` and `ExplainPlanParserService` parse SQL Server XML plans
+- **`QueryPlan` model**: Typed representation of plan nodes with cost and row estimates
+- **Issue Severity Enum**: Critical / Warning / Info classification on all detected issues
+
+### Changed
+- `QueryAnalysisResult` extended with `PerformanceScore` (0-100) and `Complexity` enum
+- `PerformanceIssue` records now include `ImpactScore` and `RecommendedFix`
+- Analysis result serialization uses camelCase for JSON consumers
+
+### Fixed
+- `ExplainPlanParserService` threw on plans with missing `EstimateRows` attributes
+- Execution cost totals were summed incorrectly for plans with nested loop joins
+
+## [0.4.0] - 2025-04-28
+
+### Added
+- **Index Suggestions**: `IndexAnalyzerService` proposes indexes with ROI estimates
+- **Fragmentation Detection**: Identify indexes above configurable thresholds
+- **Unused Index Discovery**: Surface indexes with zero seek/scan activity
+- **`IndexSuggestion` model**: Captures table, columns, estimated size, and ROI
+- **`Index` model**: Tracks usage stats — seeks, scans, lookups, updates, fragmentation
+
+### Changed
+- `IIndexAnalyzerService` interface introduced; `IndexAnalyzerService` becomes injectable
+- `PerformanceIssue.IssueType` changed from `string` to typed enum (`IssueTypes` constants)
+
+### Fixed
+- Index analysis returned suggestions for system tables (`sys.*`)
+- Fragmentation threshold comparison used `>` instead of `>=`
+
+## [0.3.0] - 2025-03-24
+
+### Added
+- **8 Issue Detectors**: `SelectStar`, `MissingIndex`, `TableScan`, `LeadingWildcard`, `FunctionOnColumn`, `SubqueryOptimization`, `CrossJoin`, `NonSargable`
+- **Performance Scoring**: Weighted deductions per issue type and severity
+- **`SqlPatternAnalyzer`**: Regex-driven pattern matching for all supported issue types
+- **`PerformanceMetricsCalculator`**: Score computation and metric aggregation utilities
+- **Complexity Classification**: Simple / Moderate / Complex based on join count and subqueries
+
+### Changed
+- `QueryAnalysisResult` now aggregates all issue lists into a single `Issues` collection
+- `PerformanceIssue` includes `Description`, `RecommendedFix`, and `AffectedColumns`
+
+### Fixed
+- Pattern detector triggered on SQL comments containing keywords
+- Complexity score overflowed on deeply nested subqueries
+
+## [0.2.0] - 2025-02-17
+
+### Added
+- **`QueryValidator`**: Rejects empty strings, oversized queries, and obviously invalid SQL
+- **`QueryNormalizer`**: Strips whitespace and normalizes keyword casing for comparison
+- **`DatabaseQuery` model**: Wraps query text with metadata (database, user, timestamp)
+- **`QueryStatistics` model**: Placeholder for execution metrics (CPU, I/O, row counts)
+- Repository interfaces: `IQueryRepository`, `IAnalysisRepository`
+
+### Changed
+- Project restructured into layered folders: `Models/`, `Services/`, `Utilities/`, `Repositories/`
+- `IQueryAnalyzerService` interface extracted; concrete implementation becomes injectable
+
+## [0.1.0] - 2025-01-20
+
+### Added
+- Initial project scaffold: .NET 10 console application
+- `QueryAnalysisResult` and `PerformanceIssue` core models
+- `IQueryAnalyzerService` skeleton with `AnalyzeQueryAsync` stub
+- Basic `SELECT *` detection proof-of-concept
+- MIT license and initial README
 
 ---
 
 ## Version Legend
 
-- **Major (X.0.0)**: Breaking changes to API or significant features
+- **Major (X.0.0)**: Breaking changes to API or significant architectural shifts
 - **Minor (0.X.0)**: New features without breaking existing API
 - **Patch (0.0.X)**: Bug fixes and performance improvements
 
-## Upgrade Guide
-
-### From 1.1.0 → 1.2.0
-
-```csharp
-// Old code (still works)
-var history = await analyzer.GetAnalysisHistoryAsync("query_text", 10);
-
-// New recommended approach
-var query = new DatabaseQuery { QueryText = "..." };
-var history = await analyzer.GetAnalysisHistoryAsync(query, 10);
-```
-
-### From 1.0.0 → 1.1.0
-
-No breaking changes. All existing code continues to work.
-
-```csharp
-// New features
-services.AddAnalyzerWithMetrics();  // Includes metrics and dashboard
-
-var metrics = analyzer.GetPerformanceMetrics();
-var charts = new PerformanceCharts(metrics);
-```
-
 ---
 
-## Planned Features
-
-### 2.0.0 (Q3 2026)
-- GraphQL API for flexible query results
-- Machine learning-based issue prediction
-- Multi-tenant SaaS support
-- Advanced query optimization suggestions
-- Distributed tracing integration
-
-### 2.1.0 (Q4 2026)
-- Oracle Database full support
-- Query recommendation engine
-- Performance baseline management
-- Integration with SSMS/Azure Data Studio
-- Cost estimation for cloud databases
-
----
-
-**Last Updated**: 2026-05-04
+**Last Updated**: 2025-12-22

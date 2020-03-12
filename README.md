@@ -8,6 +8,33 @@
 
 SQL Query Analyzer is a comprehensive .NET 10 tool that provides deep insights into SQL query performance. It detects anti-patterns, suggests index optimizations, analyzes execution plans, and generates actionable recommendations to keep your database running at peak efficiency.
 
+## Quick Start
+
+```bash
+git clone https://github.com/sarmkadan/sql-query-analyzer.git
+cd sql-query-analyzer
+dotnet restore
+dotnet run
+```
+
+Then in code:
+
+```csharp
+using SqlQueryAnalyzer.Services;
+using Microsoft.Extensions.DependencyInjection;
+
+var services = new ServiceCollection()
+    .AddScoped<IQueryAnalyzerService, QueryAnalyzerService>()
+    .BuildServiceProvider();
+
+var analyzer = services.GetRequiredService<IQueryAnalyzerService>();
+var result = await analyzer.AnalyzeQueryAsync("SELECT * FROM Orders WHERE CustomerId = 1");
+
+Console.WriteLine($"Score: {result.PerformanceScore:F1}/100");
+foreach (var issue in result.Issues)
+    Console.WriteLine($"[{issue.Severity}] {issue.IssueType}: {issue.Description}");
+```
+
 ## Key Features
 
 ### Query Performance Analysis
@@ -226,6 +253,37 @@ dotnet run --project sql-query-analyzer.csproj
 #   - SelectStar: SELECT * should specify columns
 #   - MissingIndex: Consider index on Orders.CustomerId
 ```
+
+---
+
+## Testing
+
+The test suite uses xUnit with FluentAssertions and Moq. Run all tests with:
+
+```bash
+dotnet test
+```
+
+Run a specific test project:
+
+```bash
+dotnet test tests/sql-query-analyzer.Tests/sql-query-analyzer.Tests.csproj
+```
+
+Run with verbose output and coverage:
+
+```bash
+dotnet test --logger "console;verbosity=detailed" \
+            --collect:"XPlat Code Coverage"
+```
+
+Key test files:
+
+| File | What it covers |
+|------|----------------|
+| `tests/.../QueryNormalizerTests.cs` | Whitespace stripping, keyword casing, literal removal |
+| `tests/.../QueryValidatorTests.cs` | Empty input, oversized queries, invalid SQL rejection |
+| `tests/.../SqlPatternAnalyzerTests.cs` | All 18 issue-type detectors, false-positive cases |
 
 ---
 
