@@ -60,7 +60,9 @@ public class QueryRewriteService : IQueryRewriteService
         DatabaseQuery query,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation($"Generating rewrite suggestions for query: {query.QueryId}");
+        ArgumentNullException.ThrowIfNull(query);
+
+        _logger.LogInformation("Generating rewrite suggestions for query: {QueryId}", query.QueryId);
         cancellationToken.ThrowIfCancellationRequested();
 
         var candidates = new List<QueryRewriteSuggestion?>();
@@ -68,16 +70,20 @@ public class QueryRewriteService : IQueryRewriteService
         try
         {
             candidates.Add(SuggestExplicitColumns(query));
-            candidates.Add(SuggestOrToUnionAll(query));
+            // WHERE-dependent suggestions are only applicable when the query has a WHERE clause
+            if (query.WhereConditions.Count > 0)
+            {
+                candidates.Add(SuggestOrToUnionAll(query));
+                candidates.Add(SuggestFunctionSargability(query));
+            }
             candidates.Add(SuggestSubqueryToJoin(query));
             candidates.Add(SuggestNotInToNotExists(query));
-            candidates.Add(SuggestFunctionSargability(query));
             candidates.Add(SuggestUnionToUnionAll(query));
             candidates.Add(SuggestPagination(query));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error generating rewrite suggestions for query: {query.QueryId}");
+            _logger.LogError(ex, "Error generating rewrite suggestions for query: {QueryId}", query.QueryId);
             throw;
         }
 
