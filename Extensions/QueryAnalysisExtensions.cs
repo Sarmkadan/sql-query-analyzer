@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -230,7 +231,7 @@ public static class AnalysisResultCollectionExtensions
 /// <summary>
 /// Statistics for a batch of analysis results.
 /// </summary>
-public class BatchStatistics
+public sealed class BatchStatistics
 {
     public int TotalQueries { get; set; }
     public double AverageScore { get; set; }

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -10,7 +11,7 @@ namespace SqlQueryAnalyzer.Models;
 /// <summary>
 /// Captures execution statistics for a query
 /// </summary>
-public class QueryStatistics
+public sealed class QueryStatistics
 {
     public int ExecutionCount { get; set; }
     public TimeSpan TotalExecutionTime { get; set; }

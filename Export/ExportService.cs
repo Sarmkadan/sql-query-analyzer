@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -15,7 +16,7 @@ namespace SqlQueryAnalyzer.Export;
 /// Supports JSON, CSV, XML, HTML, and custom formats.
 /// Handles batch exports and compression.
 /// </summary>
-public class ExportService
+public sealed class ExportService
 {
     private readonly ILogger<ExportService> _logger;
     private readonly Dictionary<string, IResultFormatter> _formatters = new();
@@ -234,7 +235,7 @@ RECOMMENDATION: {result.GetRecommendation()}
 /// <summary>
 /// Export configuration options.
 /// </summary>
-public class ExportOptions
+public sealed class ExportOptions
 {
     public List<string> Formats { get; set; } = new() { "json" };
     public string OutputDirectory { get; set; } = "./exports";

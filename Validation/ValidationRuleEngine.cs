@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -13,7 +14,7 @@ namespace SqlQueryAnalyzer.Validation;
 /// Supports regex patterns, syntax rules, and custom validators.
 /// Provides detailed validation reports.
 /// </summary>
-public class ValidationRuleEngine
+public sealed class ValidationRuleEngine
 {
     private readonly List<IValidationRule> _rules = new();
     private readonly ILogger<ValidationRuleEngine> _logger;
@@ -105,7 +106,7 @@ public interface IValidationRule
 /// <summary>
 /// Validates basic SQL syntax.
 /// </summary>
-public class SqlSyntaxRule : IValidationRule
+public sealed class SqlSyntaxRule : IValidationRule
 {
     public string Name => "SQL Syntax";
 

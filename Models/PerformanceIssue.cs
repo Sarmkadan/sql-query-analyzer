@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -10,7 +11,7 @@ namespace SqlQueryAnalyzer.Models;
 /// <summary>
 /// Represents a detected performance issue in a SQL query
 /// </summary>
-public class PerformanceIssue
+public sealed class PerformanceIssue
 {
     public string IssueId { get; set; } = Guid.NewGuid().ToString();
     public IssueType IssueType { get; set; }

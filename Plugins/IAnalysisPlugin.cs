@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -56,7 +57,7 @@ public interface IAnalysisPlugin
 /// Plugin manager for loading and executing plugins.
 /// Handles plugin lifecycle and error recovery.
 /// </summary>
-public class PluginManager
+public sealed class PluginManager
 {
     private readonly List<IAnalysisPlugin> _plugins = new();
     private readonly ILogger<PluginManager> _logger;
