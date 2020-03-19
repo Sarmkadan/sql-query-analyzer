@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SqlQueryAnalyzer.Models;
+using ModelIndex = SqlQueryAnalyzer.Models.Index;
 
 namespace SqlQueryAnalyzer.Utilities;
 

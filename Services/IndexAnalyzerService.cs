@@ -9,6 +9,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Models;
+using ModelIndex = SqlQueryAnalyzer.Models.Index;
+using SqlQueryAnalyzer.Repositories;
 
 namespace SqlQueryAnalyzer.Services;
 
@@ -78,19 +80,19 @@ public class IndexAnalyzerService : IIndexAnalyzerService
         return suggestions;
     }
 
-    public async Task<List<Index>> GetFragmentedIndexesAsync()
+    public async Task<List<ModelIndex>> GetFragmentedIndexesAsync()
     {
         _logger.LogInformation("Retrieving fragmented indexes");
         return await _repository.GetFragmentedIndexesAsync();
     }
 
-    public async Task<List<Index>> GetUnusedIndexesAsync()
+    public async Task<List<ModelIndex>> GetUnusedIndexesAsync()
     {
         _logger.LogInformation("Retrieving unused indexes");
         return await _repository.GetUnusedIndexesAsync();
     }
 
-    public async Task<IndexHealth> AssessIndexHealthAsync(Index index)
+    public async Task<IndexHealth> AssessIndexHealthAsync(ModelIndex index)
     {
         if (!index.IsValid())
             return IndexHealth.Corrupted;
