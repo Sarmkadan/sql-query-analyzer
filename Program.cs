@@ -77,10 +77,10 @@ class Program
             logger.LogInformation($"Analyzing: {query.Substring(0, Math.Min(60, query.Length))}...");
             var result = await analyzer.AnalyzeQueryAsync(query);
 
-            logger.LogInformation($"Issues found: {result.Issues.Count}");
+            logger.LogInformation("Issues found: {Count}", result.Issues.Count);
             foreach (var issue in result.Issues)
             {
-                logger.LogWarning($"  - {issue.IssueType}: {issue.Description}");
+                logger.LogWarning("  - {IssueType}: {Description}", issue.IssueType, issue.Description);
             }
         }
     }

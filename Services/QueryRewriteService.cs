@@ -94,8 +94,8 @@ public class QueryRewriteService : IQueryRewriteService
             .ThenByDescending(s => s.EstimatedImprovementPercent)
             .ToList();
 
-        _logger.LogInformation($"Generated {result.Count} rewrite suggestion(s) for query: {query.QueryId}");
-        return await Task.FromResult(result);
+        _logger.LogInformation("Generated {Count} rewrite suggestion(s) for query: {QueryId}", result.Count, query.QueryId);
+        return await Task.FromResult(result).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
@@ -103,7 +103,7 @@ public class QueryRewriteService : IQueryRewriteService
         DatabaseQuery query,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation($"Generating index recommendations for query: {query.QueryId}");
+        _logger.LogInformation("Generating index recommendations for query: {QueryId}", query.QueryId);
         cancellationToken.ThrowIfCancellationRequested();
 
         var suggestions = new List<IndexSuggestion>();
@@ -119,8 +119,8 @@ public class QueryRewriteService : IQueryRewriteService
             throw;
         }
 
-        _logger.LogInformation($"Generated {suggestions.Count} index recommendation(s) for query: {query.QueryId}");
-        return await Task.FromResult(suggestions);
+        _logger.LogInformation("Generated {Count} index recommendation(s) for query: {QueryId}", suggestions.Count, query.QueryId);
+        return await Task.FromResult(suggestions).ConfigureAwait(false);
     }
 
     // ──────────────────────────── rewrite helpers ────────────────────────────

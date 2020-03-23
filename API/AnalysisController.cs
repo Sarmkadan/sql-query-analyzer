@@ -88,7 +88,7 @@ public sealed class AnalysisController
                 };
             }
 
-            _logger.LogInformation($"Batch analyzing {request.Queries.Length} queries");
+            _logger.LogInformation("Batch analyzing {Length} queries", request.Queries.Length);
             var results = new List<QueryAnalysisResult>();
 
             foreach (var query in request.Queries)

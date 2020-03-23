@@ -61,7 +61,7 @@ public class ExecutionPlanAnalysisExample
 
         try
         {
-            var plan = await _planAnalyzer.ParseSqlServerPlanAsync(executionPlan);
+            var plan = await _planAnalyzer.ParseSqlServerPlanAsync(executionPlan).ConfigureAwait(false);
 
             if (plan == null)
             {
@@ -73,7 +73,7 @@ public class ExecutionPlanAnalysisExample
 
             _logger.LogInformation("\n---\n");
 
-            var issues = await _planAnalyzer.AnalyzePlanAsync(plan);
+            var issues = await _planAnalyzer.AnalyzePlanAsync(plan).ConfigureAwait(false);
             DisplayPlanIssues(issues, _logger);
 
             _logger.LogInformation("\n---\n");
@@ -93,12 +93,12 @@ public class ExecutionPlanAnalysisExample
         logger.LogInformation("EXECUTION PLAN SUMMARY");
         logger.LogInformation("=====================\n");
 
-        logger.LogInformation($"Total Cost: {plan.TotalEstimatedCost:F4}");
-        logger.LogInformation($"Estimated Rows: {plan.TotalEstimatedRows:N0}");
-        logger.LogInformation($"Estimated I/O: {plan.TotalEstimatedIoCost:F4}");
-        logger.LogInformation($"Estimated CPU: {plan.TotalEstimatedCpuCost:F6}");
+        logger.LogInformation("Total Cost: {TotalEstimatedCost}", plan.TotalEstimatedCost);
+        logger.LogInformation("Estimated Rows: {TotalEstimatedRows}", plan.TotalEstimatedRows);
+        logger.LogInformation("Estimated I/O: {TotalEstimatedIoCost}", plan.TotalEstimatedIoCost);
+        logger.LogInformation("Estimated CPU: {TotalEstimatedCpuCost}", plan.TotalEstimatedCpuCost);
         logger.LogInformation($"Root Operation: {plan.RootNode?.NodeType}");
-        logger.LogInformation($"Plan Format: {plan.Format}");
+        logger.LogInformation("Plan Format: {Format}", plan.Format);
     }
 
     static void DisplayCostAnalysis(List<PlanNode> operations, ILogger logger)
@@ -114,7 +114,7 @@ public class ExecutionPlanAnalysisExample
             var bar = new string('█', (int)(percentage / 5));
 
             logger.LogInformation($"{op.NodeType,-25} {op.EstimatedCost:F4}  ({percentage:F1}%) {bar}");
-            logger.LogInformation($"  Estimated Rows: {op.EstimatedRows:N0}, I/O: {op.EstimatedIoCost:F4}");
+            logger.LogInformation("  Estimated Rows: {EstimatedRows}, I/O: {EstimatedIoCost}", op.EstimatedRows, op.EstimatedIoCost);
         }
     }
 
@@ -129,18 +129,18 @@ public class ExecutionPlanAnalysisExample
             return;
         }
 
-        logger.LogWarning($"Found {issues.Count} issue(s):\n");
+        logger.LogWarning("Found {Count} issue(s):\n", issues.Count);
 
         var bySeverity = issues.GroupBy(i => i.Severity).OrderByDescending(g => g.Key);
 
         foreach (var group in bySeverity)
         {
-            logger.LogWarning($"\n{group.Key}:");
+            logger.LogWarning("\n{Key}:", group.Key);
             foreach (var issue in group)
             {
-                logger.LogWarning($"  • {issue.IssueType}");
-                logger.LogWarning($"    Description: {issue.Description}");
-                logger.LogWarning($"    Recommendation: {issue.RecommendedFix}");
+                logger.LogWarning("  • {IssueType}", issue.IssueType);
+                logger.LogWarning("    Description: {Description}", issue.Description);
+                logger.LogWarning("    Recommendation: {RecommendedFix}", issue.RecommendedFix);
             }
         }
     }
@@ -158,9 +158,9 @@ public class ExecutionPlanAnalysisExample
 
         foreach (var bottleneck in bottlenecks.OrderByDescending(b => b.EstimatedCost))
         {
-            logger.LogError($"🔴 {bottleneck.NodeType}");
-            logger.LogError($"   Impact: {bottleneck.EstimatedCost:F2}");
-            logger.LogError($"   Description: {bottleneck.NodeType} operation on {bottleneck.ObjectName}");
+            logger.LogError("🔴 {NodeType}", bottleneck.NodeType);
+            logger.LogError("   Impact: {EstimatedCost}", bottleneck.EstimatedCost);
+            logger.LogError("   Description: {NodeType} operation on {ObjectName}", bottleneck.NodeType, bottleneck.ObjectName);
             logger.LogError($"   Recommendation: Consider optimizing this operation.");
             logger.LogError();
         }

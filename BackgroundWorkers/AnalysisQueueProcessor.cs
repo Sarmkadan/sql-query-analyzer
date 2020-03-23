@@ -51,7 +51,7 @@ public class AnalysisQueueProcessor
         };
 
         _taskQueue.Enqueue(task);
-        _logger.LogInformation($"Enqueued analysis task: {task.TaskId}");
+        _logger.LogInformation("Enqueued analysis task: {TaskId}", task.TaskId);
 
         return task.TaskId;
     }
@@ -94,7 +94,7 @@ public class AnalysisQueueProcessor
 
         try
         {
-            await _processingTask.WaitAsync(timeout);
+            await _processingTask.WaitAsync(timeout).ConfigureAwait(false);
         }
         catch (TimeoutException)
         {
@@ -161,12 +161,12 @@ public class AnalysisQueueProcessor
                 // If no tasks running, wait before checking again
                 if (activeTasks.Count == 0)
                 {
-                    await Task.Delay(100, cancellationToken);
+                    await Task.Delay(100, cancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
                     // Wait for any task to complete
-                    await Task.WhenAny(activeTasks);
+                    await Task.WhenAny(activeTasks).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)
@@ -184,7 +184,7 @@ public class AnalysisQueueProcessor
         if (activeTasks.Count > 0)
         {
             _logger.LogInformation("Waiting for active tasks to complete...");
-            await Task.WhenAll(activeTasks);
+            await Task.WhenAll(activeTasks).ConfigureAwait(false);
         }
     }
 
@@ -198,13 +198,13 @@ public class AnalysisQueueProcessor
 
         try
         {
-            _logger.LogInformation($"Processing task: {task.TaskId}");
+            _logger.LogInformation("Processing task: {TaskId}", task.TaskId);
 
-            task.Result = await _analyzerService.AnalyzeQueryAsync(task.Query);
+            task.Result = await _analyzerService.AnalyzeQueryAsync(task.Query).ConfigureAwait(false);
             task.Status = AnalysisTaskStatus.Completed;
             task.CompletedAt = DateTime.UtcNow;
 
-            _logger.LogInformation($"Task completed: {task.TaskId} (Score: {task.Result.PerformanceScore:F1}/100)");
+            _logger.LogInformation("Task completed: {TaskId} (Score: {PerformanceScore}/100)", task.TaskId, task.Result.PerformanceScore);
 
             // Call completion callback if provided
             task.OnComplete?.Invoke(task.Result);
@@ -212,7 +212,7 @@ public class AnalysisQueueProcessor
         catch (OperationCanceledException)
         {
             task.Status = AnalysisTaskStatus.Cancelled;
-            _logger.LogInformation($"Task cancelled: {task.TaskId}");
+            _logger.LogInformation("Task cancelled: {TaskId}", task.TaskId);
         }
         catch (Exception ex)
         {

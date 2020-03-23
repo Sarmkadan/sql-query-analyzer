@@ -58,7 +58,7 @@ public class AnalyzerHealthCheck
             result.MetricsHealth = CheckMetricsHealth();
 
             // Check database connectivity
-            result.DatabaseHealth = await CheckDatabaseHealthAsync();
+            result.DatabaseHealth = await CheckDatabaseHealthAsync().ConfigureAwait(false);
 
             // Determine overall health
             result.Status = DetermineOverallHealth(result);
@@ -259,7 +259,7 @@ public class AnalyzerHealthCheck
             }
 
             result.Success = true;
-            _logger.LogInformation($"Self-heal performed {result.ActionsPerformed.Count} actions");
+            _logger.LogInformation("Self-heal performed {Count} actions", result.ActionsPerformed.Count);
         }
         catch (Exception ex)
         {

@@ -39,7 +39,7 @@ public class WebhookNotificationService : IAnalysisEventSubscriber
         }
 
         _webhooks.Add(config);
-        _logger.LogInformation($"Registered webhook: {config.Name} ({config.Type})");
+        _logger.LogInformation("Registered webhook: {Name} ({Type})", config.Name, config.Type);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public class WebhookNotificationService : IAnalysisEventSubscriber
         var removed = _webhooks.RemoveAll(w => w.Name == webhookName);
         if (removed > 0)
         {
-            _logger.LogInformation($"Unregistered webhook: {webhookName}");
+            _logger.LogInformation("Unregistered webhook: {WebhookName}", webhookName);
         }
     }
 
@@ -68,7 +68,7 @@ public class WebhookNotificationService : IAnalysisEventSubscriber
             try
             {
                 var payload = CreatePayload(@event, webhook);
-                await SendWebhookAsync(webhook, payload);
+                await SendWebhookAsync(webhook, payload).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -232,27 +232,27 @@ public class WebhookNotificationService : IAnalysisEventSubscriber
                     System.Text.Encoding.UTF8,
                     "application/json");
 
-                var response = await _httpClient.PostAsync(config.Url, content);
+                var response = await _httpClient.PostAsync(config.Url, content).ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogDebug($"Webhook sent successfully: {config.Name}");
+                    _logger.LogDebug("Webhook sent successfully: {Name}", config.Name);
                     return;
                 }
 
                 if ((int)response.StatusCode >= 500 && attempt < retries - 1)
                 {
                     // Transient server error - retry
-                    await Task.Delay(1000 * (attempt + 1));
+                    await Task.Delay(1000 * (attempt + 1)).ConfigureAwait(false);
                     continue;
                 }
 
-                _logger.LogWarning($"Webhook request failed: {config.Name} returned {response.StatusCode}");
+                _logger.LogWarning("Webhook request failed: {Name} returned {StatusCode}", config.Name, response.StatusCode);
             }
             catch (HttpRequestException ex) when (attempt < retries - 1)
             {
-                _logger.LogWarning($"Webhook request failed: {ex.Message}. Retrying...");
-                await Task.Delay(1000 * (attempt + 1));
+                _logger.LogWarning("Webhook request failed: {Message}. Retrying...", ex.Message);
+                await Task.Delay(1000 * (attempt + 1)).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -261,7 +261,7 @@ public class WebhookNotificationService : IAnalysisEventSubscriber
             }
         }
 
-        _logger.LogError($"Webhook failed after {retries} attempts: {config.Name}");
+        _logger.LogError("Webhook failed after {Retries} attempts: {Name}", retries, config.Name);
     }
 
     /// <summary>

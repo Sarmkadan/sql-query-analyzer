@@ -34,7 +34,7 @@ public class ExplainPlanParserService : IExplainPlanParserService
     {
         _logger.LogInformation("Parsing SQL Server execution plan");
 
-        var plan = await _planAnalyzer.ParseExecutionPlanAsync(xmlPlan);
+        var plan = await _planAnalyzer.ParseExecutionPlanAsync(xmlPlan).ConfigureAwait(false);
         if (plan == null)
         {
             plan = new QueryPlan { Format = PlanFormat.SqlServer };
@@ -120,7 +120,7 @@ public class ExplainPlanParserService : IExplainPlanParserService
             _logger.LogError(ex, "Error parsing PostgreSQL plan");
         }
 
-        return await Task.FromResult(plan);
+        return await Task.FromResult(plan).ConfigureAwait(false);
     }
 
     public async Task<QueryPlan> ParseMySqlPlanAsync(string jsonPlan)
@@ -170,7 +170,7 @@ public class ExplainPlanParserService : IExplainPlanParserService
             _logger.LogError(ex, "Error parsing MySQL plan");
         }
 
-        return await Task.FromResult(plan);
+        return await Task.FromResult(plan).ConfigureAwait(false);
     }
 
     public async Task<Dictionary<string, object>> ExtractPlanMetricsAsync(QueryPlan plan)
@@ -204,7 +204,7 @@ public class ExplainPlanParserService : IExplainPlanParserService
         var bottlenecks = IdentifyBottlenecks(plan);
         metrics.Add("bottlenecks", bottlenecks);
 
-        return await Task.FromResult(metrics);
+        return await Task.FromResult(metrics).ConfigureAwait(false);
     }
 
     private double CalculateEfficiency(QueryPlan plan)

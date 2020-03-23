@@ -48,7 +48,7 @@ public class QueryPlanAnalyzerService : IQueryPlanAnalyzerService
             }
 
             plan.Initialize();
-            return await Task.FromResult(plan);
+            return await Task.FromResult(plan).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -84,7 +84,7 @@ public class QueryPlanAnalyzerService : IQueryPlanAnalyzerService
             }
         }
 
-        return await Task.FromResult(missingIndexes);
+        return await Task.FromResult(missingIndexes).ConfigureAwait(false);
     }
 
     public async Task<List<PerformanceIssue>> AnalyzePlanAsync(QueryPlan plan)
@@ -129,7 +129,7 @@ public class QueryPlanAnalyzerService : IQueryPlanAnalyzerService
             }
         }
 
-        return await Task.FromResult(issues);
+        return await Task.FromResult(issues).ConfigureAwait(false);
     }
 
     private PlanNode ParsePlanNode(XElement element, int depth)

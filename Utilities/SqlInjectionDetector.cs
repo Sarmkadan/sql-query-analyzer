@@ -42,7 +42,7 @@ public class SqlInjectionDetector
         issues.AddRange(DetectTimeBasedInjection(query));
         issues.AddRange(DetectBooleanBlindInjection(query));
 
-        _logger.LogDebug($"SQL injection analysis complete. Issues found: {issues.Count}");
+        _logger.LogDebug("SQL injection analysis complete. Issues found: {Count}", issues.Count);
 
         return issues;
     }

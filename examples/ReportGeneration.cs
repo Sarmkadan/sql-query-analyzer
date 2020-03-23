@@ -55,16 +55,16 @@ public class ReportGenerationExample
 
         _logger.LogInformation("Analyzing query...\n");
 
-        var result = await _analyzer.AnalyzeQueryAsync(query);
+        var result = await _analyzer.AnalyzeQueryAsync(query).ConfigureAwait(false);
 
         // Create output directory
         var outputDir = "./reports";
         Directory.CreateDirectory(outputDir);
 
         // Generate all report formats
-        await GenerateAllReports(result, outputDir, _logger);
+        await GenerateAllReports(result, outputDir, _logger).ConfigureAwait(false);
 
-        _logger.LogInformation($"\n✓ All reports generated in '{outputDir}' directory");
+        _logger.LogInformation("\n✓ All reports generated in '{OutputDir}' directory", outputDir);
     }
 
     private static async Task GenerateAllReports(
@@ -76,44 +76,44 @@ public class ReportGenerationExample
         logger.LogInformation("Generating text report...");
         var textReport = ReportGenerator.GenerateTextReport(result);
         var textPath = Path.Combine(outputDir, "analysis.txt");
-        await File.WriteAllTextAsync(textPath, textReport);
-        logger.LogInformation($"  ✓ Saved to {textPath}");
+        await File.WriteAllTextAsync(textPath, textReport).ConfigureAwait(false);
+        logger.LogInformation("  ✓ Saved to {TextPath}", textPath);
 
         // Generate HTML Report
         logger.LogInformation("Generating HTML report...");
         var htmlReport = ReportGenerator.GenerateHtmlReport(result);
         var htmlPath = Path.Combine(outputDir, "analysis.html");
-        await File.WriteAllTextAsync(htmlPath, htmlReport);
-        logger.LogInformation($"  ✓ Saved to {htmlPath}");
+        await File.WriteAllTextAsync(htmlPath, htmlReport).ConfigureAwait(false);
+        logger.LogInformation("  ✓ Saved to {HtmlPath}", htmlPath);
         logger.LogInformation($"  → Open in browser: file://{Path.GetFullPath(htmlPath)}");
 
         // Generate JSON Report
         logger.LogInformation("Generating JSON report...");
         var jsonReport = ReportGenerator.GenerateJsonReport(result);
         var jsonPath = Path.Combine(outputDir, "analysis.json");
-        await File.WriteAllTextAsync(jsonPath, jsonReport);
-        logger.LogInformation($"  ✓ Saved to {jsonPath}");
+        await File.WriteAllTextAsync(jsonPath, jsonReport).ConfigureAwait(false);
+        logger.LogInformation("  ✓ Saved to {JsonPath}", jsonPath);
 
         // Generate CSV Report
         logger.LogInformation("Generating CSV report...");
         var csvReport = ReportGenerator.GenerateCsvReport(result);
         var csvPath = Path.Combine(outputDir, "analysis.csv");
-        await File.WriteAllTextAsync(csvPath, csvReport);
-        logger.LogInformation($"  ✓ Saved to {csvPath}");
+        await File.WriteAllTextAsync(csvPath, csvReport).ConfigureAwait(false);
+        logger.LogInformation("  ✓ Saved to {CsvPath}", csvPath);
 
         // Generate Custom Summary
         logger.LogInformation("Generating executive summary...");
         var summary = GenerateExecutiveSummary(result);
         var summaryPath = Path.Combine(outputDir, "summary.md");
-        await File.WriteAllTextAsync(summaryPath, summary);
-        logger.LogInformation($"  ✓ Saved to {summaryPath}");
+        await File.WriteAllTextAsync(summaryPath, summary).ConfigureAwait(false);
+        logger.LogInformation("  ✓ Saved to {SummaryPath}", summaryPath);
 
         // Generate Recommendations
         logger.LogInformation("Generating recommendations report...");
         var recommendations = GenerateRecommendations(result);
         var recPath = Path.Combine(outputDir, "recommendations.txt");
-        await File.WriteAllTextAsync(recPath, recommendations);
-        logger.LogInformation($"  ✓ Saved to {recPath}");
+        await File.WriteAllTextAsync(recPath, recommendations).ConfigureAwait(false);
+        logger.LogInformation("  ✓ Saved to {RecPath}", recPath);
     }
 
     private static string GenerateExecutiveSummary(QueryAnalysisResult result)

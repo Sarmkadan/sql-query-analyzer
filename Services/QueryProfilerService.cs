@@ -65,7 +65,7 @@ public sealed class QueryProfilerService : IQueryProfilerService
 
         var query = new DatabaseQuery { QueryText = queryText };
         query.Parse();
-        return await ProfileQueryAsync(query, options);
+        return await ProfileQueryAsync(query, options).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
@@ -91,15 +91,15 @@ public sealed class QueryProfilerService : IQueryProfilerService
         try
         {
             if (options.WarmUpIterations > 0)
-                await ExecuteWarmUpAsync(query, options.WarmUpIterations);
+                await ExecuteWarmUpAsync(query, options.WarmUpIterations).ConfigureAwait(false);
 
             if (options.CaptureTimings)
             {
-                var stages = await MeasureStagesAsync(query);
+                var stages = await MeasureStagesAsync(query).ConfigureAwait(false);
                 report.ExecutionStages.AddRange(stages);
             }
 
-            var analysisResult = await _queryAnalyzer.AnalyzeQueryAsync(query);
+            var analysisResult = await _queryAnalyzer.AnalyzeQueryAsync(query).ConfigureAwait(false);
             report.AnalysisResult = analysisResult;
             report.PerformanceScore = analysisResult.PerformanceScore;
 
@@ -115,7 +115,7 @@ public sealed class QueryProfilerService : IQueryProfilerService
             }
 
             report.Metrics.AddRange(BuildMetrics(report));
-            report.Suggestions = await GenerateSuggestionsAsync(report);
+            report.Suggestions = await GenerateSuggestionsAsync(report).ConfigureAwait(false);
 
             totalTimer.Stop();
             report.TotalProfilingDurationMs = totalTimer.Elapsed.TotalMilliseconds;
@@ -159,7 +159,7 @@ public sealed class QueryProfilerService : IQueryProfilerService
 
         var reports = new List<QueryProfilerReport>(queryList.Count);
         foreach (var query in queryList)
-            reports.Add(await ProfileQueryAsync(query, options));
+            reports.Add(await ProfileQueryAsync(query, options)).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Batch profiling complete — {Total} reports, {Failed} failed",
@@ -189,7 +189,7 @@ public sealed class QueryProfilerService : IQueryProfilerService
             .ThenByDescending(s => s.EstimatedImpactPercent)
             .ToList();
 
-        return await Task.FromResult(ranked);
+        return await Task.FromResult(ranked).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
@@ -228,7 +228,7 @@ public sealed class QueryProfilerService : IQueryProfilerService
             "Profile comparison — {Summary}",
             comparison.Summary);
 
-        return await Task.FromResult(comparison);
+        return await Task.FromResult(comparison).ConfigureAwait(false);
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
@@ -247,7 +247,7 @@ public sealed class QueryProfilerService : IQueryProfilerService
         for (var i = 0; i < iterations; i++)
         {
             _logger.LogDebug("Warm-up iteration {I}/{Total} for {QueryId}", i + 1, iterations, query.QueryId);
-            await _queryAnalyzer.AnalyzeQueryAsync(query);
+            await _queryAnalyzer.AnalyzeQueryAsync(query).ConfigureAwait(false);
         }
     }
 
@@ -264,25 +264,25 @@ public sealed class QueryProfilerService : IQueryProfilerService
 
         stages.Add(await TimedStageAsync("ComplexityAnalysis", async () =>
         {
-            var c = await _queryAnalyzer.DetermineComplexityAsync(query);
+            var c = await _queryAnalyzer.DetermineComplexityAsync(query).ConfigureAwait(false);
             return (object)c;
         }));
 
         stages.Add(await TimedStageAsync("IssueDetection", async () =>
         {
-            var issues = await _issueDetector.DetectIssuesAsync(query);
+            var issues = await _issueDetector.DetectIssuesAsync(query).ConfigureAwait(false);
             return (object)issues;
         }));
 
         stages.Add(await TimedStageAsync("JoinAnalysis", async () =>
         {
-            var joinIssues = await _issueDetector.DetectJoinIssuesAsync(query);
+            var joinIssues = await _issueDetector.DetectJoinIssuesAsync(query).ConfigureAwait(false);
             return (object)joinIssues;
         }));
 
         stages.Add(await TimedStageAsync("IndexOpportunities", async () =>
         {
-            var idxIssues = await _issueDetector.DetectIndexOpportunitiesAsync(query);
+            var idxIssues = await _issueDetector.DetectIndexOpportunitiesAsync(query).ConfigureAwait(false);
             return (object)idxIssues;
         }));
 
@@ -298,7 +298,7 @@ public sealed class QueryProfilerService : IQueryProfilerService
 
         try
         {
-            await work();
+            await work().ConfigureAwait(false);
         }
         catch (Exception ex)
         {

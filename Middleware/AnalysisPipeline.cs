@@ -66,7 +66,7 @@ public class AnalysisPipeline
                 }
 
                 _logger.LogDebug($"Executing middleware: {middleware.GetType().Name}");
-                await middleware.ExecuteAsync(context);
+                await middleware.ExecuteAsync(context).ConfigureAwait(false);
             }
 
             _logger.LogInformation("Analysis pipeline completed successfully");
@@ -123,8 +123,8 @@ public class LoggingMiddleware : IAnalysisMiddleware
             ? context.Query[..80] + "..."
             : context.Query;
 
-        _logger.LogInformation($"Processing query: {queryPreview}");
-        _logger.LogDebug($"Arguments - Verbose: {context.Arguments.Verbose}, Format: {context.Arguments.OutputFormat}");
+        _logger.LogInformation("Processing query: {QueryPreview}", queryPreview);
+        _logger.LogDebug("Arguments - Verbose: {Verbose}, Format: {OutputFormat}", context.Arguments.Verbose, context.Arguments.OutputFormat);
 
         return Task.CompletedTask;
     }
@@ -219,8 +219,8 @@ public class AnalysisMiddleware : IAnalysisMiddleware
         try
         {
             _logger.LogInformation("Starting query analysis");
-            context.Result = await _analyzer.AnalyzeQueryAsync(context.Query);
-            _logger.LogInformation($"Analysis complete. Score: {context.Result.PerformanceScore:F1}/100");
+            context.Result = await _analyzer.AnalyzeQueryAsync(context.Query).ConfigureAwait(false);
+            _logger.LogInformation("Analysis complete. Score: {PerformanceScore}/100", context.Result.PerformanceScore);
         }
         catch (Exception ex)
         {
@@ -262,7 +262,7 @@ public class OptimizationMiddleware : IAnalysisMiddleware
                 ApplyResultLimit(context);
             }
 
-            _logger.LogDebug($"Optimization complete. Final issue count: {context.Result.Issues.Count}");
+            _logger.LogDebug("Optimization complete. Final issue count: {Count}", context.Result.Issues.Count);
         }
         catch (Exception ex)
         {
@@ -283,7 +283,7 @@ public class OptimizationMiddleware : IAnalysisMiddleware
             .Where(i => i.Severity == severity)
             .ToList();
 
-        _logger.LogDebug($"Severity filter applied: {initialCount} → {context.Result.Issues.Count} issues");
+        _logger.LogDebug("Severity filter applied: {InitialCount} → {Count} issues", initialCount, context.Result.Issues.Count);
     }
 
     private void ApplyResultLimit(AnalysisContext context)
@@ -295,7 +295,7 @@ public class OptimizationMiddleware : IAnalysisMiddleware
                 .Take(context.Arguments.MaxResults.Value)
                 .ToList();
 
-            _logger.LogDebug($"Result limit applied: {initialCount} → {context.Result.Issues.Count} issues");
+            _logger.LogDebug("Result limit applied: {InitialCount} → {Count} issues", initialCount, context.Result.Issues.Count);
         }
     }
 }

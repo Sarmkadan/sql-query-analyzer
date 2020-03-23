@@ -71,7 +71,7 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
 
         try
         {
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -86,7 +86,7 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
     {
         try
         {
-            await subscriber.OnEventAsync(@event);
+            await subscriber.OnEventAsync(@event).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -231,9 +231,9 @@ public class NotificationEventSubscriber : IAnalysisEventSubscriber
 
     private async Task SendNotificationAsync(string subject, string message)
     {
-        _logger.LogWarning($"Notification: {subject} - {message}");
+        _logger.LogWarning("Notification: {Subject} - {Message}", subject, message);
 
         // In production, integrate with notification service (email, Slack, etc)
-        await Task.Delay(10);
+        await Task.Delay(10).ConfigureAwait(false);
     }
 }

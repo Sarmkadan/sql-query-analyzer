@@ -49,7 +49,7 @@ public class RateLimitingMiddleware
             // Check global concurrency limit
             if (_activeAnalysis >= _maxConcurrentAnalysis)
             {
-                _logger.LogWarning($"Rate limit: {_activeAnalysis}/{_maxConcurrentAnalysis} concurrent analysis slots in use");
+                _logger.LogWarning("Rate limit: {_activeAnalysis}/{_maxConcurrentAnalysis} concurrent analysis slots in use", _activeAnalysis, _maxConcurrentAnalysis);
                 await Task.Delay(100);
                 continue;
             }
@@ -57,7 +57,7 @@ public class RateLimitingMiddleware
             // Check rate limit window
             if (!IsWithinRateLimit())
             {
-                _logger.LogWarning($"Rate limit: {_requestsInWindow}/{_maxQueriesPerSecond} requests in window");
+                _logger.LogWarning("Rate limit: {_requestsInWindow}/{_maxQueriesPerSecond} requests in window", _requestsInWindow, _maxQueriesPerSecond);
                 await Task.Delay(100);
                 continue;
             }
@@ -69,7 +69,7 @@ public class RateLimitingMiddleware
             var limit = GetOrCreateQueryLimit(queryHash);
             limit.RequestCount++;
 
-            _logger.LogDebug($"Rate limit slot acquired. Active: {_activeAnalysis}/{_maxConcurrentAnalysis}");
+            _logger.LogDebug("Rate limit slot acquired. Active: {_activeAnalysis}/{_maxConcurrentAnalysis}", _activeAnalysis, _maxConcurrentAnalysis);
             return;
         }
 
@@ -86,7 +86,7 @@ public class RateLimitingMiddleware
         if (_activeAnalysis > 0)
         {
             _activeAnalysis--;
-            _logger.LogDebug($"Rate limit slot released. Active: {_activeAnalysis}/{_maxConcurrentAnalysis}");
+            _logger.LogDebug("Rate limit slot released. Active: {_activeAnalysis}/{_maxConcurrentAnalysis}", _activeAnalysis, _maxConcurrentAnalysis);
         }
     }
 

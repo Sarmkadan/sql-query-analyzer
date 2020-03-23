@@ -63,13 +63,13 @@ class BatchAnalyzer
         };
 
         // Analyze batch
-        logger.LogInformation($"Analyzing {queries.Count} queries...\n");
+        logger.LogInformation("Analyzing {Count} queries...\n", queries.Count);
 
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
         try
         {
-            var results = await analyzer.AnalyzeQueriesAsync(queries);
+            var results = await analyzer.AnalyzeQueriesAsync(queries).ConfigureAwait(false);
 
             stopwatch.Stop();
 
@@ -102,14 +102,14 @@ class BatchAnalyzer
         var warnings = results.Sum(r => r.Issues.Count(i => i.Severity == IssueSeverity.Warning));
         var infos = results.Sum(r => r.Issues.Count(i => i.Severity == IssueSeverity.Info));
 
-        logger.LogInformation($"Queries Analyzed: {results.Count}");
+        logger.LogInformation("Queries Analyzed: {Count}", results.Count);
         logger.LogInformation($"Total Time: {elapsedMs}ms ({elapsedMs / (double)results.Count:F1}ms per query)");
-        logger.LogInformation($"Average Score: {avgScore:F1}/100");
+        logger.LogInformation("Average Score: {AvgScore}/100", avgScore);
 
         logger.LogInformation($"\nIssue Breakdown:");
-        logger.LogWarning($"  Critical: {criticalIssues}");
-        logger.LogWarning($"  Warnings: {warnings}");
-        logger.LogInformation($"  Info: {infos}");
+        logger.LogWarning("  Critical: {CriticalIssues}", criticalIssues);
+        logger.LogWarning("  Warnings: {Warnings}", warnings);
+        logger.LogInformation("  Info: {Infos}", infos);
 
         // Score distribution
         var excellent = results.Count(r => r.PerformanceScore >= 90);
@@ -119,11 +119,11 @@ class BatchAnalyzer
         var critical = results.Count(r => r.PerformanceScore < 40);
 
         logger.LogInformation($"\nScore Distribution:");
-        logger.LogInformation($"  ⭐⭐⭐⭐⭐ Excellent (90-100): {excellent}");
-        logger.LogInformation($"  ⭐⭐⭐⭐ Good (75-89): {good}");
-        logger.LogInformation($"  ⭐⭐⭐ Acceptable (60-74): {acceptable}");
-        logger.LogWarning($"  ⭐⭐ Poor (40-59): {poor}");
-        logger.LogError($"  ⭐ Critical (0-39): {critical}");
+        logger.LogInformation("  ⭐⭐⭐⭐⭐ Excellent (90-100): {Excellent}", excellent);
+        logger.LogInformation("  ⭐⭐⭐⭐ Good (75-89): {Good}", good);
+        logger.LogInformation("  ⭐⭐⭐ Acceptable (60-74): {Acceptable}", acceptable);
+        logger.LogWarning("  ⭐⭐ Poor (40-59): {Poor}", poor);
+        logger.LogError("  ⭐ Critical (0-39): {Critical}", critical);
     }
 
     static void GenerateDetailedBreakdown(
@@ -152,7 +152,7 @@ class BatchAnalyzer
 
         foreach (var result in worstQueries)
         {
-            logger.LogError($"\n  Score: {result.PerformanceScore:F1}/100");
+            logger.LogError("\n  Score: {PerformanceScore}/100", result.PerformanceScore);
             logger.LogError($"  Query: {result.QueryText.Substring(0, Math.Min(60, result.QueryText.Length))}...");
             logger.LogError($"  Top Issue: {result.Issues.FirstOrDefault()?.IssueType}");
         }
@@ -176,11 +176,11 @@ class BatchAnalyzer
             var issueCount = appGroup.Sum(x => x.Result.Issues.Count);
             var indexSuggestions = appGroup.Sum(x => x.Result.IndexSuggestions.Count);
 
-            logger.LogInformation($"\n{appGroup.Key}:");
+            logger.LogInformation("\n{Key}:", appGroup.Key);
             logger.LogInformation($"  Queries: {appGroup.Count()}");
-            logger.LogInformation($"  Avg Score: {avgScore:F1}/100");
-            logger.LogInformation($"  Total Issues: {issueCount}");
-            logger.LogInformation($"  Index Suggestions: {indexSuggestions}");
+            logger.LogInformation("  Avg Score: {AvgScore}/100", avgScore);
+            logger.LogInformation("  Total Issues: {IssueCount}", issueCount);
+            logger.LogInformation("  Index Suggestions: {IndexSuggestions}", indexSuggestions);
         }
     }
 }

@@ -27,22 +27,22 @@ class IndexAnalyzer
         logger.LogInformation("======================\n");
 
         // Analyze indexes on Orders table
-        await AnalyzeTableIndexes(indexAnalyzer, "Orders", logger);
+        await AnalyzeTableIndexes(indexAnalyzer, "Orders", logger).ConfigureAwait(false);
 
         logger.LogInformation("\n---\n");
 
         // Check for fragmented indexes
-        await AnalyzeFragmentation(indexAnalyzer, logger);
+        await AnalyzeFragmentation(indexAnalyzer, logger).ConfigureAwait(false);
 
         logger.LogInformation("\n---\n");
 
         // Find unused indexes
-        await FindUnusedIndexes(indexAnalyzer, logger);
+        await FindUnusedIndexes(indexAnalyzer, logger).ConfigureAwait(false);
 
         logger.LogInformation("\n---\n");
 
         // Generate maintenance scripts
-        await GenerateMaintenanceScripts(indexAnalyzer, logger);
+        await GenerateMaintenanceScripts(indexAnalyzer, logger).ConfigureAwait(false);
     }
 
     static async Task AnalyzeTableIndexes(
@@ -50,11 +50,11 @@ class IndexAnalyzer
         string tableName,
         ILogger logger)
     {
-        logger.LogInformation($"Analyzing indexes on table: {tableName}\n");
+        logger.LogInformation("Analyzing indexes on table: {TableName}\n", tableName);
 
         try
         {
-            var suggestions = await indexAnalyzer.AnalyzeIndexesAsync(tableName);
+            var suggestions = await indexAnalyzer.AnalyzeIndexesAsync(tableName).ConfigureAwait(false);
 
             if (suggestions.Count == 0)
             {
@@ -62,12 +62,12 @@ class IndexAnalyzer
                 return;
             }
 
-            logger.LogInformation($"Found {suggestions.Count} index opportunity/ies:\n");
+            logger.LogInformation("Found {Count} index opportunity/ies:\n", suggestions.Count);
 
             foreach (var suggestion in suggestions.OrderByDescending(s => s.Roi).Take(5))
             {
-                logger.LogInformation($"Suggested Index: {suggestion.SuggestedIndexName}");
-                logger.LogInformation($"  Table: {suggestion.TableName}");
+                logger.LogInformation("Suggested Index: {SuggestedIndexName}", suggestion.SuggestedIndexName);
+                logger.LogInformation("  Table: {TableName}", suggestion.TableName);
                 logger.LogInformation($"  Columns: {string.Join(", ", suggestion.Columns)}");
 
                 if (suggestion.IncludedColumns?.Count > 0)
@@ -75,9 +75,9 @@ class IndexAnalyzer
                     logger.LogInformation($"  Included: {string.Join(", ", suggestion.IncludedColumns)}");
                 }
 
-                logger.LogInformation($"  ROI: {suggestion.Roi:F1}%");
-                logger.LogInformation($"  Est. Size: {suggestion.EstimatedSizeKB} KB");
-                logger.LogInformation($"  Est. Improvement: {suggestion.EstimatedImprovementPercent}%");
+                logger.LogInformation("  ROI: {Roi}%", suggestion.Roi);
+                logger.LogInformation("  Est. Size: {EstimatedSizeKB} KB", suggestion.EstimatedSizeKB);
+                logger.LogInformation("  Est. Improvement: {EstimatedImprovementPercent}%", suggestion.EstimatedImprovementPercent);
                 logger.LogInformation();
                 logger.LogInformation($"  SQL: {suggestion.ToCreateIndexSql()}");
                 logger.LogInformation();
@@ -98,7 +98,7 @@ class IndexAnalyzer
         try
         {
             // Get fragmented indexes (> 10%)
-            var fragmented = await indexAnalyzer.GetFragmentedIndexesAsync(10.0);
+            var fragmented = await indexAnalyzer.GetFragmentedIndexesAsync(10.0).ConfigureAwait(false);
 
             if (fragmented.Count == 0)
             {
@@ -110,27 +110,27 @@ class IndexAnalyzer
             var rebuild = fragmented.Where(i => i.FragmentationPercent > 30).ToList();
             var reorganize = fragmented.Where(i => i.FragmentationPercent <= 30).ToList();
 
-            logger.LogWarning($"Found {fragmented.Count} fragmented indexes:\n");
+            logger.LogWarning("Found {Count} fragmented indexes:\n", fragmented.Count);
 
             if (rebuild.Count > 0)
             {
-                logger.LogError($"REBUILD (Fragmentation > 30%): {rebuild.Count} indexes");
+                logger.LogError("REBUILD (Fragmentation > 30%): {Count} indexes", rebuild.Count);
                 foreach (var idx in rebuild.OrderByDescending(i => i.FragmentationPercent).Take(5))
                 {
-                    logger.LogError($"  • {idx.TableName}.{idx.IndexName}");
-                    logger.LogError($"    Fragmentation: {idx.FragmentationPercent:F2}%");
-                    logger.LogError($"    Size: {idx.SizeInKB} KB");
-                    logger.LogError($"    Action: ALTER INDEX [{idx.IndexName}] ON [{idx.TableName}] REBUILD;");
+                    logger.LogError("  • {TableName}.{IndexName}", idx.TableName, idx.IndexName);
+                    logger.LogError("    Fragmentation: {FragmentationPercent}%", idx.FragmentationPercent);
+                    logger.LogError("    Size: {SizeInKB} KB", idx.SizeInKB);
+                    logger.LogError("    Action: ALTER INDEX [{IndexName}] ON [{TableName}] REBUILD;", idx.IndexName, idx.TableName);
                 }
             }
 
             if (reorganize.Count > 0)
             {
-                logger.LogWarning($"\nREORGANIZE (10% < Fragmentation <= 30%): {reorganize.Count} indexes");
+                logger.LogWarning("\nREORGANIZE (10% < Fragmentation <= 30%): {Count} indexes", reorganize.Count);
                 foreach (var idx in reorganize.OrderByDescending(i => i.FragmentationPercent).Take(3))
                 {
-                    logger.LogWarning($"  • {idx.TableName}.{idx.IndexName}: {idx.FragmentationPercent:F2}%");
-                    logger.LogWarning($"    ALTER INDEX [{idx.IndexName}] ON [{idx.TableName}] REORGANIZE;");
+                    logger.LogWarning("  • {TableName}.{IndexName}: {FragmentationPercent}%", idx.TableName, idx.IndexName, idx.FragmentationPercent);
+                    logger.LogWarning("    ALTER INDEX [{IndexName}] ON [{TableName}] REORGANIZE;", idx.IndexName, idx.TableName);
                 }
             }
         }
@@ -148,7 +148,7 @@ class IndexAnalyzer
 
         try
         {
-            var unused = await indexAnalyzer.GetUnusedIndexesAsync();
+            var unused = await indexAnalyzer.GetUnusedIndexesAsync().ConfigureAwait(false);
 
             if (unused.Count == 0)
             {
@@ -156,17 +156,17 @@ class IndexAnalyzer
                 return;
             }
 
-            logger.LogWarning($"Found {unused.Count} unused indexes that could be removed:\n");
+            logger.LogWarning("Found {Count} unused indexes that could be removed:\n", unused.Count);
 
             var totalWastedSpace = 0L;
 
             foreach (var idx in unused.OrderByDescending(i => i.SizeInKB).Take(10))
             {
-                logger.LogWarning($"  • {idx.TableName}.{idx.IndexName}");
-                logger.LogWarning($"    Type: {idx.IndexType}");
-                logger.LogWarning($"    Size: {idx.SizeInKB} KB");
-                logger.LogWarning($"    Drops: {idx.UnusedDays} days since last use");
-                logger.LogWarning($"    Action: DROP INDEX [{idx.IndexName}] ON [{idx.TableName}];");
+                logger.LogWarning("  • {TableName}.{IndexName}", idx.TableName, idx.IndexName);
+                logger.LogWarning("    Type: {IndexType}", idx.IndexType);
+                logger.LogWarning("    Size: {SizeInKB} KB", idx.SizeInKB);
+                logger.LogWarning("    Drops: {UnusedDays} days since last use", idx.UnusedDays);
+                logger.LogWarning("    Action: DROP INDEX [{IndexName}] ON [{TableName}];", idx.IndexName, idx.TableName);
                 totalWastedSpace += idx.SizeInKB;
                 logger.LogWarning();
             }
@@ -187,7 +187,7 @@ class IndexAnalyzer
 
         try
         {
-            var scripts = await indexAnalyzer.GenerateMaintenanceScriptsAsync();
+            var scripts = await indexAnalyzer.GenerateMaintenanceScriptsAsync().ConfigureAwait(false);
 
             if (scripts.Count == 0)
             {
@@ -195,14 +195,14 @@ class IndexAnalyzer
                 return;
             }
 
-            logger.LogInformation($"Generated {scripts.Count} maintenance scripts:\n");
+            logger.LogInformation("Generated {Count} maintenance scripts:\n", scripts.Count);
 
             // Save to file
             var scriptPath = "./index_maintenance.sql";
             var scriptContent = string.Join("\n\nGO\n\n", scripts);
-            await File.WriteAllTextAsync(scriptPath, scriptContent);
+            await File.WriteAllTextAsync(scriptPath, scriptContent).ConfigureAwait(false);
 
-            logger.LogInformation($"✓ Maintenance scripts saved to: {scriptPath}");
+            logger.LogInformation("✓ Maintenance scripts saved to: {ScriptPath}", scriptPath);
             logger.LogInformation($"\nScript Preview (first 3):");
 
             foreach (var script in scripts.Take(3))
@@ -216,7 +216,7 @@ class IndexAnalyzer
             }
 
             logger.LogInformation($"\nTo apply changes, execute:\n");
-            logger.LogInformation($"sqlcmd -S YOUR_SERVER -d YOUR_DATABASE -i {scriptPath}");
+            logger.LogInformation("sqlcmd -S YOUR_SERVER -d YOUR_DATABASE -i {ScriptPath}", scriptPath);
         }
         catch (Exception ex)
         {

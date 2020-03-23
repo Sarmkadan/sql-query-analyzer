@@ -39,7 +39,7 @@ public sealed class ExportService
     public void RegisterFormatter(string format, IResultFormatter formatter)
     {
         _formatters[format.ToLower()] = formatter;
-        _logger.LogDebug($"Registered formatter: {format}");
+        _logger.LogDebug("Registered formatter: {Format}", format);
     }
 
     /// <summary>
@@ -66,8 +66,8 @@ public sealed class ExportService
                 Directory.CreateDirectory(directory);
             }
 
-            await File.WriteAllTextAsync(filePath, content);
-            _logger.LogInformation($"Exported analysis to {filePath} ({format})");
+            await File.WriteAllTextAsync(filePath, content).ConfigureAwait(false);
+            _logger.LogInformation("Exported analysis to {FilePath} ({Format})", filePath, format);
         }
         catch (Exception ex)
         {
@@ -103,8 +103,8 @@ public sealed class ExportService
                 Directory.CreateDirectory(directory);
             }
 
-            await File.WriteAllTextAsync(filePath, content);
-            _logger.LogInformation($"Exported {results.Count} results to {filePath} ({format})");
+            await File.WriteAllTextAsync(filePath, content).ConfigureAwait(false);
+            _logger.LogInformation("Exported {Count} results to {FilePath} ({Format})", results.Count, filePath, format);
         }
         catch (Exception ex)
         {
@@ -124,8 +124,8 @@ public sealed class ExportService
         var tasks = formats.Select(format =>
             ExportAsync(result, Path.Combine(outputDirectory, $"analysis.{format}"), format));
 
-        await Task.WhenAll(tasks);
-        _logger.LogInformation($"Exported to {formats.Length} formats");
+        await Task.WhenAll(tasks).ConfigureAwait(false);
+        _logger.LogInformation("Exported to {Length} formats", formats.Length);
     }
 
     /// <summary>
@@ -141,23 +141,23 @@ public sealed class ExportService
             Directory.CreateDirectory(outputDirectory);
 
             // Export main analysis
-            await ExportAsync(result, Path.Combine(outputDirectory, "analysis.json"), "json");
+            await ExportAsync(result, Path.Combine(outputDirectory, "analysis.json"), "json").ConfigureAwait(false);
 
             // Export HTML report
             var htmlPath = Path.Combine(outputDirectory, "report.html");
-            await ExportAsync(result, htmlPath, "html");
+            await ExportAsync(result, htmlPath, "html").ConfigureAwait(false);
 
             // Export summary
             var summaryPath = Path.Combine(outputDirectory, "summary.txt");
             var summary = GenerateSummary(result);
-            await File.WriteAllTextAsync(summaryPath, summary);
+            await File.WriteAllTextAsync(summaryPath, summary).ConfigureAwait(false);
 
             // Export recommendations
             var recommendationsPath = Path.Combine(outputDirectory, "recommendations.txt");
             var recommendations = GenerateRecommendations(result);
-            await File.WriteAllTextAsync(recommendationsPath, recommendations);
+            await File.WriteAllTextAsync(recommendationsPath, recommendations).ConfigureAwait(false);
 
-            _logger.LogInformation($"Complete export package created in {outputDirectory}");
+            _logger.LogInformation("Complete export package created in {OutputDirectory}", outputDirectory);
         }
         catch (Exception ex)
         {

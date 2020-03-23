@@ -58,7 +58,7 @@ public class ExplainPlanParserTests
         ]";
 
         // Act
-        var result = await _sut.ParsePostgreSqlPlanAsync(postgres17JsonPlan);
+        var result = await _sut.ParsePostgreSqlPlanAsync(postgres17JsonPlan).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -77,7 +77,7 @@ public class ExplainPlanParserTests
         var emptyJsonPlan = @"[]";
 
         // Act
-        var result = await _sut.ParsePostgreSqlPlanAsync(emptyJsonPlan);
+        var result = await _sut.ParsePostgreSqlPlanAsync(emptyJsonPlan).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -96,7 +96,7 @@ public class ExplainPlanParserTests
         var invalidJsonPlan = @"{""invalid""}";
 
         // Act
-        var result = await _sut.ParsePostgreSqlPlanAsync(invalidJsonPlan);
+        var result = await _sut.ParsePostgreSqlPlanAsync(invalidJsonPlan).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();

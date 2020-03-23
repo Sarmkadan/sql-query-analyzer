@@ -34,10 +34,10 @@ public class IndexAnalyzerService : IIndexAnalyzerService
         if (string.IsNullOrWhiteSpace(tableName))
             throw new ArgumentException("Table name must be provided to analyze indexes.", nameof(tableName));
 
-        _logger.LogInformation($"Analyzing indexes for table: {tableName}");
+        _logger.LogInformation("Analyzing indexes for table: {TableName}", tableName);
 
         var suggestions = new List<IndexSuggestion>();
-        var existingIndexes = await _repository.GetIndexesByTableAsync(tableName);
+        var existingIndexes = await _repository.GetIndexesByTableAsync(tableName).ConfigureAwait(false);
 
         // Check for missing indexes on foreign keys
         var fkSuggestion = new IndexSuggestion
@@ -74,7 +74,7 @@ public class IndexAnalyzerService : IIndexAnalyzerService
         {
             suggestion.GenerateCreateScript();
             suggestion.GenerateDropScript();
-            await _repository.SaveSuggestionAsync(suggestion);
+            await _repository.SaveSuggestionAsync(suggestion).ConfigureAwait(false);
         }
 
         return suggestions;
@@ -83,13 +83,13 @@ public class IndexAnalyzerService : IIndexAnalyzerService
     public async Task<List<ModelIndex>> GetFragmentedIndexesAsync()
     {
         _logger.LogInformation("Retrieving fragmented indexes");
-        return await _repository.GetFragmentedIndexesAsync();
+        return await _repository.GetFragmentedIndexesAsync().ConfigureAwait(false);
     }
 
     public async Task<List<ModelIndex>> GetUnusedIndexesAsync()
     {
         _logger.LogInformation("Retrieving unused indexes");
-        return await _repository.GetUnusedIndexesAsync();
+        return await _repository.GetUnusedIndexesAsync().ConfigureAwait(false);
     }
 
     public async Task<IndexHealth> AssessIndexHealthAsync(ModelIndex index)
@@ -114,7 +114,7 @@ public class IndexAnalyzerService : IIndexAnalyzerService
         _logger.LogInformation("Generating index maintenance scripts");
 
         var scripts = new List<string>();
-        var allIndexes = await _repository.GetAllIndexesAsync();
+        var allIndexes = await _repository.GetAllIndexesAsync().ConfigureAwait(false);
 
         // Rebuild highly fragmented indexes
         var rebuildIndexes = allIndexes

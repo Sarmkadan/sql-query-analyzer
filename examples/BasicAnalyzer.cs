@@ -62,8 +62,8 @@ class BasicAnalyzer
 
         foreach (var item in queries)
         {
-            logger.LogInformation($"\n--- Analyzing: {item.Name} ---");
-            await AnalyzeAndReport(analyzer, item.Query, logger);
+            logger.LogInformation("\n--- Analyzing: {Name} ---", item.Name);
+            await AnalyzeAndReport(analyzer, item.Query, logger).ConfigureAwait(false);
         }
 
         logger.LogInformation("\n\nAnalysis complete!");
@@ -76,16 +76,16 @@ class BasicAnalyzer
     {
         try
         {
-            var result = await analyzer.AnalyzeQueryAsync(query);
+            var result = await analyzer.AnalyzeQueryAsync(query).ConfigureAwait(false);
 
             // Display score
-            logger.LogInformation($"Performance Score: {result.PerformanceScore:F1}/100");
-            logger.LogInformation($"Complexity: {result.Complexity}");
+            logger.LogInformation("Performance Score: {PerformanceScore}/100", result.PerformanceScore);
+            logger.LogInformation("Complexity: {Complexity}", result.Complexity);
 
             // Display issues
             if (result.Issues.Count > 0)
             {
-                logger.LogInformation($"\nIssues Found: {result.Issues.Count}");
+                logger.LogInformation("\nIssues Found: {Count}", result.Issues.Count);
 
                 var byServerity = result.Issues
                     .GroupBy(i => i.Severity)
@@ -93,12 +93,12 @@ class BasicAnalyzer
 
                 foreach (var group in byServerity)
                 {
-                    logger.LogWarning($"\n  {group.Key}:");
+                    logger.LogWarning("\n  {Key}:", group.Key);
                     foreach (var issue in group.OrderByDescending(i => i.ImpactScore))
                     {
-                        logger.LogWarning($"    • {issue.IssueType}: {issue.Description}");
-                        logger.LogWarning($"      Fix: {issue.RecommendedFix}");
-                        logger.LogWarning($"      Impact: {issue.ImpactScore}/10");
+                        logger.LogWarning("    • {IssueType}: {Description}", issue.IssueType, issue.Description);
+                        logger.LogWarning("      Fix: {RecommendedFix}", issue.RecommendedFix);
+                        logger.LogWarning("      Impact: {ImpactScore}/10", issue.ImpactScore);
                     }
                 }
             }
@@ -110,15 +110,15 @@ class BasicAnalyzer
             // Display suggestions
             if (result.IndexSuggestions.Count > 0)
             {
-                logger.LogInformation($"\nIndex Suggestions: {result.IndexSuggestions.Count}");
+                logger.LogInformation("\nIndex Suggestions: {Count}", result.IndexSuggestions.Count);
                 foreach (var suggestion in result.IndexSuggestions
                     .OrderByDescending(s => s.Roi)
                     .Take(3))
                 {
-                    logger.LogInformation($"  • {suggestion.SuggestedIndexName}");
+                    logger.LogInformation("  • {SuggestedIndexName}", suggestion.SuggestedIndexName);
                     logger.LogInformation($"    Columns: {string.Join(", ", suggestion.Columns)}");
-                    logger.LogInformation($"    Est. ROI: {suggestion.Roi:F1}%");
-                    logger.LogInformation($"    Est. Size: {suggestion.EstimatedSizeKB} KB");
+                    logger.LogInformation("    Est. ROI: {Roi}%", suggestion.Roi);
+                    logger.LogInformation("    Est. Size: {EstimatedSizeKB} KB", suggestion.EstimatedSizeKB);
                 }
             }
         }

@@ -57,7 +57,7 @@ public class ErrorHandlingMiddleware
                     throw;
                 }
 
-                _logger.LogWarning($"{operationName} failed (transient). Retrying in {_retryDelay.TotalMilliseconds}ms");
+                _logger.LogWarning("{OperationName} failed (transient). Retrying in {TotalMilliseconds}ms", operationName, _retryDelay.TotalMilliseconds);
                 await Task.Delay(_retryDelay);
             }
             catch (AnalysisException ex)
@@ -72,7 +72,7 @@ public class ErrorHandlingMiddleware
             }
         }
 
-        _logger.LogWarning($"{operationName} exhausted retries, returning default value");
+        _logger.LogWarning("{OperationName} exhausted retries, returning default value", operationName);
         return defaultValue!;
     }
 
@@ -189,7 +189,7 @@ public class DegradationStrategy
             }
             catch (Exception degradedEx)
             {
-                _logger.LogError($"Degraded operation also failed: {degradedEx.Message}");
+                _logger.LogError("Degraded operation also failed: {Message}", degradedEx.Message);
                 throw;
             }
         }

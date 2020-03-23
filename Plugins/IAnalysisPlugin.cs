@@ -74,9 +74,9 @@ public sealed class PluginManager
     {
         try
         {
-            await plugin.InitializeAsync();
+            await plugin.InitializeAsync().ConfigureAwait(false);
             _plugins.Add(plugin);
-            _logger.LogInformation($"Plugin registered: {plugin.Name} v{plugin.Version}");
+            _logger.LogInformation("Plugin registered: {Name} v{Version}", plugin.Name, plugin.Version);
         }
         catch (Exception ex)
         {
@@ -93,15 +93,15 @@ public sealed class PluginManager
         var plugin = _plugins.FirstOrDefault(p => p.PluginId == pluginId);
         if (plugin == null)
         {
-            _logger.LogWarning($"Plugin not found: {pluginId}");
+            _logger.LogWarning("Plugin not found: {PluginId}", pluginId);
             return;
         }
 
         try
         {
-            await plugin.ShutdownAsync();
+            await plugin.ShutdownAsync().ConfigureAwait(false);
             _plugins.Remove(plugin);
-            _logger.LogInformation($"Plugin unregistered: {plugin.Name}");
+            _logger.LogInformation("Plugin unregistered: {Name}", plugin.Name);
         }
         catch (Exception ex)
         {
@@ -120,8 +120,8 @@ public sealed class PluginManager
         {
             try
             {
-                _logger.LogDebug($"Processing through plugin: {plugin.Name}");
-                current = await plugin.ProcessAsync(current);
+                _logger.LogDebug("Processing through plugin: {Name}", plugin.Name);
+                current = await plugin.ProcessAsync(current).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

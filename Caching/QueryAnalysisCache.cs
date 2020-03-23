@@ -54,7 +54,7 @@ public sealed class QueryAnalysisCache
                 if (DateTime.UtcNow - entry.CreatedAt > _entryTtl)
                 {
                     _cache.Remove(key);
-                    _logger.LogDebug($"Cache entry expired: {key}");
+                    _logger.LogDebug("Cache entry expired: {Key}", key);
                     return false;
                 }
 
@@ -63,11 +63,11 @@ public sealed class QueryAnalysisCache
                 entry.AccessCount++;
 
                 result = entry.Result;
-                _logger.LogDebug($"Cache hit for query. Key: {key}");
+                _logger.LogDebug("Cache hit for query. Key: {Key}", key);
                 return true;
             }
 
-            _logger.LogDebug($"Cache miss for query. Key: {key}");
+            _logger.LogDebug("Cache miss for query. Key: {Key}", key);
         }
         catch (Exception ex)
         {
@@ -108,7 +108,7 @@ public sealed class QueryAnalysisCache
             };
 
             _cache[key] = entry;
-            _logger.LogDebug($"Cached analysis result. Key: {key}, Size: {_cache.Count}/{_maxEntries}");
+            _logger.LogDebug("Cached analysis result. Key: {Key}, Size: {Count}/{_maxEntries}", key, _cache.Count, _maxEntries);
         }
         catch (Exception ex)
         {
@@ -126,7 +126,7 @@ public sealed class QueryAnalysisCache
             var key = _keyGenerator.GenerateQueryKey(query);
             if (_cache.Remove(key))
             {
-                _logger.LogDebug($"Cache invalidated for query. Key: {key}");
+                _logger.LogDebug("Cache invalidated for query. Key: {Key}", key);
             }
         }
         catch (Exception ex)
@@ -142,7 +142,7 @@ public sealed class QueryAnalysisCache
     {
         var count = _cache.Count;
         _cache.Clear();
-        _logger.LogInformation($"Cache cleared. {count} entries removed.");
+        _logger.LogInformation("Cache cleared. {Count} entries removed.", count);
     }
 
     /// <summary>
@@ -163,7 +163,7 @@ public sealed class QueryAnalysisCache
 
         if (keysToRemove.Count > 0)
         {
-            _logger.LogDebug($"Removed {keysToRemove.Count} expired cache entries");
+            _logger.LogDebug("Removed {Count} expired cache entries", keysToRemove.Count);
         }
     }
 
@@ -202,7 +202,7 @@ public sealed class QueryAnalysisCache
             .First();
 
         _cache.Remove(lruEntry.Key);
-        _logger.LogDebug($"Evicted LRU cache entry: {lruEntry.Key}");
+        _logger.LogDebug("Evicted LRU cache entry: {Key}", lruEntry.Key);
     }
 
     /// <summary>

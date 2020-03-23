@@ -68,7 +68,7 @@ public sealed class ValidationRuleEngine
     public void RegisterRule(IValidationRule rule)
     {
         _rules.Add(rule);
-        _logger.LogDebug($"Registered validation rule: {rule.Name}");
+        _logger.LogDebug("Registered validation rule: {Name}", rule.Name);
     }
 
     /// <summary>

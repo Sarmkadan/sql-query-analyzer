@@ -70,7 +70,7 @@ public class SqlServerConfiguration : IConnectionConfiguration
         {
             using (var connection = new System.Data.SqlClient.SqlConnection(ConnectionString))
             {
-                await connection.OpenAsync();
+                await connection.OpenAsync().ConfigureAwait(false);
                 return connection.State == System.Data.ConnectionState.Open;
             }
         }
@@ -86,7 +86,7 @@ public class SqlServerConfiguration : IConnectionConfiguration
         {
             using (var connection = new System.Data.SqlClient.SqlConnection(ConnectionString))
             {
-                await connection.OpenAsync();
+                await connection.OpenAsync().ConfigureAwait(false);
 
                 var initSql = @"
                     IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'QueryAnalyses')
@@ -103,7 +103,7 @@ public class SqlServerConfiguration : IConnectionConfiguration
 
                 using (var cmd = new System.Data.SqlClient.SqlCommand(initSql, connection))
                 {
-                    await cmd.ExecuteNonQueryAsync();
+                    await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }
 
                 return true;
@@ -154,7 +154,7 @@ public class PostgresConfiguration : IConnectionConfiguration
         {
             using (var connection = new Npgsql.NpgsqlConnection(ConnectionString))
             {
-                await connection.OpenAsync();
+                await connection.OpenAsync().ConfigureAwait(false);
                 return connection.State == System.Data.ConnectionState.Open;
             }
         }
@@ -170,7 +170,7 @@ public class PostgresConfiguration : IConnectionConfiguration
         {
             using (var connection = new Npgsql.NpgsqlConnection(ConnectionString))
             {
-                await connection.OpenAsync();
+                await connection.OpenAsync().ConfigureAwait(false);
 
                 var initSql = @"
                     CREATE TABLE IF NOT EXISTS query_analyses (
@@ -184,7 +184,7 @@ public class PostgresConfiguration : IConnectionConfiguration
 
                 using (var cmd = new Npgsql.NpgsqlCommand(initSql, connection))
                 {
-                    await cmd.ExecuteNonQueryAsync();
+                    await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }
 
                 return true;

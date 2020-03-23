@@ -48,7 +48,7 @@ public class BatchAnalysisProcessor
 
         _progressReporter = onProgress != null ? new Progress<BatchProgress>(onProgress) : null;
 
-        _logger.LogInformation($"Starting batch analysis of {queries.Length} queries with {_maxParallel} threads");
+        _logger.LogInformation("Starting batch analysis of {Length} queries with {_maxParallel} threads", queries.Length, _maxParallel);
 
         var results = new QueryAnalysisResult[queries.Length];
         var options = new ParallelOptions
@@ -72,7 +72,7 @@ public class BatchAnalysisProcessor
                         var query = queries[index];
                         _logger.LogDebug($"Analyzing query {index + 1}/{queries.Length}");
 
-                        results[index] = await _analyzerService.AnalyzeQueryAsync(query);
+                        results[index] = await _analyzerService.AnalyzeQueryAsync(query).ConfigureAwait(false);
 
                         lock (lockObj)
                         {
@@ -113,7 +113,7 @@ public class BatchAnalysisProcessor
         }
 
         var finalResults = results.Where(r => r != null).ToList();
-        _logger.LogInformation($"Batch analysis complete. {finalResults.Count}/{queries.Length} successful");
+        _logger.LogInformation("Batch analysis complete. {Count}/{Length} successful", finalResults.Count, queries.Length);
 
         return finalResults;
     }
@@ -131,12 +131,12 @@ public class BatchAnalysisProcessor
             throw new FileNotFoundException($"Query file not found: {filePath}");
         }
 
-        var queries = await File.ReadAllLinesAsync(filePath, cancellationToken);
+        var queries = await File.ReadAllLinesAsync(filePath, cancellationToken).ConfigureAwait(false);
         var validQueries = queries.Where(q => !string.IsNullOrWhiteSpace(q)).ToArray();
 
-        _logger.LogInformation($"Loaded {validQueries.Length} queries from {filePath}");
+        _logger.LogInformation("Loaded {Length} queries from {FilePath}", validQueries.Length, filePath);
 
-        return await AnalyzeBatchAsync(validQueries, onProgress, cancellationToken);
+        return await AnalyzeBatchAsync(validQueries, onProgress, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -145,7 +145,7 @@ public class BatchAnalysisProcessor
     public void SetMaxParallel(int maxParallel)
     {
         _maxParallel = Math.Max(1, Math.Min(maxParallel, Environment.ProcessorCount * 2));
-        _logger.LogDebug($"Max parallel threads set to {_maxParallel}");
+        _logger.LogDebug("Max parallel threads set to {_maxParallel}", _maxParallel);
     }
 
     /// <summary>
@@ -162,16 +162,16 @@ public class BatchAnalysisProcessor
             throw new FileNotFoundException($"Query file not found: {filePath}");
         }
 
-        var content = await File.ReadAllTextAsync(filePath, cancellationToken);
+        var content = await File.ReadAllTextAsync(filePath, cancellationToken).ConfigureAwait(false);
         var queries = content
             .Split(new[] { delimiter }, StringSplitOptions.RemoveEmptyEntries)
             .Select(q => q.Trim())
             .Where(q => !string.IsNullOrWhiteSpace(q))
             .ToArray();
 
-        _logger.LogInformation($"Extracted {queries.Length} queries from {filePath} (delimiter: {delimiter})");
+        _logger.LogInformation("Extracted {Length} queries from {FilePath} (delimiter: {Delimiter})", queries.Length, filePath, delimiter);
 
-        return await AnalyzeBatchAsync(queries, onProgress, cancellationToken);
+        return await AnalyzeBatchAsync(queries, onProgress, cancellationToken).ConfigureAwait(false);
     }
 }
 

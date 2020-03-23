@@ -46,23 +46,23 @@ public partial class PerformanceIssueDetectorService : IPerformanceIssueDetector
 
     public async Task<List<PerformanceIssue>> DetectIssuesAsync(DatabaseQuery query)
     {
-        _logger.LogInformation($"Detecting issues in query: {query.QueryId}");
+        _logger.LogInformation("Detecting issues in query: {QueryId}", query.QueryId);
 
         var issues = new List<PerformanceIssue>();
 
         // Private helpers are synchronous — no awaiting overhead for in-process work.
         issues.AddRange(DetectSelectStarIssues(query));
-        issues.AddRange(await DetectJoinIssuesAsync(query));
+        issues.AddRange(await DetectJoinIssuesAsync(query)).ConfigureAwait(false);
         issues.AddRange(DetectLeadingWildcardIssues(query));
         issues.AddRange(DetectFunctionOnColumnIssues(query));
-        issues.AddRange(await DetectIndexOpportunitiesAsync(query));
+        issues.AddRange(await DetectIndexOpportunitiesAsync(query)).ConfigureAwait(false);
         issues.AddRange(DetectImplicitConversionIssues(query));
 
         issues = issues.OrderByDescending(i => i.Severity)
                        .ThenByDescending(i => i.EstimatedPerformanceImpact)
                        .ToList();
 
-        _logger.LogInformation($"Found {issues.Count} performance issues");
+        _logger.LogInformation("Found {Count} performance issues", issues.Count);
 
         return issues;
     }
@@ -72,7 +72,7 @@ public partial class PerformanceIssueDetectorService : IPerformanceIssueDetector
         if (queries == null)
             throw new ArgumentNullException(nameof(queries), "The query collection provided for N+1 detection must not be null.");
 
-        _logger.LogInformation($"Detecting N+1 query patterns in {queries.Count} queries");
+        _logger.LogInformation("Detecting N+1 query patterns in {Count} queries", queries.Count);
 
         var issues = new List<PerformanceIssue>();
 

@@ -101,12 +101,12 @@ public class QueryAnalyzerService : IQueryAnalyzerService
     {
         var query = new DatabaseQuery { QueryText = queryText };
         query.Parse();
-        return await AnalyzeQueryAsync(query);
+        return await AnalyzeQueryAsync(query).ConfigureAwait(false);
     }
 
     public async Task<QueryAnalysisResult> AnalyzeQueryAsync(DatabaseQuery query)
     {
-        _logger.LogInformation($"Analyzing query: {query.QueryId}");
+        _logger.LogInformation("Analyzing query: {QueryId}", query.QueryId);
 
         var result = new QueryAnalysisResult
         {
@@ -122,22 +122,22 @@ public class QueryAnalyzerService : IQueryAnalyzerService
 
         try
         {
-            result.Issues = await _issueDetector.DetectIssuesAsync(query);
+            result.Issues = await _issueDetector.DetectIssuesAsync(query).ConfigureAwait(false);
 
             if (query.ReferencedTables.Count > 0)
             {
                 foreach (var table in query.ReferencedTables)
                 {
-                    var suggestions = await _indexAnalyzer.AnalyzeIndexesAsync(table);
+                    var suggestions = await _indexAnalyzer.AnalyzeIndexesAsync(table).ConfigureAwait(false);
                     result.IndexSuggestions.AddRange(suggestions);
                 }
             }
 
-            result.PerformanceScore = await CalculatePerformanceScoreAsync(result);
+            result.PerformanceScore = await CalculatePerformanceScoreAsync(result).ConfigureAwait(false);
             result.EstimatedExecutionTime = EstimateExecutionTime(result);
 
-            await _repository.SaveAnalysisAsync(result);
-            _logger.LogInformation($"Analysis completed. Score: {result.PerformanceScore:F1}/100");
+            await _repository.SaveAnalysisAsync(result).ConfigureAwait(false);
+            _logger.LogInformation("Analysis completed. Score: {PerformanceScore}/100", result.PerformanceScore);
         }
         catch (Exception ex)
         {

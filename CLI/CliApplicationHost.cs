@@ -57,7 +57,7 @@ public class CliApplicationHost
             _logger.LogInformation("SQL Query Analyzer initialized with CLI arguments");
 
             // Read query from file or use provided query
-            string queryText = await GetQueryTextAsync(args);
+            string queryText = await GetQueryTextAsync(args).ConfigureAwait(false);
             if (string.IsNullOrEmpty(queryText))
             {
                 _logger.LogError("No query provided");
@@ -66,12 +66,12 @@ public class CliApplicationHost
 
             // Run through pipeline
             var context = new AnalysisContext { Query = queryText, Arguments = args };
-            await _pipeline.ExecuteAsync(context);
+            await _pipeline.ExecuteAsync(context).ConfigureAwait(false);
 
             // Format and output results
             if (context.Result != null)
             {
-                await OutputResultsAsync(context.Result, args);
+                await OutputResultsAsync(context.Result, args).ConfigureAwait(false);
             }
 
             _logger.LogInformation("Analysis completed successfully");
@@ -79,7 +79,7 @@ public class CliApplicationHost
         }
         catch (ArgumentException ex)
         {
-            _logger.LogError($"Invalid arguments: {ex.Message}");
+            _logger.LogError("Invalid arguments: {Message}", ex.Message);
             Console.WriteLine($"Error: {ex.Message}");
             Console.WriteLine("Use --help for usage information");
             return 2;
@@ -112,7 +112,7 @@ public class CliApplicationHost
                 throw new FileNotFoundException($"Query file not found: {args.QueryFile}");
             }
 
-            return await File.ReadAllTextAsync(args.QueryFile);
+            return await File.ReadAllTextAsync(args.QueryFile).ConfigureAwait(false);
         }
 
         return string.Empty;
@@ -128,8 +128,8 @@ public class CliApplicationHost
 
         if (!string.IsNullOrEmpty(args.OutputPath))
         {
-            await File.WriteAllTextAsync(args.OutputPath, output);
-            _logger.LogInformation($"Results written to {args.OutputPath}");
+            await File.WriteAllTextAsync(args.OutputPath, output).ConfigureAwait(false);
+            _logger.LogInformation("Results written to {OutputPath}", args.OutputPath);
         }
         else
         {
@@ -141,8 +141,8 @@ public class CliApplicationHost
         {
             var reportPath = Path.ChangeExtension(args.OutputPath ?? "analysis_report.html", ".html");
             var reportContent = GenerateHtmlReport(result);
-            await File.WriteAllTextAsync(reportPath, reportContent);
-            _logger.LogInformation($"Report generated: {reportPath}");
+            await File.WriteAllTextAsync(reportPath, reportContent).ConfigureAwait(false);
+            _logger.LogInformation("Report generated: {ReportPath}", reportPath);
         }
     }
 

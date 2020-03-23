@@ -45,12 +45,12 @@ public class DatabaseConnectionValidator
                 return result;
             }
 
-            _logger.LogDebug($"Connection string format valid for {databaseType}");
+            _logger.LogDebug("Connection string format valid for {DatabaseType}", databaseType);
 
             // Test actual connection if requested
             if (testConnection)
             {
-                var connectionTest = await TestDatabaseConnectionAsync(connectionString, databaseType);
+                var connectionTest = await TestDatabaseConnectionAsync(connectionString, databaseType).ConfigureAwait(false);
                 if (!connectionTest.Success)
                 {
                     result.IsValid = false;
@@ -110,7 +110,7 @@ public class DatabaseConnectionValidator
         {
             // Note: In production, use actual database connection
             // For now, returning simulated result
-            _logger.LogInformation($"Testing {databaseType} connection");
+            _logger.LogInformation("Testing {DatabaseType} connection", databaseType);
 
             // Simulate connection test with timeout
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
@@ -151,7 +151,7 @@ public class DatabaseConnectionValidator
         {
             // In actual implementation, create real SqlConnection
             // For now, simulate successful connection
-            await Task.Delay(100, ct);
+            await Task.Delay(100, ct).ConfigureAwait(false);
             result.DatabaseVersion = "SQL Server 2019";
             result.Success = true;
 
@@ -174,7 +174,7 @@ public class DatabaseConnectionValidator
 
         try
         {
-            await Task.Delay(100, ct);
+            await Task.Delay(100, ct).ConfigureAwait(false);
             result.DatabaseVersion = "PostgreSQL 13";
             result.Success = true;
 
@@ -197,7 +197,7 @@ public class DatabaseConnectionValidator
 
         try
         {
-            await Task.Delay(100, ct);
+            await Task.Delay(100, ct).ConfigureAwait(false);
             result.DatabaseVersion = "MySQL 8.0";
             result.Success = true;
 

@@ -62,11 +62,11 @@ public class HttpQueryAnalysisClient
                     System.Text.Encoding.UTF8,
                     "application/json");
 
-                var response = await _httpClient.PostAsync("/api/analyze", content);
+                var response = await _httpClient.PostAsync("/api/analyze", content).ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    var jsonContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     _logger.LogInformation("Remote analysis completed successfully");
                     return ParseAnalysisResponse(jsonContent);
                 }
@@ -79,23 +79,23 @@ public class HttpQueryAnalysisClient
                     if (attempt < maxRetries)
                     {
                         var delayMs = backoffMs * (int)Math.Pow(2, attempt - 1);
-                        _logger.LogWarning($"Remote service unavailable. Retrying in {delayMs}ms");
-                        await Task.Delay(delayMs);
+                        _logger.LogWarning("Remote service unavailable. Retrying in {DelayMs}ms", delayMs);
+                        await Task.Delay(delayMs).ConfigureAwait(false);
                         continue;
                     }
                 }
 
-                _logger.LogError($"Remote analysis failed: {response.StatusCode}");
+                _logger.LogError("Remote analysis failed: {StatusCode}", response.StatusCode);
                 return null;
             }
             catch (HttpRequestException ex)
             {
-                _logger.LogWarning($"HTTP request failed: {ex.Message}");
+                _logger.LogWarning("HTTP request failed: {Message}", ex.Message);
                 attempt++;
 
                 if (attempt < maxRetries)
                 {
-                    await Task.Delay(backoffMs * attempt);
+                    await Task.Delay(backoffMs * attempt).ConfigureAwait(false);
                     continue;
                 }
 
@@ -103,7 +103,7 @@ public class HttpQueryAnalysisClient
             }
             catch (TaskCanceledException ex)
             {
-                _logger.LogError($"Remote analysis timed out after {_timeoutSeconds}s");
+                _logger.LogError("Remote analysis timed out after {_timeoutSeconds}s", _timeoutSeconds);
                 throw;
             }
         }
@@ -119,7 +119,7 @@ public class HttpQueryAnalysisClient
     {
         try
         {
-            _logger.LogInformation($"Sending {queries.Length} queries for batch analysis");
+            _logger.LogInformation("Sending {Length} queries for batch analysis", queries.Length);
 
             var request = new BatchAnalysisRequest { Queries = queries };
             var content = new StringContent(
@@ -127,15 +127,15 @@ public class HttpQueryAnalysisClient
                 System.Text.Encoding.UTF8,
                 "application/json");
 
-            var response = await _httpClient.PostAsync("/api/analyze/batch", content);
+            var response = await _httpClient.PostAsync("/api/analyze/batch", content).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
-                var jsonContent = await response.Content.ReadAsStringAsync();
+                var jsonContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return ParseBatchAnalysisResponse(jsonContent);
             }
 
-            _logger.LogError($"Batch analysis failed: {response.StatusCode}");
+            _logger.LogError("Batch analysis failed: {StatusCode}", response.StatusCode);
             return new List<QueryAnalysisResult>();
         }
         catch (Exception ex)
@@ -152,7 +152,7 @@ public class HttpQueryAnalysisClient
     {
         try
         {
-            var response = await _httpClient.GetAsync("/health");
+            var response = await _httpClient.GetAsync("/health").ConfigureAwait(false);
             var isHealthy = response.IsSuccessStatusCode;
 
             _logger.LogDebug($"Remote service health: {(isHealthy ? "Healthy" : "Unhealthy")}");
@@ -160,7 +160,7 @@ public class HttpQueryAnalysisClient
         }
         catch (Exception ex)
         {
-            _logger.LogWarning($"Failed to check remote service health: {ex.Message}");
+            _logger.LogWarning("Failed to check remote service health: {Message}", ex.Message);
             return false;
         }
     }
@@ -172,17 +172,17 @@ public class HttpQueryAnalysisClient
     {
         try
         {
-            var response = await _httpClient.GetAsync("/api/version");
+            var response = await _httpClient.GetAsync("/api/version").ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadAsStringAsync();
+                return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
 
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning($"Failed to get remote version: {ex.Message}");
+            _logger.LogWarning("Failed to get remote version: {Message}", ex.Message);
             return null;
         }
     }
