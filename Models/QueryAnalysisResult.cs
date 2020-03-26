@@ -7,6 +7,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using SqlQueryAnalyzer.Constants;
+using SqlQueryAnalyzer.Scoring;
 
 namespace SqlQueryAnalyzer.Models;
 
@@ -26,6 +27,12 @@ public sealed class QueryAnalysisResult
     public List<IndexSuggestion> IndexSuggestions { get; set; } = [];
     public QueryPlan? ExecutionPlan { get; set; }
     public QueryStatistics Statistics { get; set; } = new();
+
+    /// <summary>
+    /// Overall complexity score computed by <see cref="Scoring.QueryComplexityScorer"/>.
+    /// Higher values indicate queries that are more costly to optimize.
+    /// </summary>
+    public int ComplexityScore => QueryComplexityScorer.ComputeScore(this);
 
     // Calculate if query has critical issues
     public bool HasCriticalIssues => Issues.Any(i => i.Severity == IssueSeverity.Critical);
@@ -59,6 +66,7 @@ public sealed class QueryAnalysisResult
             { "issueCount", Issues.Count },
             { "indexSuggestions", IndexSuggestions.Count },
             { "hasCriticalIssues", HasCriticalIssues },
-            { "optimizationPotential", TotalOptimizationPotential }
+            { "optimizationPotential", TotalOptimizationPotential },
+            { "complexityScore", ComplexityScore }
         };
 }
