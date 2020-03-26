@@ -448,7 +448,111 @@ ANALYZER_LOG_LEVEL=Debug dotnet run
 
 ---
 
-## Contributing & Support
+## Integration with Entity Framework Core
+
+### Q: How do I integrate the analyzer with EF Core interceptors on .NET 8+?
+
+**A:** Use EF Core's `DbCommandInterceptor` to capture every SQL command and
+pass its text to the analyzer. Below is a complete, minimal example for an
+ASP.NET Core Web API project using EF Core 8 with SQL Server.
+
+**1. Install the analyzer package**
+
+```bash
+dotnet add package SqlQueryAnalyzer
+```
+
+**2. Implement the interceptor**
+
+```csharp
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Data.SqlClient;
+using SqlQueryAnalyzer.Models;
+using SqlQueryAnalyzer.Services;
+
+public sealed class QueryAnalysisInterceptor : DbCommandInterceptor
+{
+    private readonly IQueryAnalyzerService _analyzer;
+    private readonly ILogger<QueryAnalysisInterceptor> _logger;
+
+    public QueryAnalysisInterceptor(
+        IQueryAnalyzerService analyzer,
+        ILogger<QueryAnalysisInterceptor> logger)
+    {
+        _analyzer = analyzer;
+        _logger = logger;
+    }
+
+    public override async ValueTask<DbDataReader> ReaderExecutedAsync(
+        DbCommand command,
+        CommandExecutedEventData eventData,
+        DbDataReader result,
+        CancellationToken cancellationToken = default)
+    {
+        await AnalyzeAsync(command.CommandText, cancellationToken);
+        return result;
+    }
+
+    public override async ValueTask<int> NonQueryExecutedAsync(
+        DbCommand command,
+        CommandExecutedEventData eventData,
+        int result,
+        CancellationToken cancellationToken = default)
+    {
+        await AnalyzeAsync(command.CommandText, cancellationToken);
+        return result;
+    }
+
+    private async Task AnalyzeAsync(string sql, CancellationToken ct)
+    {
+        try
+        {
+            var query = new DatabaseQuery
+            {
+                QueryText = sql,
+                DatabaseType = DatabaseType.SqlServer
+            };
+            query.Parse();
+
+            var result = await _analyzer.AnalyzeQueryAsync(query);
+
+            foreach (var issue in result.Issues.Where(i =>
+                i.Severity >= IssueSeverity.Warning))
+            {
+                _logger.LogWarning(
+                    "[SqlQueryAnalyzer] {Severity} {IssueType}: {Description}",
+                    issue.Severity, issue.IssueType, issue.Description);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "QueryAnalysisInterceptor: analysis failed silently");
+        }
+    }
+}
+```
+
+**3. Register the interceptor in `Program.cs`**
+
+```csharp
+builder.Services.AddScoped<QueryAnalysisInterceptor>();
+
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default"))
+           .AddInterceptors(sp.GetRequiredService<QueryAnalysisInterceptor>()));
+```
+
+**Tips**:
+
+- Keep analysis fire-and-forget in production; wrap the call in
+  `Task.Run(...).ConfigureAwait(false)` and do not `await` it on the hot path.
+- Use `Analysis.IgnorePatterns` in `analyzer.json` to suppress EF Core
+  migration queries and known false positives (see the
+  [Troubleshooting guide](troubleshooting.md#false-positives-and-tuning)).
+- For high-traffic APIs, enable caching (`Cache.Enabled: true`) so identical
+  normalized queries are not re-analyzed on every request.
+
+
 
 ### Q: How do I report a bug?
 
