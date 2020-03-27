@@ -33,9 +33,8 @@ public static class QueryValidator
     // Validate database query object
     public static void ValidateDatabaseQuery(DatabaseQuery query)
     {
-        // Fix: Use Argument exceptions instead of generic ValidationException
         if (query == null)
-            throw new ArgumentNullException(nameof(query), "Database query object cannot be null.");
+            throw new ValidationException("Database query object cannot be null.", nameof(query));
 
         if (string.IsNullOrWhiteSpace(query.QueryText))
             throw new ArgumentException("Database query text cannot be empty.", nameof(query.QueryText));
@@ -71,7 +70,7 @@ public static class QueryValidator
     }
 
     // Validate index
-    public static void ValidateIndex(Index index)
+    public static void ValidateIndex(ModelIndex index)
     {
         if (index == null)
             throw new ValidationException("Index cannot be null", "Index");
@@ -157,7 +156,9 @@ public static class QueryValidator
         var displayText = query.Replace("\r\n", " ").Replace("\n", " ").Replace("\t", " ");
 
         if (displayText.Length > maxLength)
-            displayText = displayText.Substring(0, maxLength) + "...";
+            displayText = maxLength <= 3
+                ? displayText.Substring(0, maxLength)
+                : displayText.Substring(0, maxLength - 3) + "...";
 
         return displayText;
     }

@@ -18,6 +18,12 @@ public sealed class QueryAnalysisResult
 {
     public string QueryId { get; set; } = Guid.NewGuid().ToString();
     public string Query { get; set; } = string.Empty;
+    public string QueryText
+    {
+        get => Query;
+        set => Query = value;
+    }
+
     public DateTime AnalyzedAt { get; set; } = DateTime.UtcNow;
     public QueryComplexity Complexity { get; set; } = QueryComplexity.Medium;
     public double PerformanceScore { get; set; } // 0-100, higher is better
@@ -27,6 +33,7 @@ public sealed class QueryAnalysisResult
     public List<IndexSuggestion> IndexSuggestions { get; set; } = [];
     public QueryPlan? ExecutionPlan { get; set; }
     public QueryStatistics Statistics { get; set; } = new();
+    public Dictionary<string, object> Metadata { get; set; } = [];
 
     /// <summary>
     /// Overall complexity score computed by <see cref="Scoring.QueryComplexityScorer"/>.

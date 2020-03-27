@@ -96,7 +96,7 @@ public sealed class QueryPlan
 
     // Detect missing indexes based on plan
     public List<string> DetectMissingIndexes() =>
-        TableScans.Where(ts => !string.IsNullOrEmpty(ts.ObjectName))
+        GetTableScans().Where(ts => !string.IsNullOrEmpty(ts.ObjectName))
             .Select(ts => $"Consider adding index on {ts.ObjectName}")
             .ToList();
 
