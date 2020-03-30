@@ -30,6 +30,9 @@ public class CommandLineArguments
     public int? MaxResults { get; set; }
     public bool EnableCache { get; set; } = true;
     public string? CachePath { get; set; }
+    public string? SlowLogFile { get; set; }
+    public string SlowLogFormat { get; set; } = "mysql";
+    public bool ParseSlowLog { get; set; }
     public bool ShowHelp { get; set; }
     public bool ShowVersion { get; set; }
 
