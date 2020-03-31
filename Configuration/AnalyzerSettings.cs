@@ -264,7 +264,8 @@ public class IndexSeverityThresholds
 /// <summary>
 /// Factory for creating settings instances.
 /// Encapsulates configuration loading logic.
-/// </summary>public static class AnalyzerSettingsFactory
+/// </summary>
+public static class AnalyzerSettingsFactory
 {
     /// <summary>
     /// Creates settings with sensible defaults.
