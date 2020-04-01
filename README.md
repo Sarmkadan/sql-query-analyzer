@@ -319,6 +319,14 @@ Key test files:
 
 ## Usage Examples
 
+For practical code snippets, check the files in the `/examples` directory:
+
+- [BasicUsage.cs](./examples/BasicUsage.cs): Minimal setup and first call.
+- [AdvancedUsage.cs](./examples/AdvancedUsage.cs): Configuration, custom options, error handling.
+- [IntegrationExample.cs](./examples/IntegrationExample.cs): ASP.NET DI integration.
+
+The following examples provide more detail:
+
 ### Example 1: Analyze a Single Query
 
 ```csharp
