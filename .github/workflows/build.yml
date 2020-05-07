@@ -1,0 +1,86 @@
+# =============================================================================
+# Author: Vladyslav Zaiets | https://sarmkadan.com
+# CTO & Software Architect
+# =============================================================================
+
+name: Build & Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code
+      - uses: actions/checkout@v4
+
+      # Setup .NET 10
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Build release
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      # Run tests
+      - name: Run tests
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+      # Code analysis
+      - name: Code formatting check
+        run: dotnet format --verify-no-changes --verbosity diagnostic
+
+      # Publish artifacts
+      - name: Publish
+        run: dotnet publish --configuration Release --no-build -o ./publish
+
+      # Upload artifacts
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sql-query-analyzer-release
+          path: ./publish
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t sql-query-analyzer:latest .
+
+      - name: Test Docker image
+        run: docker run --rm sql-query-analyzer:latest --version
+
+  sonarcloud:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: SonarCloud analysis
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
