@@ -52,6 +52,10 @@ public class PerformanceIssueDetectorService : IPerformanceIssueDetectorService
 
     public async Task<List<PerformanceIssue>> DetectNPlusOneAsync(List<DatabaseQuery> queries)
     {
+        // Fix: Handle null query collection edge case properly instead of crashing
+        if (queries == null)
+            throw new ArgumentNullException(nameof(queries), "The query collection provided for N+1 detection must not be null.");
+
         _logger.LogInformation($"Detecting N+1 query patterns in {queries.Count} queries");
 
         var issues = new List<PerformanceIssue>();
