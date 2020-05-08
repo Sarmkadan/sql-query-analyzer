@@ -3,8 +3,15 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using SqlQueryAnalyzer.Constants;
 using SqlQueryAnalyzer.Models;
+using SqlQueryAnalyzer.Repositories;
+// Alias avoids CS0104 ambiguity with System.Index (range operator struct, .NET 5+).
+using ModelIndex = SqlQueryAnalyzer.Models.Index;
 
 namespace SqlQueryAnalyzer.Services;
 
@@ -15,8 +22,10 @@ public interface IQueryAnalyzerService
 {
     Task<QueryAnalysisResult> AnalyzeQueryAsync(string queryText);
     Task<QueryAnalysisResult> AnalyzeQueryAsync(DatabaseQuery query);
-    Task<double> CalculatePerformanceScoreAsync(QueryAnalysisResult analysis);
-    Task<QueryComplexity> DetermineComplexityAsync(DatabaseQuery query);
+
+    // ValueTask avoids Task allocation on the synchronous (hot) path.
+    ValueTask<double> CalculatePerformanceScoreAsync(QueryAnalysisResult analysis);
+    ValueTask<QueryComplexity> DetermineComplexityAsync(DatabaseQuery query);
 }
 
 /// <summary>
@@ -25,9 +34,9 @@ public interface IQueryAnalyzerService
 public interface IIndexAnalyzerService
 {
     Task<List<IndexSuggestion>> AnalyzeIndexesAsync(string tableName);
-    Task<List<Index>> GetFragmentedIndexesAsync();
-    Task<List<Index>> GetUnusedIndexesAsync();
-    Task<IndexHealth> AssessIndexHealthAsync(Index index);
+    Task<List<ModelIndex>> GetFragmentedIndexesAsync();
+    Task<List<ModelIndex>> GetUnusedIndexesAsync();
+    Task<IndexHealth> AssessIndexHealthAsync(ModelIndex index);
     Task<List<string>> GenerateMaintenanceScriptsAsync();
 }
 
@@ -47,9 +56,11 @@ public interface IQueryPlanAnalyzerService
 public interface IPerformanceIssueDetectorService
 {
     Task<List<PerformanceIssue>> DetectIssuesAsync(DatabaseQuery query);
-    Task<List<PerformanceIssue>> DetectNPlusOneAsync(List<DatabaseQuery> queries);
-    Task<List<PerformanceIssue>> DetectJoinIssuesAsync(DatabaseQuery query);
-    Task<List<PerformanceIssue>> DetectIndexOpportunitiesAsync(DatabaseQuery query);
+
+    // These methods complete synchronously; ValueTask avoids the Task allocation.
+    ValueTask<List<PerformanceIssue>> DetectNPlusOneAsync(List<DatabaseQuery> queries);
+    ValueTask<List<PerformanceIssue>> DetectJoinIssuesAsync(DatabaseQuery query);
+    ValueTask<List<PerformanceIssue>> DetectIndexOpportunitiesAsync(DatabaseQuery query);
 }
 
 /// <summary>
@@ -110,10 +121,8 @@ public class QueryAnalyzerService : IQueryAnalyzerService
 
         try
         {
-            // Detect issues
             result.Issues = await _issueDetector.DetectIssuesAsync(query);
 
-            // Get index suggestions
             if (query.ReferencedTables.Count > 0)
             {
                 foreach (var table in query.ReferencedTables)
@@ -123,10 +132,7 @@ public class QueryAnalyzerService : IQueryAnalyzerService
                 }
             }
 
-            // Calculate performance score
             result.PerformanceScore = await CalculatePerformanceScoreAsync(result);
-
-            // Estimate execution time
             result.EstimatedExecutionTime = EstimateExecutionTime(result);
 
             await _repository.SaveAnalysisAsync(result);
@@ -141,64 +147,56 @@ public class QueryAnalyzerService : IQueryAnalyzerService
         return result;
     }
 
-    public Task<double> CalculatePerformanceScoreAsync(QueryAnalysisResult analysis)
+    // ValueTask.FromResult avoids a heap allocation when the result is already known.
+    public ValueTask<double> CalculatePerformanceScoreAsync(QueryAnalysisResult analysis)
     {
         var score = 100.0;
 
-        // Deduct for critical issues
-        score -= analysis.Issues.Count(i => i.Severity == Constants.IssueSeverity.Critical) * 10;
+        score -= analysis.Issues.Count(i => i.Severity == IssueSeverity.Critical) * 10;
+        score -= analysis.Issues.Count(i => i.Severity == IssueSeverity.Warning) * 5;
+        score -= analysis.Issues.Count(i => i.Severity == IssueSeverity.Info) * 2;
 
-        // Deduct for warnings
-        score -= analysis.Issues.Count(i => i.Severity == Constants.IssueSeverity.Warning) * 5;
-
-        // Deduct for info issues
-        score -= analysis.Issues.Count(i => i.Severity == Constants.IssueSeverity.Info) * 2;
-
-        // Bonus for optimization potential
         score += analysis.TotalOptimizationPotential * 0.1;
 
-        return Task.FromResult(Math.Max(0, Math.Min(100, score)));
+        return ValueTask.FromResult(Math.Max(0, Math.Min(100, score)));
     }
 
-    public Task<QueryComplexity> DetermineComplexityAsync(DatabaseQuery query)
+    public ValueTask<QueryComplexity> DetermineComplexityAsync(DatabaseQuery query)
     {
-        var complexity = Constants.QueryComplexity.Simple;
+        var complexity = QueryComplexity.Simple;
 
         if (query.LineCount > 50)
-            complexity = Constants.QueryComplexity.VeryHigh;
+            complexity = QueryComplexity.VeryHigh;
         else if (query.LineCount > 30)
-            complexity = Constants.QueryComplexity.High;
+            complexity = QueryComplexity.High;
         else if (query.LineCount > 15)
-            complexity = Constants.QueryComplexity.Medium;
+            complexity = QueryComplexity.Medium;
         else if (query.LineCount > 5)
-            complexity = Constants.QueryComplexity.Low;
+            complexity = QueryComplexity.Low;
 
         if (query.ReferencedTables.Count > 5)
-            complexity = Constants.QueryComplexity.High;
+            complexity = QueryComplexity.High;
 
         if (query.JoinConditions.Count > 3)
-            complexity = Constants.QueryComplexity.High;
+            complexity = QueryComplexity.High;
 
-        return Task.FromResult(complexity);
+        return ValueTask.FromResult(complexity);
     }
 
     private TimeSpan EstimateExecutionTime(QueryAnalysisResult result)
     {
         var baseTime = result.Complexity switch
         {
-            Constants.QueryComplexity.Simple => 10,
-            Constants.QueryComplexity.Low => 50,
-            Constants.QueryComplexity.Medium => 200,
-            Constants.QueryComplexity.High => 500,
-            Constants.QueryComplexity.VeryHigh => 1000,
+            QueryComplexity.Simple => 10,
+            QueryComplexity.Low => 50,
+            QueryComplexity.Medium => 200,
+            QueryComplexity.High => 500,
+            QueryComplexity.VeryHigh => 1000,
             _ => 100
         };
 
-        // Adjust for issues
         foreach (var issue in result.Issues)
-        {
             baseTime += issue.EstimatedPerformanceImpact * 10;
-        }
 
         return TimeSpan.FromMilliseconds(Math.Min(baseTime, 10000));
     }
