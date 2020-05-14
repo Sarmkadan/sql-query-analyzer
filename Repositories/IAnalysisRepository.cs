@@ -5,6 +5,7 @@
 // =============================================================================
 
 using SqlQueryAnalyzer.Models;
+using ModelIndex = SqlQueryAnalyzer.Models.Index;
 
 namespace SqlQueryAnalyzer.Repositories;
 
@@ -18,7 +19,7 @@ public interface IAnalysisRepository
     /// <summary>
     /// Saves an analysis result.
     /// </summary>
-    Task SaveAnalysisAsync(QueryAnalysisResult result);
+    Task<QueryAnalysisResult> SaveAnalysisAsync(QueryAnalysisResult result);
 
     /// <summary>
     /// Retrieves analysis by ID.
@@ -50,14 +51,14 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
     private readonly Dictionary<string, QueryAnalysisResult> _analyses = new();
     private readonly object _lock = new object();
 
-    public Task SaveAnalysisAsync(QueryAnalysisResult result)
+    public Task<QueryAnalysisResult> SaveAnalysisAsync(QueryAnalysisResult result)
     {
         lock (_lock)
         {
             _analyses[result.QueryId] = result;
         }
 
-        return Task.CompletedTask;
+        return Task.FromResult(result);
     }
 
     public Task<QueryAnalysisResult?> GetAnalysisAsync(string analysisId)
@@ -66,6 +67,25 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
         {
             _analyses.TryGetValue(analysisId, out var result);
             return Task.FromResult(result);
+        }
+    }
+
+    public Task<List<QueryAnalysisResult>> GetAllAnalysesAsync()
+    {
+        lock (_lock)
+        {
+            return Task.FromResult(_analyses.Values.ToList());
+        }
+    }
+
+    public Task<List<QueryAnalysisResult>> GetAnalysesByDateRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        lock (_lock)
+        {
+            var results = _analyses.Values
+                .Where(a => a.AnalyzedAt >= startDate && a.AnalyzedAt <= endDate)
+                .ToList();
+            return Task.FromResult(results);
         }
     }
 
@@ -103,6 +123,38 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
             return Task.FromResult(results);
         }
     }
+
+    public Task<List<PerformanceIssue>> GetIssuesByTypeAsync(Constants.IssueType issueType)
+    {
+        lock (_lock)
+        {
+            var issues = _analyses.Values
+                .SelectMany(a => a.Issues)
+                .Where(i => i.IssueType == issueType)
+                .ToList();
+            return Task.FromResult(issues);
+        }
+    }
+
+    public Task<List<PerformanceIssue>> GetCriticalIssuesAsync()
+    {
+        lock (_lock)
+        {
+            var issues = _analyses.Values
+                .SelectMany(a => a.Issues)
+                .Where(i => i.Severity == Constants.IssueSeverity.Critical)
+                .ToList();
+            return Task.FromResult(issues);
+        }
+    }
+
+    public Task<int> GetTotalIssueCountAsync()
+    {
+        lock (_lock)
+        {
+            return Task.FromResult(_analyses.Values.Sum(a => a.Issues.Count));
+        }
+    }
 }
 
 /// <summary>
@@ -110,10 +162,19 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
 /// </summary>
 public interface IIndexRepository
 {
-    Task SaveIndexAsync(Index index);
-    Task<List<Index>> GetIndexesForTableAsync(string tableName);
-    Task<Index?> GetIndexAsync(string indexId);
+    Task SaveIndexAsync(ModelIndex index);
+    Task<List<ModelIndex>> GetIndexesForTableAsync(string tableName);
+    Task<ModelIndex?> GetIndexAsync(string indexId);
     Task DeleteIndexAsync(string indexId);
+
+    Task<List<ModelIndex>> GetAllIndexesAsync(); // Added missing method
+    Task<List<ModelIndex>> GetUnusedIndexesAsync(); // Added missing method
+    Task<List<ModelIndex>> GetFragmentedIndexesAsync(); // Added missing method
+    Task<ModelIndex> AddIndexAsync(ModelIndex index); // Changed return type
+    Task UpdateIndexAsync(ModelIndex index); // Changed parameter and return type
+    Task<List<IndexSuggestion>> GetSuggestionsAsync(); // Added missing method
+    Task SaveSuggestionAsync(IndexSuggestion suggestion); // Added missing method
+    Task<int> GetIndexCountAsync(); // Added missing method
 }
 
 /// <summary>
@@ -121,20 +182,20 @@ public interface IIndexRepository
 /// </summary>
 public class InMemoryIndexRepository : IIndexRepository
 {
-    private readonly Dictionary<string, Index> _indexes = new();
+    private readonly Dictionary<string, ModelIndex> _indexes = new();
+    private readonly List<IndexSuggestion> _suggestions = new();
     private readonly object _lock = new object();
 
-    public Task SaveIndexAsync(Index index)
+    public Task<ModelIndex?> GetIndexByNameAsync(string indexName)
     {
         lock (_lock)
         {
-            _indexes[index.IndexId] = index;
+            var index = _indexes.Values.FirstOrDefault(i => i.IndexName == indexName);
+            return Task.FromResult(index);
         }
-
-        return Task.CompletedTask;
     }
 
-    public Task<List<Index>> GetIndexesForTableAsync(string tableName)
+    public Task<List<ModelIndex>> GetIndexesByTableAsync(string tableName)
     {
         lock (_lock)
         {
@@ -146,7 +207,54 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
-    public Task<Index?> GetIndexAsync(string indexId)
+    public Task<List<ModelIndex>> GetAllIndexesAsync()
+    {
+        lock (_lock)
+        {
+            return Task.FromResult(_indexes.Values.ToList());
+        }
+    }
+
+    public Task<List<ModelIndex>> GetUnusedIndexesAsync()
+    {
+        lock (_lock)
+        {
+            var unused = _indexes.Values.Where(i => i.IsCandidateForRemoval).ToList();
+            return Task.FromResult(unused);
+        }
+    }
+
+    public Task<List<ModelIndex>> GetFragmentedIndexesAsync()
+    {
+        lock (_lock)
+        {
+            var fragmented = _indexes.Values.Where(i => i.IsFragmented).ToList();
+            return Task.FromResult(fragmented);
+        }
+    }
+
+    public Task<ModelIndex> AddIndexAsync(ModelIndex index)
+    {
+        lock (_lock)
+        {
+            _indexes[index.IndexId] = index;
+            return Task.FromResult(index);
+        }
+    }
+
+    public Task UpdateIndexAsync(ModelIndex index)
+    {
+        lock (_lock)
+        {
+            if (_indexes.ContainsKey(index.IndexId))
+            {
+                _indexes[index.IndexId] = index;
+            }
+            return Task.CompletedTask;
+        }
+    }
+
+    public Task<ModelIndex?> GetIndexAsync(string indexId)
     {
         lock (_lock)
         {
@@ -163,5 +271,36 @@ public class InMemoryIndexRepository : IIndexRepository
         }
 
         return Task.CompletedTask;
+    }
+
+    public Task<List<IndexSuggestion>> GetSuggestionsAsync()
+    {
+        lock (_lock)
+        {
+            return Task.FromResult(new List<IndexSuggestion>(_suggestions));
+        }
+    }
+
+    public Task SaveSuggestionAsync(IndexSuggestion suggestion)
+    {
+        lock (_lock)
+        {
+            var existing = _suggestions.FirstOrDefault(s => s.SuggestionId == suggestion.SuggestionId);
+            if (existing != null)
+                _suggestions.Remove(existing);
+            suggestion.GenerateIndexName();
+            suggestion.GenerateCreateScript();
+            suggestion.GenerateDropScript();
+            _suggestions.Add(suggestion);
+            return Task.CompletedTask;
+        }
+    }
+
+    public Task<int> GetIndexCountAsync()
+    {
+        lock (_lock)
+        {
+            return Task.FromResult(_indexes.Count);
+        }
     }
 }
