@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -10,7 +11,7 @@ namespace SqlQueryAnalyzer.DTOs;
 /// <summary>
 /// Request DTO for analyzing a query
 /// </summary>
-public class AnalysisRequestDto
+public sealed class AnalysisRequestDto
 {
     public string QueryText { get; set; } = string.Empty;
     public string? ApplicationName { get; set; }
@@ -25,7 +26,7 @@ public class AnalysisRequestDto
 /// <summary>
 /// Response DTO for analysis results
 /// </summary>
-public class AnalysisResponseDto
+public sealed class AnalysisResponseDto
 {
     public string QueryId { get; set; } = string.Empty;
     public double PerformanceScore { get; set; }
@@ -41,7 +42,7 @@ public class AnalysisResponseDto
 /// <summary>
 /// DTO for performance issue
 /// </summary>
-public class PerformanceIssueDto
+public sealed class PerformanceIssueDto
 {
     public string IssueType { get; set; } = string.Empty;
     public string Severity { get; set; } = string.Empty;
@@ -54,7 +55,7 @@ public class PerformanceIssueDto
 /// <summary>
 /// DTO for index suggestion
 /// </summary>
-public class IndexSuggestionDto
+public sealed class IndexSuggestionDto
 {
     public string TableName { get; set; } = string.Empty;
     public string IndexName { get; set; } = string.Empty;
@@ -68,7 +69,7 @@ public class IndexSuggestionDto
 /// <summary>
 /// DTO for batch analysis request
 /// </summary>
-public class BatchAnalysisRequestDto
+public sealed class BatchAnalysisRequestDto
 {
     public List<string> Queries { get; set; } = [];
     public string? ApplicationName { get; set; }
@@ -79,7 +80,7 @@ public class BatchAnalysisRequestDto
 /// <summary>
 /// DTO for batch analysis response
 /// </summary>
-public class BatchAnalysisResponseDto
+public sealed class BatchAnalysisResponseDto
 {
     public int TotalQueries { get; set; }
     public int SuccessfulAnalyses { get; set; }
@@ -93,7 +94,7 @@ public class BatchAnalysisResponseDto
 /// <summary>
 /// DTO for index analysis request
 /// </summary>
-public class IndexAnalysisRequestDto
+public sealed class IndexAnalysisRequestDto
 {
     public string TableName { get; set; } = string.Empty;
     public bool IncludeFragmentation { get; set; } = true;
@@ -104,7 +105,7 @@ public class IndexAnalysisRequestDto
 /// <summary>
 /// DTO for index analysis response
 /// </summary>
-public class IndexAnalysisResponseDto
+public sealed class IndexAnalysisResponseDto
 {
     public string TableName { get; set; } = string.Empty;
     public int TotalIndexes { get; set; }
@@ -118,7 +119,7 @@ public class IndexAnalysisResponseDto
 /// <summary>
 /// DTO for index details
 /// </summary>
-public class IndexDetailDto
+public sealed class IndexDetailDto
 {
     public string IndexName { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;

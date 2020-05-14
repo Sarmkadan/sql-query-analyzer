@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -14,7 +15,7 @@ namespace SqlQueryAnalyzer.Services;
 /// <summary>
 /// Builder class for creating analysis requests and configuring analysis options
 /// </summary>
-public class AnalysisBuilder
+public sealed class AnalysisBuilder
 {
     private AnalysisRequestDto _request = new();
     private readonly List<string> _validationErrors = [];
@@ -141,7 +142,7 @@ public class AnalysisBuilder
 /// <summary>
 /// Builder for batch analysis requests
 /// </summary>
-public class BatchAnalysisBuilder
+public sealed class BatchAnalysisBuilder
 {
     private BatchAnalysisRequestDto _request = new();
     private readonly List<string> _validationErrors = [];
@@ -234,7 +235,7 @@ public class BatchAnalysisBuilder
 /// <summary>
 /// Builder for index analysis requests
 /// </summary>
-public class IndexAnalysisBuilder
+public sealed class IndexAnalysisBuilder
 {
     private IndexAnalysisRequestDto _request = new();
     private readonly List<string> _validationErrors = [];
