@@ -6,6 +6,7 @@
 
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using SqlQueryAnalyzer.Constants;
 
 namespace SqlQueryAnalyzer.Configuration;
 
@@ -147,6 +148,19 @@ public class AnalysisSettings
     public bool AnalyzeExecutionPlans { get; set; } = true;
     public double CriticalIssueSensitivity { get; set; } = 0.8; // 0-1 scale
     public bool EnableDetailedLogging { get; set; } = false;
+
+    /// <summary>
+    /// Configurable thresholds that map estimated row count or cost to
+    /// missing-index warning severity (Info / Warning / Critical).
+    /// </summary>
+    public IndexSeverityThresholds IndexSeverity { get; set; } = new();
+
+    /// <summary>
+    /// Query patterns (regex strings) whose matches are excluded from all
+    /// detectors. Useful for suppressing known false positives from ORMs
+    /// such as Entity Framework or Dapper.
+    /// </summary>
+    public List<string> IgnorePatterns { get; set; } = [];
 }
 
 /// <summary>
@@ -189,10 +203,68 @@ public class LoggingSettings
 }
 
 /// <summary>
+/// Configurable thresholds that map estimated row count or query cost to
+/// missing-index warning severity levels (Info / Warning / Critical).
+///
+/// Configure via analyzer.json:
+/// <code>
+/// {
+///   "Analysis": {
+///     "IndexSeverity": {
+///       "InfoMaxRows": 10000,
+///       "WarningMaxRows": 1000000,
+///       "InfoMaxCost": 10.0,
+///       "WarningMaxCost": 100.0
+///     }
+///   }
+/// }
+/// </code>
+/// </summary>
+public class IndexSeverityThresholds
+{
+    /// <summary>Row count at or below which a missing-index issue is Info severity.</summary>
+    public long InfoMaxRows { get; set; } = 10_000;
+
+    /// <summary>Row count at or below which a missing-index issue is Warning severity.
+    /// Anything above this threshold is Critical.</summary>
+    public long WarningMaxRows { get; set; } = 1_000_000;
+
+    /// <summary>Estimated cost at or below which a missing-index issue is Info severity.</summary>
+    public double InfoMaxCost { get; set; } = 10.0;
+
+    /// <summary>Estimated cost at or below which a missing-index issue is Warning severity.
+    /// Anything above this threshold is Critical.</summary>
+    public double WarningMaxCost { get; set; } = 100.0;
+
+    /// <summary>
+    /// Resolves the appropriate severity for a missing-index warning.
+    /// Row count takes precedence when both arguments are supplied.
+    /// Falls back to Warning when neither is provided.
+    /// </summary>
+    public IssueSeverity ResolveSeverity(long? rowCount = null, double? estimatedCost = null)
+    {
+        if (rowCount.HasValue)
+        {
+            if (rowCount.Value <= InfoMaxRows)   return IssueSeverity.Info;
+            if (rowCount.Value <= WarningMaxRows) return IssueSeverity.Warning;
+            return IssueSeverity.Critical;
+        }
+
+        if (estimatedCost.HasValue)
+        {
+            if (estimatedCost.Value <= InfoMaxCost)   return IssueSeverity.Info;
+            if (estimatedCost.Value <= WarningMaxCost) return IssueSeverity.Warning;
+            return IssueSeverity.Critical;
+        }
+
+        return IssueSeverity.Warning;
+    }
+}
+
+/// <summary>
 /// Factory for creating settings instances.
 /// Encapsulates configuration loading logic.
-/// </summary>
-public static class AnalyzerSettingsFactory
+/// </summary>public static class AnalyzerSettingsFactory
 {
     /// <summary>
     /// Creates settings with sensible defaults.
