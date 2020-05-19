@@ -1,8 +1,8 @@
-[![Build](https://github.com/sarmkadan/sql-query-analyzer/actions/workflows/build.yml/badge.svg)](https://github.com/sarmkadan/sql-query-analyzer/actions/workflows/build.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
-
 # SQL Query Analyzer
+
+![CI](https://github.com/sarmkadan/sql-query-analyzer/actions/workflows/ci.yml/badge.svg)
+![License](https://img.shields.io/github/license/sarmkadan/sql-query-analyzer)
+![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
 
 **Enterprise-grade SQL query analysis tool for detecting performance issues, optimizing queries, and preventing database bottlenecks before they impact production.**
 
