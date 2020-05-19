@@ -108,7 +108,7 @@ public class ExplainPlanParserService : IExplainPlanParserService
                     if (planElement.TryGetProperty("Plan Rows", out var planRowsElement) &&
                         planRowsElement.ValueKind == System.Text.Json.JsonValueKind.Number)
                     {
-                        plan.TotalEstimatedRows = planRowsElement.GetDouble();
+                        plan.TotalEstimatedRows = (int)planRowsElement.GetDouble();
                     }
                 }
             }

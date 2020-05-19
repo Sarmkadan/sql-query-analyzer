@@ -85,7 +85,7 @@ public static class PerformanceMetricsCalculator
     }
 
     // Calculate index usage score (0-100)
-    public static double CalculateIndexUsageScore(Index index)
+    public static double CalculateIndexUsageScore(ModelIndex index)
     {
         if (!index.IsValid())
             return 0;
@@ -107,7 +107,7 @@ public static class PerformanceMetricsCalculator
     }
 
     // Calculate index maintenance effort
-    public static int CalculateMaintenanceEffort(List<Index> indexes)
+    public static int CalculateMaintenanceEffort(List<ModelIndex> indexes)
     {
         if (indexes.Count == 0)
             return 0;

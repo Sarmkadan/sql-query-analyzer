@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Constants;
 using SqlQueryAnalyzer.Models;
 using SqlQueryAnalyzer.Repositories;
@@ -186,7 +187,7 @@ public class QueryAnalyzerService : IQueryAnalyzerService
 
     private TimeSpan EstimateExecutionTime(QueryAnalysisResult result)
     {
-        var baseTime = result.Complexity switch
+        double baseTime = result.Complexity switch
         {
             QueryComplexity.Simple => 10,
             QueryComplexity.Low => 50,

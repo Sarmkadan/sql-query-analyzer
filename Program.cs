@@ -10,6 +10,7 @@ using SqlQueryAnalyzer.Configuration;
 using SqlQueryAnalyzer.Services;
 using SqlQueryAnalyzer.Repositories;
 using SqlQueryAnalyzer.Models;
+using SqlQueryAnalyzer.Visualization;
 
 namespace SqlQueryAnalyzer;
 
@@ -29,6 +30,8 @@ class Program
         // Register configuration
         services.AddSingleton<IConnectionConfiguration, SqlServerConfiguration>();
 
+        services.AddSingleton(ProfilerSettings.ForDevelopment());
+
         // Register repositories
         services.AddSingleton<IQueryRepository, QueryRepository>();
         services.AddSingleton<IAnalysisRepository, AnalysisRepository>();
@@ -40,6 +43,7 @@ class Program
         services.AddSingleton<IQueryPlanAnalyzerService, QueryPlanAnalyzerService>();
         services.AddSingleton<IPerformanceIssueDetectorService, PerformanceIssueDetectorService>();
         services.AddSingleton<IExplainPlanParserService, ExplainPlanParserService>();
+        services.AddSingleton<IHtmlPlanVisualizer, HtmlPlanVisualizer>();
 
         var serviceProvider = services.BuildServiceProvider();
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>();

@@ -5,6 +5,7 @@
 // =============================================================================
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using SqlQueryAnalyzer.CLI;
 using SqlQueryAnalyzer.Services;
 using SqlQueryAnalyzer.Utilities;
@@ -31,11 +32,11 @@ public class AnalysisPipeline
 
 
         // Register middleware in order of execution
-        RegisterMiddleware(new LoggingMiddleware(logger));
-        RegisterMiddleware(new ValidationMiddleware(logger));
-        RegisterMiddleware(new QueryNormalizationMiddleware(logger));
-        RegisterMiddleware(new AnalysisMiddleware(analyzer, logger));
-        RegisterMiddleware(new OptimizationMiddleware(logger));
+        RegisterMiddleware(new LoggingMiddleware(NullLogger<LoggingMiddleware>.Instance));
+        RegisterMiddleware(new ValidationMiddleware(NullLogger<ValidationMiddleware>.Instance));
+        RegisterMiddleware(new QueryNormalizationMiddleware(NullLogger<QueryNormalizationMiddleware>.Instance));
+        RegisterMiddleware(new AnalysisMiddleware(analyzer, NullLogger<AnalysisMiddleware>.Instance));
+        RegisterMiddleware(new OptimizationMiddleware(NullLogger<OptimizationMiddleware>.Instance));
     }
 
     /// <summary>
