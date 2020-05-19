@@ -45,6 +45,7 @@ class Program
         services.AddSingleton<IExplainPlanParserService, ExplainPlanParserService>();
         services.AddSingleton<IHtmlPlanVisualizer, HtmlPlanVisualizer>();
         services.AddSingleton<IIndexRecommendationEngine, IndexRecommendationEngine>();
+        services.AddSingleton<ISlowQueryLogParser, SlowQueryLogParser>();
 
         var serviceProvider = services.BuildServiceProvider();
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
