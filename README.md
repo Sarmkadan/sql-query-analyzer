@@ -72,6 +72,27 @@ foreach (var issue in result.Issues)
 - **Table Access Patterns**: Understand how tables are accessed
 - **Join Efficiency**: Evaluate join strategies and costs
 
+### Query Plan Visualization
+- **ASCII Tree Rendering**: Full execution plan tree with cost bars, row counts, and bottleneck markers
+- **HTML Visualization**: Self-contained, browser-ready HTML reports with collapsible node trees and color-coded cost indicators
+- **Cost Distribution Chart**: Horizontal bar chart ranking table access operations by estimated cost
+- **Bottleneck Annotations**: Automatic identification and human-readable recommendations for expensive nodes
+- **Summary Statistics**: seek/scan ratios, total node counts, join types, and I/O breakdown
+
+### Index Recommendation Engine
+- **SQL-Aware Analysis**: Parses WHERE, JOIN, ORDER BY, and GROUP BY clauses to infer the right columns to index
+- **Impact Scoring**: Ranks every candidate on a 0–100 scale (WHERE predicates score highest, followed by joins, ordering, and grouping)
+- **Composite Index Detection**: Combines multiple same-table predicates into a single covering-index recommendation
+- **Redundancy Detection**: Identifies overlapping candidates before you run `CREATE INDEX`
+- **Ready-to-Run Scripts**: Every recommendation includes a complete `CREATE NONCLUSTERED INDEX … INCLUDE (…)` statement
+
+### Slow Query Log Parser
+- **MySQL Slow Query Log**: Parses `# Query_time`, `# Lock_time`, `Rows_sent`, `Rows_examined` headers and the query body
+- **PostgreSQL Log**: Extracts duration and statement from `LOG: duration: … ms  statement:` lines
+- **SQL Server Query Store**: Parses tab-separated `creation_time / query_text / total_elapsed_time_ms` exports
+- **Efficiency Metrics**: Computes row-efficiency ratio and flags full-scan candidates automatically
+- **Top-N Filtering**: Returns the N slowest queries above a configurable minimum duration threshold
+
 ### Report Generation (Multiple Formats)
 - **Text Reports**: Human-readable analysis with clear recommendations
 - **HTML Reports**: Interactive, styled reports viewable in any browser
@@ -144,9 +165,15 @@ foreach (var issue in result.Issues)
 **Services Layer** (`/Services`)
 - `IQueryAnalyzerService`: Main orchestrator, coordinates all analysis
 - `IIndexAnalyzerService`: Index health, fragmentation, usage analysis
+- `IIndexRecommendationEngine`: SQL-aware index recommendation from query clauses
 - `IQueryPlanAnalyzerService`: Execution plan parsing and interpretation
 - `IPerformanceIssueDetectorService`: Pattern matching for 18+ issue types
 - `IExplainPlanParserService`: Multi-database plan format parsing
+- `ISlowQueryLogParser`: MySQL, PostgreSQL, and SQL Server slow-log parsing
+
+**Visualization Layer** (`/Visualization`)
+- `IExecutionPlanVisualizer`: ASCII tree with cost bars and bottleneck annotations
+- `IHtmlPlanVisualizer`: Self-contained HTML execution plan report
 
 **Data Access Layer** (`/Repositories`)
 - `IQueryRepository`: Query storage, retrieval, and history
@@ -284,6 +311,9 @@ Key test files:
 | `tests/.../QueryNormalizerTests.cs` | Whitespace stripping, keyword casing, literal removal |
 | `tests/.../QueryValidatorTests.cs` | Empty input, oversized queries, invalid SQL rejection |
 | `tests/.../SqlPatternAnalyzerTests.cs` | All 18 issue-type detectors, false-positive cases |
+| `tests/.../HtmlPlanVisualizerTests.cs` | HTML plan rendering, empty-plan handling, bottleneck markup |
+| `tests/.../IndexRecommendationEngineTests.cs` | WHERE/JOIN/ORDER BY column inference, impact scoring |
+| `tests/.../SlowQueryLogParserTests.cs` | MySQL/PostgreSQL/SQL Server log parsing, duration extraction |
 
 ---
 
@@ -543,6 +573,129 @@ if (nplusOneIssues.Any())
         Console.WriteLine($"  Fix: {issue.RecommendedFix}");
     }
 }
+```
+
+### Example 8: Query Plan Visualization
+
+```csharp
+using SqlQueryAnalyzer.Visualization;
+using SqlQueryAnalyzer.Configuration;
+
+var settings = ProfilerSettings.ForDevelopment();
+var visualizer = new ExecutionPlanVisualizer(settings);
+var htmlVisualizer = new HtmlPlanVisualizer(settings);
+
+// Parse an execution plan first
+var planParser = services.GetRequiredService<IExplainPlanParserService>();
+var plan = await planParser.ParsePostgreSqlPlanAsync(postgresJsonPlan);
+
+// ASCII tree with cost bars and bottleneck annotations
+var visualization = visualizer.Render(plan);
+Console.WriteLine(visualization.TextTree);
+Console.WriteLine(visualization.CostDistribution);
+
+foreach (var bottleneck in visualization.Bottlenecks)
+{
+    Console.WriteLine($"BOTTLENECK [{bottleneck.NodeType}] on '{bottleneck.ObjectName}'");
+    Console.WriteLine($"  Cost: {bottleneck.EstimatedCost:F4}");
+    Console.WriteLine($"  Tip:  {bottleneck.Recommendation}");
+}
+
+// Self-contained HTML report
+var html = htmlVisualizer.RenderHtml(plan);
+await File.WriteAllTextAsync("plan.html", html);
+Console.WriteLine("HTML execution plan written to plan.html");
+```
+
+### Example 9: Index Recommendation Engine
+
+```csharp
+using SqlQueryAnalyzer.Services;
+
+var engine = services.GetRequiredService<IIndexRecommendationEngine>();
+
+var query = @"
+    SELECT o.OrderId, o.OrderDate, c.Name
+    FROM Orders o
+    JOIN Customers c ON o.CustomerId = c.Id
+    WHERE o.Status = 'Pending'
+    ORDER BY o.OrderDate DESC
+";
+
+var recommendations = await engine.RecommendAsync(query);
+var ranked = engine.RankRecommendations(recommendations);
+var redundancies = engine.DetectRedundancies(ranked);
+
+Console.WriteLine($"Index Recommendations ({ranked.Count}):");
+foreach (var rec in ranked)
+{
+    Console.WriteLine($"\n[Score {rec.ImpactScore:F0}] {rec.TableName}");
+    Console.WriteLine($"  Source:  {rec.Source}");
+    Console.WriteLine($"  Columns: {string.Join(", ", rec.KeyColumns)}");
+    if (rec.IncludeColumns.Count > 0)
+        Console.WriteLine($"  Include: {string.Join(", ", rec.IncludeColumns)}");
+    Console.WriteLine($"  Script:  {rec.GeneratedScript}");
+    Console.WriteLine($"  Reason:  {rec.Rationale}");
+}
+
+if (redundancies.Any())
+{
+    Console.WriteLine("\nRedundant candidates (safe to skip):");
+    foreach (var r in redundancies)
+        Console.WriteLine($"  - {r}");
+}
+```
+
+### Example 10: Slow Query Log Parser
+
+```csharp
+using SqlQueryAnalyzer.Services;
+
+var parser = services.GetRequiredService<ISlowQueryLogParser>();
+
+// Parse MySQL slow query log
+var mysqlLog = await File.ReadAllTextAsync("/var/log/mysql/slow.log");
+var mysqlEntries = await parser.ParseMySqlLogAsync(mysqlLog);
+
+// Parse PostgreSQL log
+var pgLog = await File.ReadAllTextAsync("/var/log/postgresql/postgresql.log");
+var pgEntries = await parser.ParsePostgreSqlLogAsync(pgLog);
+
+// Parse SQL Server Query Store export (tab-separated)
+var ssLog = await File.ReadAllTextAsync("query_store_export.txt");
+var ssEntries = await parser.ParseSqlServerLogAsync(ssLog);
+
+var allEntries = mysqlEntries.Concat(pgEntries).Concat(ssEntries).ToList();
+
+// Get the 10 worst queries taking longer than 500 ms
+var topSlow = parser.GetTopSlowQueries(
+    allEntries, topN: 10, minDuration: TimeSpan.FromMilliseconds(500));
+
+Console.WriteLine($"Top {topSlow.Count} slow queries:");
+foreach (var entry in topSlow)
+{
+    Console.WriteLine($"\n[{entry.LogSource}] {entry.Duration.TotalMilliseconds:F0} ms");
+    Console.WriteLine($"  Rows sent / examined: {entry.RowsSent} / {entry.RowsExamined}");
+    if (entry.IsFullScan)
+        Console.WriteLine("  ⚠ Full scan suspected — consider adding an index");
+    Console.WriteLine($"  SQL: {entry.QueryText.Substring(0, Math.Min(100, entry.QueryText.Length))}...");
+}
+```
+
+**CLI usage:**
+
+```bash
+# Parse MySQL slow query log and report the top 20 slowest queries
+sqlanalyzer --parse-slow-log --slow-log-file /var/log/mysql/slow.log \
+            --slow-log-format mysql --format text
+
+# Parse PostgreSQL log and export JSON
+sqlanalyzer --parse-slow-log --slow-log-file /var/log/postgresql/pg.log \
+            --slow-log-format postgresql --format json --output slow_report.json
+
+# Parse SQL Server Query Store export
+sqlanalyzer --parse-slow-log --slow-log-file qs_export.txt \
+            --slow-log-format sqlserver --report
 ```
 
 ---
