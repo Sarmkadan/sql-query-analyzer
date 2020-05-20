@@ -1,6 +1,6 @@
 # SQL Query Analyzer
 
-![CI](https://github.com/sarmkadan/sql-query-analyzer/actions/workflows/ci.yml/badge.svg)
+![Build](https://github.com/sarmkadan/sql-query-analyzer/actions/workflows/build.yml/badge.svg)
 ![License](https://img.shields.io/github/license/sarmkadan/sql-query-analyzer)
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
 

@@ -18,27 +18,74 @@ using ModelIndex = SqlQueryAnalyzer.Models.Index;
 namespace SqlQueryAnalyzer.Services;
 
 /// <summary>
-/// Main service for analyzing SQL queries
+/// Provides methods for analyzing SQL queries to detect performance issues and optimize them.
 /// </summary>
 public interface IQueryAnalyzerService
 {
+    /// <summary>
+    /// Analyzes a raw SQL query string for performance issues.
+    /// </summary>
+    /// <param name="queryText">The SQL query string.</param>
+    /// <returns>A <see cref="QueryAnalysisResult"/> containing the analysis findings.</returns>
     Task<QueryAnalysisResult> AnalyzeQueryAsync(string queryText);
+
+    /// <summary>
+    /// Analyzes a <see cref="DatabaseQuery"/> object for performance issues.
+    /// </summary>
+    /// <param name="query">The <see cref="DatabaseQuery"/> to analyze.</param>
+    /// <returns>A <see cref="QueryAnalysisResult"/> containing the analysis findings.</returns>
     Task<QueryAnalysisResult> AnalyzeQueryAsync(DatabaseQuery query);
 
-    // ValueTask avoids Task allocation on the synchronous (hot) path.
+    /// <summary>
+    /// Calculates the performance score of a given analysis result.
+    /// </summary>
+    /// <param name="analysis">The analysis result to score.</param>
+    /// <returns>A <see cref="ValueTask{TResult}"/> representing the performance score (0-100).</returns>
     ValueTask<double> CalculatePerformanceScoreAsync(QueryAnalysisResult analysis);
+
+    /// <summary>
+    /// Determines the complexity level of a given query.
+    /// </summary>
+    /// <param name="query">The query to assess.</param>
+    /// <returns>A <see cref="ValueTask{TResult}"/> representing the query complexity.</returns>
     ValueTask<QueryComplexity> DetermineComplexityAsync(DatabaseQuery query);
 }
 
 /// <summary>
-/// Service for analyzing indexes
+/// Provides methods for analyzing database indexes to identify optimization opportunities and maintenance needs.
 /// </summary>
 public interface IIndexAnalyzerService
 {
+    /// <summary>
+    /// Analyzes indexes for a given table.
+    /// </summary>
+    /// <param name="tableName">The name of the table to analyze.</param>
+    /// <returns>A list of <see cref="IndexSuggestion"/> for the table.</returns>
     Task<List<IndexSuggestion>> AnalyzeIndexesAsync(string tableName);
+
+    /// <summary>
+    /// Retrieves a list of fragmented indexes.
+    /// </summary>
+    /// <returns>A list of fragmented <see cref="ModelIndex"/> objects.</returns>
     Task<List<ModelIndex>> GetFragmentedIndexesAsync();
+
+    /// <summary>
+    /// Retrieves a list of unused indexes.
+    /// </summary>
+    /// <returns>A list of unused <see cref="ModelIndex"/> objects.</returns>
     Task<List<ModelIndex>> GetUnusedIndexesAsync();
+
+    /// <summary>
+    /// Assesses the health of a given index.
+    /// </summary>
+    /// <param name="index">The index to assess.</param>
+    /// <returns>The <see cref="IndexHealth"/> status of the index.</returns>
     Task<IndexHealth> AssessIndexHealthAsync(ModelIndex index);
+
+    /// <summary>
+    /// Generates maintenance scripts for all indexes.
+    /// </summary>
+    /// <returns>A list of SQL maintenance scripts.</returns>
     Task<List<string>> GenerateMaintenanceScriptsAsync();
 }
 
