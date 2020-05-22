@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  sql-query-analyzer:
+    environment:
+      - DB_SERVER=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=YourPassword123!
+      - DB_NAME=QueryAnalyzer
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=YourPassword123!
+      - MYSQL_DATABASE=QueryAnalyzer
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

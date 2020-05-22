@@ -1,0 +1,46 @@
+# Build output directories
+bin/
+obj/
+
+# Git
+.git/
+.gitignore
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# IDE
+.idea/
+.idea_modules/
+*.swp
+*.swo
+
+# Build and test output
+**/TestResults/
+**/*.trx
+**/*.binlog
+**/coverage.cobertura.xml
+
+# Package cache
+packages/
+
+# Environment files
+.env
+.env.local
+
+# Docker
+.dockerignore
+Dockerfile*
+
+# Local development
+*.db
+*.sqlite
+*.bak
+local_settings.json
+
+# Test and benchmark output
+tests/**/TestResults/
+benchmarks/**/bin/
+benchmarks/**/obj/
