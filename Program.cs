@@ -6,6 +6,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using SqlQueryAnalyzer.Configuration;
 using SqlQueryAnalyzer.Services;
 using SqlQueryAnalyzer.Repositories;
@@ -18,11 +19,25 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        // Build configuration
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .AddEnvironmentVariables(prefix: "SQA_")
+            .Build();
+
         var services = new ServiceCollection();
+
+        // Register configuration
+        services.AddOptions<SqlQueryAnalyzerOptions>()
+            .Bind(configuration.GetSection(SqlQueryAnalyzerOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         // Configure logging
         services.AddLogging(config =>
         {
+            config.AddConfiguration(configuration.GetSection("Logging"));
             config.AddConsole();
             config.SetMinimumLevel(LogLevel.Information);
         });
