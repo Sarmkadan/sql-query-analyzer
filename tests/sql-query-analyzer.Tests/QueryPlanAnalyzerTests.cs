@@ -48,7 +48,7 @@ namespace SqlQueryAnalyzer.Tests
         }
 
         [Fact]
-        public void ParseExecutionPlanAsync_InvalidXml_ThrowsException()
+        public void ParseExecutionPlanAsync_InvalidXml_ThrowsQueryPlanException()
         {
             // Arrange
             var invalidXml = "INVALID XML";
@@ -56,7 +56,7 @@ namespace SqlQueryAnalyzer.Tests
 
             // Act and Assert
             Func<Task> act = async () => await service.ParseExecutionPlanAsync(invalidXml);
-            act.Should().ThrowAsync<Exception>();
+            act.Should().ThrowAsync<Exceptions.QueryPlanException>();
         }
 
         [Fact]

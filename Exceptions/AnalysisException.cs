@@ -9,9 +9,18 @@ using System;
 namespace SqlQueryAnalyzer.Exceptions;
 
 /// <summary>
+/// Base exception for all SQL Query Analyzer errors.
+/// </summary>
+public class SqlQueryAnalyzerException : Exception
+{
+    public SqlQueryAnalyzerException(string message) : base(message) { }
+    public SqlQueryAnalyzerException(string message, Exception innerException) : base(message, innerException) { }
+}
+
+/// <summary>
 /// Base exception for all analysis-related errors
 /// </summary>
-public class AnalysisException : Exception
+public class AnalysisException : SqlQueryAnalyzerException
 {
     public string? ErrorCode { get; set; }
     public string? ErrorDetails { get; set; }
@@ -34,6 +43,7 @@ public class AnalysisException : Exception
         ErrorDetails = errorDetails;
     }
 }
+// ... (keep the rest of the file, just add IntegrationException below)
 
 /// <summary>
 /// Exception for invalid SQL queries
@@ -190,5 +200,22 @@ public class ValidationException : AnalysisException
     {
         ValidationField = field;
         ValidationRule = rule;
+    }
+}
+
+/// <summary>
+/// Exception for integration errors
+/// </summary>
+public class IntegrationException : AnalysisException
+{
+    public string? ServiceName { get; set; }
+
+    public IntegrationException(string message)
+        : base(message, "INTEGRATION_ERROR") { }
+
+    public IntegrationException(string message, string serviceName)
+        : base(message, "INTEGRATION_ERROR")
+    {
+        ServiceName = serviceName;
     }
 }
