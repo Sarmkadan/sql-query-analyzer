@@ -3,28 +3,17 @@ using SqlQueryAnalyzer.Utilities;
 
 namespace SqlQueryAnalyzer.Benchmarks;
 
-/// <summary>
-/// Benchmarks for string extension methods, specifically truncation and whitespace normalization.
-/// </summary>
 [MemoryDiagnoser]
 public class StringExtensionsBenchmarks
 {
     private const string Input = "This is a long string that needs to be truncated for testing purposes.";
 
-    /// <summary>
-    /// Benchmarks the performance of truncating a string to a specified length.
-    /// </summary>
-    /// <returns>The truncated string.</returns>
     [Benchmark]
     public string Truncate()
     {
         return Input.Truncate(20);
     }
 
-    /// <summary>
-    /// Benchmarks the performance of normalizing whitespace in a SQL query string.
-    /// </summary>
-    /// <returns>The string with normalized whitespace.</returns>
     [Benchmark]
     public string NormalizeWhitespace()
     {
