@@ -11,11 +11,11 @@ namespace SqlQueryAnalyzer.Integration;
 /// </summary>
 public static class HttpQueryAnalysisClientJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
     /// <summary>
@@ -24,34 +24,21 @@ public static class HttpQueryAnalysisClientJsonExtensions
     /// <param name="value">The HttpQueryAnalysisClient instance to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>A JSON string representation of the HttpQueryAnalysisClient.</returns>
-    public static string ToJson(this HttpQueryAnalysisClient value, bool indented = false)
-    {
-        if (value == null)
-        {
-            throw new ArgumentNullException(nameof(value));
-        }
-
-        var options = indented
-            ? new JsonSerializerOptions(_jsonSerializerOptions)
-            {
-                WriteIndented = true
-            }
-            : _jsonSerializerOptions;
-
-        return JsonSerializer.Serialize(value, options);
-    }
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    public static string ToJson(this HttpQueryAnalysisClient value, bool indented = false) =>
+        value is null
+            ? throw new ArgumentNullException(nameof(value))
+            : JsonSerializer.Serialize(value, GetOptions(indented));
 
     /// <summary>
     /// Deserializes a JSON string to an HttpQueryAnalysisClient instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>An HttpQueryAnalysisClient instance, or null if deserialization fails.</returns>
+    /// <returns>An HttpQueryAnalysisClient instance, or <see langword="null"/> if deserialization fails.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
     public static HttpQueryAnalysisClient? FromJson(string json)
     {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            throw new ArgumentNullException(nameof(json));
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         try
         {
@@ -67,14 +54,12 @@ public static class HttpQueryAnalysisClientJsonExtensions
     /// Attempts to deserialize a JSON string to an HttpQueryAnalysisClient instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized HttpQueryAnalysisClient instance, or null if deserialization fails.</param>
-    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <param name="value">Receives the deserialized HttpQueryAnalysisClient instance, or <see langword="null"/> if deserialization fails.</param>
+    /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
     public static bool TryFromJson(string json, out HttpQueryAnalysisClient? value)
     {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            throw new ArgumentNullException(nameof(json));
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         try
         {
@@ -87,4 +72,11 @@ public static class HttpQueryAnalysisClientJsonExtensions
             return false;
         }
     }
+
+    private static JsonSerializerOptions GetOptions(bool indented) => indented
+        ? new JsonSerializerOptions(_jsonSerializerOptions)
+        {
+            WriteIndented = true,
+        }
+        : _jsonSerializerOptions;
 }
