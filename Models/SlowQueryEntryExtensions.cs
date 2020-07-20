@@ -16,50 +16,40 @@ public static class SlowQueryEntryExtensions
     /// Formats the query duration in a human-readable format with appropriate units.
     /// </summary>
     /// <param name="entry">The slow query entry to format.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="entry"/> is <see langword="null"/>.</exception>
     /// <returns>Formatted duration string (e.g., "1.2s", "500ms", "2.5ms").</returns>
     public static string FormatDuration(this SlowQueryEntry entry)
     {
-        if (entry == null) throw new ArgumentNullException(nameof(entry));
+        ArgumentNullException.ThrowIfNull(entry);
 
         double totalMs = entry.Duration.TotalMilliseconds;
 
-        if (totalMs >= 1000)
+        return totalMs switch
         {
-            return $"{totalMs / 1000:F2}s";
-        }
-        else if (totalMs >= 1)
-        {
-            return $"{totalMs:F0}ms";
-        }
-        else
-        {
-            return $"{totalMs * 1000:F1}μs";
-        }
+            >= 1000 => $"{totalMs / 1000:F2}s",
+            >= 1 => $"{totalMs:F0}ms",
+            _ => $"{totalMs * 1000:F1}μs"
+        };
     }
 
     /// <summary>
     /// Formats the lock time in a human-readable format with appropriate units.
     /// </summary>
     /// <param name="entry">The slow query entry to format.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="entry"/> is <see langword="null"/>.</exception>
     /// <returns>Formatted lock time string (e.g., "800ms", "2.3s", "150μs").</returns>
     public static string FormatLockTime(this SlowQueryEntry entry)
     {
-        if (entry == null) throw new ArgumentNullException(nameof(entry));
+        ArgumentNullException.ThrowIfNull(entry);
 
         double lockMs = entry.LockTime.TotalMilliseconds;
 
-        if (lockMs >= 1000)
+        return lockMs switch
         {
-            return $"{lockMs / 1000:F2}s";
-        }
-        else if (lockMs >= 1)
-        {
-            return $"{lockMs:F0}ms";
-        }
-        else
-        {
-            return $"{lockMs * 1000:F1}μs";
-        }
+            >= 1000 => $"{lockMs / 1000:F2}s",
+            >= 1 => $"{lockMs:F0}ms",
+            _ => $"{lockMs * 1000:F1}μs"
+        };
     }
 
     /// <summary>
@@ -67,10 +57,11 @@ public static class SlowQueryEntryExtensions
     /// </summary>
     /// <param name="entry">The slow query entry to check.</param>
     /// <param name="thresholdMilliseconds">The duration threshold in milliseconds to consider a query slow.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="entry"/> is <see langword="null"/>.</exception>
     /// <returns>True if the query duration exceeds the threshold; otherwise, false.</returns>
     public static bool IsSlow(this SlowQueryEntry entry, double thresholdMilliseconds = 1000)
     {
-        if (entry == null) throw new ArgumentNullException(nameof(entry));
+        ArgumentNullException.ThrowIfNull(entry);
 
         return entry.Duration.TotalMilliseconds > thresholdMilliseconds;
     }
@@ -79,10 +70,11 @@ public static class SlowQueryEntryExtensions
     /// Gets a formatted efficiency score for the query.
     /// </summary>
     /// <param name="entry">The slow query entry to analyze.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="entry"/> is <see langword="null"/>.</exception>
     /// <returns>Formatted efficiency score string (e.g., "95%", "50%", "1.2%").</returns>
     public static string GetEfficiencyScore(this SlowQueryEntry entry)
     {
-        if (entry == null) throw new ArgumentNullException(nameof(entry));
+        ArgumentNullException.ThrowIfNull(entry);
 
         double ratio = entry.EfficiencyRatio * 100;
         return $"{ratio:F1}%";
