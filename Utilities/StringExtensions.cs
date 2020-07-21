@@ -18,10 +18,19 @@ namespace SqlQueryAnalyzer.Utilities;
 public static class StringExtensions
 {
     // Normalize whitespace in SQL queries
+    /// <summary>
+    /// Normalizes whitespace in SQL queries by replacing multiple whitespace characters with single spaces,
+    /// normalizing line breaks, and trimming the result.
+    /// </summary>
+    /// <param name="query">The SQL query string to normalize.</param>
+    /// <returns>The normalized query string, or the original string if it's null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="query"/> is null.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string NormalizeSqlWhitespace(this string query)
     {
-        if (string.IsNullOrEmpty(query))
+        ArgumentNullException.ThrowIfNull(query);
+
+        if (query.Length == 0)
             return query;
 
         // Replace multiple spaces with single space
@@ -34,9 +43,17 @@ public static class StringExtensions
     }
 
     // Remove SQL comments
+    /// <summary>
+    /// Removes both line comments (-- to end of line) and block comments (/* ... */) from SQL queries.
+    /// </summary>
+    /// <param name="query">The SQL query string to process.</param>
+    /// <returns>The query with comments removed, or the original string if it's null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="query"/> is null.</exception>
     public static string RemoveSqlComments(this string query)
     {
-        if (string.IsNullOrEmpty(query))
+        ArgumentNullException.ThrowIfNull(query);
+
+        if (query.Length == 0)
             return query;
 
         // Remove line comments
@@ -49,43 +66,77 @@ public static class StringExtensions
     }
 
     // Truncate string with ellipsis
+    /// <summary>
+    /// Truncates a string to the specified maximum length, adding an ellipsis (...) if the string is longer.
+    /// </summary>
+    /// <param name="text">The string to truncate.</param>
+    /// <param name="maxLength">The maximum length of the result string.</param>
+    /// <returns>The truncated string with ellipsis, or the original string if it's null, empty, or shorter than maxLength.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="text"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="maxLength"/> is negative.</exception>
     public static string Truncate(this string text, int maxLength)
     {
-        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxLength);
+
+        if (text.Length <= maxLength)
             return text;
 
-        return text.Substring(0, maxLength - 3) + "...";
+        return text[..Math.Min(maxLength, text.Length)] + "...";
     }
 
     // Check if string is SQL keyword
+    /// <summary>
+    /// Determines whether the specified word is a common SQL keyword.
+    /// </summary>
+    /// <param name="word">The word to check.</param>
+    /// <returns><see langword="true"/> if the word is a SQL keyword; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="word"/> is null.</exception>
     public static bool IsSqlKeyword(this string word)
     {
-        var keywords = new[]
-        {
-            "SELECT", "FROM", "WHERE", "JOIN", "LEFT", "RIGHT", "INNER", "OUTER",
-            "ON", "AND", "OR", "NOT", "IN", "BETWEEN", "LIKE", "EXISTS",
-            "ORDER", "BY", "GROUP", "HAVING", "LIMIT", "OFFSET", "INSERT",
-            "UPDATE", "DELETE", "CREATE", "DROP", "ALTER", "TABLE", "INDEX",
-            "DATABASE", "PROCEDURE", "FUNCTION", "VIEW", "TRIGGER", "CONSTRAINT",
-            "PRIMARY", "KEY", "FOREIGN", "UNIQUE", "CHECK", "DEFAULT", "NULL"
-        };
+        ArgumentNullException.ThrowIfNull(word);
 
-        return keywords.Contains(word.ToUpperInvariant());
+        return word.ToUpperInvariant() switch
+        {
+            "SELECT" or "FROM" or "WHERE" or "JOIN" or "LEFT" or "RIGHT" or "INNER" or "OUTER" or
+            "ON" or "AND" or "OR" or "NOT" or "IN" or "BETWEEN" or "LIKE" or "EXISTS" or
+            "ORDER" or "BY" or "GROUP" or "HAVING" or "LIMIT" or "OFFSET" or "INSERT" or
+            "UPDATE" or "DELETE" or "CREATE" or "DROP" or "ALTER" or "TABLE" or "INDEX" or
+            "DATABASE" or "PROCEDURE" or "FUNCTION" or "VIEW" or "TRIGGER" or "CONSTRAINT" or
+            "PRIMARY" or "KEY" or "FOREIGN" or "UNIQUE" or "CHECK" or "DEFAULT" or "NULL" => true,
+            _ => false
+        };
     }
 
     // Capitalize first letter
+    /// <summary>
+    /// Capitalizes the first character of the string.
+    /// </summary>
+    /// <param name="text">The string to capitalize.</param>
+    /// <returns>The string with the first character capitalized, or the original string if it's null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="text"/> is null.</exception>
     public static string CapitalizeFirst(this string text)
     {
-        if (string.IsNullOrEmpty(text))
+        ArgumentNullException.ThrowIfNull(text);
+
+        if (text.Length == 0)
             return text;
 
-        return char.ToUpper(text[0]) + text.Substring(1);
+        return char.ToUpperInvariant(text[0]) + text[1..];
     }
 
     // Convert to snake_case
+    /// <summary>
+    /// Converts a PascalCase or camelCase string to snake_case.
+    /// </summary>
+    /// <param name="text">The string to convert.</param>
+    /// <returns>The snake_case representation of the string, or the original string if it's null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="text"/> is null.</exception>
     public static string ToSnakeCase(this string text)
     {
-        if (string.IsNullOrEmpty(text))
+        ArgumentNullException.ThrowIfNull(text);
+
+        if (text.Length == 0)
             return text;
 
         var withUnderscores = Regex.Replace(text, @"([a-z0-9])([A-Z])", "$1_$2");
@@ -93,25 +144,43 @@ public static class StringExtensions
     }
 
     // Count occurrences of substring
+    /// <summary>
+    /// Counts the number of occurrences of a substring within a string.
+    /// </summary>
+    /// <param name="text">The string to search.</param>
+    /// <param name="substring">The substring to count.</param>
+    /// <returns>The number of occurrences of the substring.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="text"/> or <paramref name="substring"/> is null.</exception>
     public static int CountOccurrences(this string text, string substring)
     {
-        if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(substring))
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(substring);
+
+        if (substring.Length == 0)
             return 0;
 
         return (text.Length - text.Replace(substring, string.Empty).Length) / substring.Length;
     }
 
     // Check if contains SQL injection patterns
+    /// <summary>
+    /// Checks if the query contains common SQL injection patterns.
+    /// </summary>
+    /// <param name="query">The SQL query to check.</param>
+    /// <returns><see langword="true"/> if suspicious patterns are found; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="query"/> is null.</exception>
     public static bool ContainsSuspiciousPatterns(this string query)
     {
+        ArgumentNullException.ThrowIfNull(query);
+
         var suspiciousPatterns = new[]
         {
             @"'\s+or\s+",
             @";\s*drop\s+",
             @";\s*delete\s+",
             @"union\s+select",
-            @"exec\s*\(",
-            @"execute\s*\("
+            @"exec\s*\\(",
+            @"execute\s*\\("
         };
 
         return suspiciousPatterns.Any(pattern =>
@@ -119,46 +188,67 @@ public static class StringExtensions
     }
 
     // Extract query type
+    /// <summary>
+    /// Extracts the query type (SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, UNKNOWN) from a SQL query.
+    /// </summary>
+    /// <param name="query">The SQL query to analyze.</param>
+    /// <returns>The query type as a string.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="query"/> is null.</exception>
     public static string ExtractQueryType(this string query)
     {
+        ArgumentNullException.ThrowIfNull(query);
+
         var normalized = query.NormalizeSqlWhitespace().ToUpperInvariant();
 
-        if (normalized.StartsWith("SELECT"))
-            return "SELECT";
-        if (normalized.StartsWith("INSERT"))
-            return "INSERT";
-        if (normalized.StartsWith("UPDATE"))
-            return "UPDATE";
-        if (normalized.StartsWith("DELETE"))
-            return "DELETE";
-        if (normalized.StartsWith("CREATE"))
-            return "CREATE";
-        if (normalized.StartsWith("DROP"))
-            return "DROP";
-
-        return "UNKNOWN";
+        return normalized switch
+        {
+            var s when s.StartsWith("SELECT") => "SELECT",
+            var s when s.StartsWith("INSERT") => "INSERT",
+            var s when s.StartsWith("UPDATE") => "UPDATE",
+            var s when s.StartsWith("DELETE") => "DELETE",
+            var s when s.StartsWith("CREATE") => "CREATE",
+            var s when s.StartsWith("DROP") => "DROP",
+            _ => "UNKNOWN"
+        };
     }
 
     // Split query into statements
+    /// <summary>
+    /// Splits a SQL query into individual statements using semicolon as a delimiter.
+    /// </summary>
+    /// <param name="query">The SQL query to split.</param>
+    /// <returns>A list of individual SQL statements.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="query"/> is null.</exception>
     public static List<string> SplitStatements(this string query)
     {
-        if (string.IsNullOrEmpty(query))
-            return new List<string>();
+        ArgumentNullException.ThrowIfNull(query);
 
-        var statements = query.Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries);
-        return statements.Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList();
+        if (query.Length == 0)
+            return [];
+
+        var statements = query.Split([";"], StringSplitOptions.RemoveEmptyEntries);
+        return statements.Select(s => s.Trim()).Where(s => s.Length > 0).ToList();
     }
 
     // Get line and column position
+    /// <summary>
+    /// Gets the line and column position for a given character index in the string.
+    /// </summary>
+    /// <param name="text">The text to analyze.</param>
+    /// <param name="index">The character index to find the position for.</param>
+    /// <returns>A tuple containing the line and column numbers (1-based).</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="text"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="index"/> is negative or greater than the string length.</exception>
     public static (int Line, int Column) GetPosition(this string text, int index)
     {
-        if (string.IsNullOrEmpty(text) || index < 0 || index >= text.Length)
-            return (0, 0);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(index, text.Length);
 
         var line = 1;
         var column = 1;
 
-        for (int i = 0; i < index; i++)
+        for (var i = 0; i < index; i++)
         {
             if (text[i] == '\n')
             {
