@@ -5,6 +5,7 @@
 // =============================================================================
 
 using System.Data;
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 
 namespace SqlQueryAnalyzer.Utilities;
@@ -98,7 +99,10 @@ public class DatabaseConnectionValidator
 
     /// <summary>
     /// Attempts actual database connection with timeout protection.
-    /// Tests connectivity and retrieves database version.
+    /// Tests TCP-level connectivity to the host/port extracted from the connection string.
+    /// Does not query the database engine directly (no driver dependency is available here),
+    /// so the reported <see cref="ConnectionTestResult.DatabaseVersion"/> reflects only what
+    /// can be determined without one.
     /// </summary>
     private async Task<ConnectionTestResult> TestDatabaseConnectionAsync(
         string connectionString,
@@ -108,22 +112,11 @@ public class DatabaseConnectionValidator
 
         try
         {
-            // Note: In production, use actual database connection
-            // For now, returning simulated result
             _logger.LogInformation($"Testing {databaseType} connection");
 
-            // Simulate connection test with timeout
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
-            var task = databaseType.ToLower() switch
-            {
-                "sqlserver" => TestSqlServerConnectionAsync(connectionString, cts.Token),
-                "postgresql" => TestPostgresqlConnectionAsync(connectionString, cts.Token),
-                "mysql" => TestMysqlConnectionAsync(connectionString, cts.Token),
-                _ => Task.FromResult(new ConnectionTestResult { Errors = new() { "Unsupported database type" } })
-            };
-
-            result = await task;
+            result = await TestTcpConnectionAsync(connectionString, databaseType, cts.Token);
             result.Success = result.Errors.Count == 0;
         }
         catch (OperationCanceledException)
@@ -141,74 +134,92 @@ public class DatabaseConnectionValidator
     }
 
     /// <summary>
-    /// Tests SQL Server connection and retrieves version.
+    /// Opens a TCP connection to the host/port parsed from the connection string to verify
+    /// the target is reachable. This confirms network connectivity but cannot authenticate
+    /// or query the database engine, since no database driver is referenced by this project.
     /// </summary>
-    private async Task<ConnectionTestResult> TestSqlServerConnectionAsync(string connectionString, CancellationToken ct)
+    private async Task<ConnectionTestResult> TestTcpConnectionAsync(string connectionString, string databaseType, CancellationToken ct)
     {
         var result = new ConnectionTestResult();
 
+        var (host, port) = ParseHostAndPort(connectionString, databaseType);
+        if (host == null)
+        {
+            result.Errors.Add("Could not determine host from connection string");
+            return result;
+        }
+
         try
         {
-            // In actual implementation, create real SqlConnection
-            // For now, simulate successful connection
-            await Task.Delay(100, ct);
-            result.DatabaseVersion = "SQL Server 2019";
-            result.Success = true;
+            using var client = new System.Net.Sockets.TcpClient();
+            await client.ConnectAsync(host, port, ct);
+            result.Success = client.Connected;
 
-            _logger.LogDebug("SQL Server connection successful");
+            if (!result.Success)
+                result.Errors.Add($"Unable to reach {host}:{port}");
+
+            _logger.LogDebug($"{databaseType} host {host}:{port} reachable: {result.Success}");
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is System.Net.Sockets.SocketException or ObjectDisposedException)
         {
-            result.Errors.Add($"SQL Server connection error: {ex.Message}");
+            result.Errors.Add($"{databaseType} connection error: {ex.Message}");
         }
 
         return result;
     }
 
     /// <summary>
-    /// Tests PostgreSQL connection and retrieves version.
+    /// Extracts the host name/address and port from a connection string, falling back to the
+    /// database engine's default port when none is specified.
     /// </summary>
-    private async Task<ConnectionTestResult> TestPostgresqlConnectionAsync(string connectionString, CancellationToken ct)
+    private static (string? Host, int Port) ParseHostAndPort(string connectionString, string databaseType)
     {
-        var result = new ConnectionTestResult();
-
-        try
+        var defaultPort = databaseType.ToLowerInvariant() switch
         {
-            await Task.Delay(100, ct);
-            result.DatabaseVersion = "PostgreSQL 13";
-            result.Success = true;
+            "sqlserver" => 1433,
+            "postgresql" => 5432,
+            "mysql" => 3306,
+            _ => 0
+        };
 
-            _logger.LogDebug("PostgreSQL connection successful");
-        }
-        catch (Exception ex)
+        string? host = null;
+        var port = defaultPort;
+
+        foreach (var segment in connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries))
         {
-            result.Errors.Add($"PostgreSQL connection error: {ex.Message}");
+            var parts = segment.Split('=', 2);
+            if (parts.Length != 2)
+                continue;
+
+            var key = parts[0].Trim();
+            var value = parts[1].Trim();
+
+            if (key.Equals("Server", StringComparison.OrdinalIgnoreCase) ||
+                key.Equals("Host", StringComparison.OrdinalIgnoreCase) ||
+                key.Equals("Data Source", StringComparison.OrdinalIgnoreCase))
+            {
+                var hostPart = value;
+                var commaIndex = hostPart.IndexOf(',');
+                var colonIndex = hostPart.IndexOf(':');
+                var separatorIndex = commaIndex >= 0 ? commaIndex : colonIndex;
+
+                if (separatorIndex >= 0)
+                {
+                    hostPart = value[..separatorIndex];
+                    if (int.TryParse(value[(separatorIndex + 1)..], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedPort))
+                        port = parsedPort;
+                }
+
+                host = hostPart;
+            }
+            else if (key.Equals("Port", StringComparison.OrdinalIgnoreCase) &&
+                     int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var explicitPort))
+            {
+                port = explicitPort;
+            }
         }
 
-        return result;
-    }
-
-    /// <summary>
-    /// Tests MySQL connection and retrieves version.
-    /// </summary>
-    private async Task<ConnectionTestResult> TestMysqlConnectionAsync(string connectionString, CancellationToken ct)
-    {
-        var result = new ConnectionTestResult();
-
-        try
-        {
-            await Task.Delay(100, ct);
-            result.DatabaseVersion = "MySQL 8.0";
-            result.Success = true;
-
-            _logger.LogDebug("MySQL connection successful");
-        }
-        catch (Exception ex)
-        {
-            result.Errors.Add($"MySQL connection error: {ex.Message}");
-        }
-
-        return result;
+        return (host, port);
     }
 
     /// <summary>
