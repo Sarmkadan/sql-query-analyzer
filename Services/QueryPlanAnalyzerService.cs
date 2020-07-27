@@ -24,6 +24,7 @@ public class QueryPlanAnalyzerService : IQueryPlanAnalyzerService
 
     public QueryPlanAnalyzerService(ILogger<QueryPlanAnalyzerService> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
     }
 

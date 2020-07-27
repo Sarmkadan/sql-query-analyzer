@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Xunit;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using SqlQueryAnalyzer.Models;
 using SqlQueryAnalyzer.Services;
 
@@ -9,6 +10,9 @@ namespace SqlQueryAnalyzer.Tests
 {
     public class QueryPlanAnalyzerTests
     {
+        private static QueryPlanAnalyzerService CreateService() =>
+            new(NullLogger<QueryPlanAnalyzerService>.Instance);
+
         [Fact]
         public void AnalyzeQueryPlan_InvalidQueryPlan_ThrowsException()
         {
@@ -18,14 +22,14 @@ namespace SqlQueryAnalyzer.Tests
             // Act and Assert
             // The service does not have a static AnalyzeQueryPlan method.
             // Instead we use ParseExecutionPlanAsync which validates the input.
-            var service = new QueryPlanAnalyzerService(null!);
+            var service = CreateService();
             Func<Task> act = async () => await service.ParseExecutionPlanAsync(null!);
             act.Should().ThrowAsync<ArgumentException>()
                .WithMessage("*planXml*");
         }
 
         [Fact]
-        public void ParseExecutionPlanAsync_ValidXmlPlan_ReturnsQueryPlan()
+        public async Task ParseExecutionPlanAsync_ValidXmlPlan_ReturnsQueryPlan()
         {
             // Arrange
             var xmlPlan = @"<?xml version=""1.0""?>
@@ -37,10 +41,10 @@ namespace SqlQueryAnalyzer.Tests
     </Batch>
 </ShowPlanXML>";
 
-            var service = new QueryPlanAnalyzerService(null!);
+            var service = CreateService();
 
             // Act
-            var result = service.ParseExecutionPlanAsync(xmlPlan).Result;
+            var result = await service.ParseExecutionPlanAsync(xmlPlan);
 
             // Assert
             result.Should().NotBeNull();
@@ -52,7 +56,7 @@ namespace SqlQueryAnalyzer.Tests
         {
             // Arrange
             var invalidXml = "INVALID XML";
-            var service = new QueryPlanAnalyzerService(null!);
+            var service = CreateService();
 
             // Act and Assert
             Func<Task> act = async () => await service.ParseExecutionPlanAsync(invalidXml);
@@ -72,7 +76,7 @@ namespace SqlQueryAnalyzer.Tests
     </Batch>
 </ShowPlanXML>";
 
-            var service = new QueryPlanAnalyzerService(null!);
+            var service = CreateService();
             var plan = await service.ParseExecutionPlanAsync(xmlPlan);
 
             // Act
@@ -95,7 +99,7 @@ namespace SqlQueryAnalyzer.Tests
     </Batch>
 </ShowPlanXML>";
 
-            var service = new QueryPlanAnalyzerService(null!);
+            var service = CreateService();
             var plan = await service.ParseExecutionPlanAsync(xmlPlan);
             if (plan != null)
             {
