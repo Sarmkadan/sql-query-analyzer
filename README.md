@@ -129,3 +129,32 @@ The application uses the `IOptions` pattern for configuration, supporting JSON f
 | `LogFilePath` | Log file path |
 | `LogMaxFileSizeBytes` | Maximum log file size in bytes |
 | `LogMaxBackupFiles` | Maximum log backup files |
+
+## SqlQueryAnalyzerException
+
+The `SqlQueryAnalyzerException` is the base exception class for all exceptions thrown by the SQL Query Analyzer. It inherits from `System.Exception` and provides two standard constructors for creating exception instances with custom error messages and optional inner exceptions. This exception serves as the foundation for more specific exception types like `AnalysisException`, `InvalidQueryException`, `DatabaseConnectionException`, and others.
+
+### Usage Example
+
+```csharp
+try
+{
+    // Simulate an analysis error
+    throw new SqlQueryAnalyzerException("Failed to analyze SQL query due to syntax error");
+}
+catch (SqlQueryAnalyzerException ex)
+{
+    Console.WriteLine($"SQL Query Analyzer Error: {ex.Message}");
+    // Handle the exception appropriately
+}
+
+// Example with inner exception
+try
+{
+    // Some operation that might fail
+}
+catch (Exception innerEx)
+{
+    throw new SqlQueryAnalyzerException("Analysis failed during query processing", innerEx);
+}
+```
