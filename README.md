@@ -244,6 +244,42 @@ public class CustomEventSubscriber : IAnalysisEventSubscriber
 - Errors in individual subscribers are logged but don't prevent other subscribers from receiving the event
 - The publisher is thread-safe for concurrent subscriptions/unsubscriptions
 
+## QueryNormalizerBenchmarks
+
+The `QueryNormalizerBenchmarks` class provides performance benchmarks for the `QueryNormalizer` utility, measuring the efficiency of SQL query normalization, table name extraction, and column name extraction operations. It uses BenchmarkDotNet to compare different normalization scenarios including simple queries, complex multi-join queries, and queries with embedded string literals.
+
+
+### Usage Example
+
+
+```csharp
+// Create benchmark instance
+var benchmarks = new QueryNormalizerBenchmarks();
+
+// Initialize the normalizer (required before running benchmarks)
+benchmarks.Setup();
+
+// Benchmark simple query normalization
+var simpleResult = benchmarks.NormalizeSimple();
+Console.WriteLine($"Normalized simple query: {simpleResult}");
+
+// Benchmark complex query normalization
+var complexResult = benchmarks.NormalizeComplex();
+Console.WriteLine($"Normalized complex query: {complexResult}");
+
+// Benchmark query with string literals
+var literalResult = benchmarks.NormalizeWithLiterals();
+Console.WriteLine($"Normalized query with literals: {literalResult}");
+
+// Benchmark table name extraction
+var tableNames = benchmarks.ExtractTableNamesComplex();
+Console.WriteLine($"Extracted tables: {string.Join(", ", tableNames)}");
+
+// Benchmark column name extraction
+var columnNames = benchmarks.ExtractColumnNamesComplex();
+Console.WriteLine($"Extracted columns: {string.Join(", ", columnNames)}");
+```
+
 ## SqlQueryAnalyzerException
 
 The `SqlQueryAnalyzerException` is the base exception class for all exceptions thrown by the SQL Query Analyzer. It inherits from `System.Exception` and provides two standard constructors for creating exception instances with custom error messages and optional inner exceptions. This exception serves as the foundation for more specific exception types like `AnalysisException`, `InvalidQueryException`, `DatabaseConnectionException`, and others.
