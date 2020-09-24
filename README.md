@@ -280,6 +280,49 @@ var columnNames = benchmarks.ExtractColumnNamesComplex();
 Console.WriteLine($"Extracted columns: {string.Join(", ", columnNames)}");
 ```
 
+## QueryAnalysisPipelineBenchmarks
+
+The `QueryAnalysisPipelineBenchmarks` class provides performance benchmarks for the complete SQL query parsing and analysis pipeline. It measures the efficiency of query parsing (including type detection and table extraction), SHA-256 hashing, and pattern analysis operations that represent a real-world analysis pass. Benchmarks are grouped by category (`Parse`, `Hash`, `Combined`) and use BenchmarkDotNet for accurate performance measurement.
+
+This benchmark suite is valuable for performance profiling during development, helping identify regressions in query parsing speed or memory usage as the analyzer evolves.
+
+### Usage Example
+
+```csharp
+// Create benchmark instance
+var benchmarks = new QueryAnalysisPipelineBenchmarks();
+
+// Benchmark simple query parsing
+benchmarks.ParseSimpleQuery();
+
+// Benchmark complex multi-join query parsing
+benchmarks.ParseComplexQuery();
+
+// Benchmark stored procedure parsing
+benchmarks.ParseStoredProcQuery();
+
+// Benchmark query hashing (parse + SHA-256)
+var simpleHash = benchmarks.HashSimpleQuery();
+var complexHash = benchmarks.HashComplexQuery();
+
+// Benchmark join condition extraction
+var joinConditions = benchmarks.ExtractJoinConditions();
+Console.WriteLine($"Found {joinConditions.Count} join conditions");
+
+// Benchmark full pattern suite (7 different pattern checks)
+var patterns = benchmarks.FullPatternSuite();
+```
+
+### Public Members
+
+- `ParseSimpleQuery()` - Parses a simple SELECT query with table extraction
+- `ParseComplexQuery()` - Parses a complex 4-JOIN query with full pattern extraction
+- `ParseStoredProcQuery()` - Parses a stored procedure with DECLARE, GROUP BY, and HAVING clauses
+- `HashSimpleQuery()` - Parses and generates SHA-256 hash for a simple query
+- `HashComplexQuery()` - Parses and generates SHA-256 hash for a complex query
+- `FullPatternSuite()` - Runs 7 different pattern checks on a complex query (returns tuple of bool/int results)
+- `ExtractJoinConditions()` - Extracts join conditions from a multi-join query
+
 ## SqlQueryAnalyzerException
 
 The `SqlQueryAnalyzerException` is the base exception class for all exceptions thrown by the SQL Query Analyzer. It inherits from `System.Exception` and provides two standard constructors for creating exception instances with custom error messages and optional inner exceptions. This exception serves as the foundation for more specific exception types like `AnalysisException`, `InvalidQueryException`, `DatabaseConnectionException`, and others.
