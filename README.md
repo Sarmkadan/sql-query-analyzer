@@ -130,6 +130,120 @@ The application uses the `IOptions` pattern for configuration, supporting JSON f
 | `LogMaxFileSizeBytes` | Maximum log file size in bytes |
 | `LogMaxBackupFiles` | Maximum log backup files |
 
+## IAnalysisEventPublisher
+
+The `IAnalysisEventPublisher` interface implements the observer pattern for publishing domain events from the SQL query analysis pipeline. It decouples the analysis logic from side effects such as logging, caching, notifications, and other event-driven operations. Publishers maintain a list of subscribers and asynchronously dispatch events to all registered subscribers.
+
+This interface is typically used to notify external systems about analysis lifecycle events like query start/completion, performance issues, or failures.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection (ASP.NET Core example)
+services.AddSingleton<IAnalysisEventPublisher, AnalysisEventPublisher>();
+services.AddSingleton<IAnalysisEventSubscriber, LoggingEventSubscriber>();
+services.AddSingleton<IAnalysisEventSubscriber, NotificationEventSubscriber>();
+
+// In your service class
+public class QueryAnalyzerService
+{
+    private readonly IAnalysisEventPublisher _eventPublisher;
+    
+    public QueryAnalyzerService(IAnalysisEventPublisher eventPublisher)
+    {
+        _eventPublisher = eventPublisher;
+    }
+    
+    public async Task AnalyzeQueryAsync(string queryId, string query)
+    {
+        // Publish analysis started event
+        var startedEvent = new AnalysisStartedEvent
+        {
+            QueryId = queryId,
+            Query = query,
+            Metadata = new Dictionary<string, object>
+            {
+                {"user", "admin"},
+                {"environment", "production"}
+            }
+        };
+        await _eventPublisher.PublishAsync(startedEvent);
+        
+        try
+        {
+            // Perform analysis...
+            var completedEvent = new AnalysisCompletedEvent
+            {
+                QueryId = queryId,
+                PerformanceScore = 95.5,
+                IssuesFound = 2,
+                AnalysisDuration = TimeSpan.FromMilliseconds(150),
+                Metadata = new Dictionary<string, object> { {"engine", "sql-server"} }
+            };
+            await _eventPublisher.PublishAsync(completedEvent);
+        }
+        catch (Exception ex)
+        {
+            var failedEvent = new AnalysisFailedEvent
+            {
+                QueryId = queryId,
+                ErrorMessage = ex.Message,
+                ExceptionType = ex.GetType().Name,
+                Metadata = new Dictionary<string, object> { {"errorType", "timeout"} }
+            };
+            await _eventPublisher.PublishAsync(failedEvent);
+        }
+    }
+}
+
+// Custom subscriber example
+public class CustomEventSubscriber : IAnalysisEventSubscriber
+{
+    private readonly ILogger<CustomEventSubscriber> _logger;
+    
+    public CustomEventSubscriber(ILogger<CustomEventSubscriber> logger)
+    {
+        _logger = logger;
+    }
+    
+    public Task OnEventAsync(AnalysisEvent @event)
+    {
+        if (@event is CriticalIssueDetectedEvent critical)
+        {
+            _logger.LogCritical($"Critical issue in query {critical.QueryId}: {critical.Description}");
+            // Send to monitoring system, etc.
+        }
+        return Task.CompletedTask;
+    }
+}
+```
+
+### Public Members
+
+- `Subscribe(IAnalysisEventSubscriber subscriber)` - Registers a subscriber to receive all published events
+- `Unsubscribe(IAnalysisEventSubscriber subscriber)` - Unregisters a subscriber
+- `PublishAsync(AnalysisEvent @event)` - Publishes an event to all subscribers asynchronously
+
+### Common Event Types
+
+- `AnalysisStartedEvent` - Raised when query analysis begins
+- `AnalysisCompletedEvent` - Raised when query analysis completes with results
+- `CriticalIssueDetectedEvent` - Raised when critical performance issues are detected
+- `AnalysisFailedEvent` - Raised when analysis fails with error details
+
+### Event Properties (from AnalysisEvent base class)
+
+- `Timestamp` - When the event occurred (UTC)
+- `CorrelationId` - Unique identifier for correlating events
+- `Metadata` - Dictionary of additional context data
+
+### Implementation Notes
+
+- Events are published asynchronously to avoid blocking the analysis pipeline
+- Subscribers are invoked in parallel using `Task.WhenAll`
+- Errors in individual subscribers are logged but don't prevent other subscribers from receiving the event
+- The publisher is thread-safe for concurrent subscriptions/unsubscriptions
+
 ## SqlQueryAnalyzerException
 
 The `SqlQueryAnalyzerException` is the base exception class for all exceptions thrown by the SQL Query Analyzer. It inherits from `System.Exception` and provides two standard constructors for creating exception instances with custom error messages and optional inner exceptions. This exception serves as the foundation for more specific exception types like `AnalysisException`, `InvalidQueryException`, `DatabaseConnectionException`, and others.
