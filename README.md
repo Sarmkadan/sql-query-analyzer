@@ -608,6 +608,95 @@ webhookService.UnregisterWebhook("Teams Monitoring");
 - Custom headers can be added for authentication or additional metadata
 - Thread-safe for concurrent webhook registration/unregistration
 
+## ExportService
+
+The `ExportService` class provides centralized export functionality for SQL query analysis results, supporting multiple output formats (JSON, CSV, XML, HTML, text) and batch operations. It handles directory creation, error logging, and can generate comprehensive export packages with summary reports and recommendations.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection (ASP.NET Core example)
+services.AddSingleton<ExportService>();
+
+// Create export service
+var exportService = new ExportService(logger);
+
+// Analyze a query
+var analyzer = new QueryAnalyzerService();
+var result = await analyzer.AnalyzeAsync("SELECT * FROM Users WHERE CreatedAt > '2024-01-01'");
+
+// Export single analysis to JSON
+await exportService.ExportAsync(
+    result,
+    "./exports/analysis-2024-01-15.json",
+    "json"
+);
+
+// Export batch of analyses to CSV
+var batchResults = new List<QueryAnalysisResult> { result1, result2, result3 };
+await exportService.ExportBatchAsync(
+    batchResults,
+    "./exports/batch-analysis.csv",
+    "csv"
+);
+
+// Export to multiple formats simultaneously
+await exportService.ExportMultipleFormatsAsync(
+    result,
+    "./exports/multi-format",
+    "json", "csv", "html", "xml"
+);
+
+// Export with comprehensive report package
+await exportService.ExportWithReportAsync(
+    result,
+    "./exports/full-report-2024-01-15"
+);
+
+// Check supported formats
+var supportedFormats = exportService.GetSupportedFormats();
+Console.WriteLine($"Supported formats: {string.Join(", ", supportedFormats)}");
+
+// Check if specific format is supported
+bool isSupported = exportService.IsFormatSupported("json");
+Console.WriteLine($"JSON format supported: {isSupported}");
+```
+
+### Public Members
+
+- `ExportService(ILogger<ExportService> logger)` - Constructor that initializes default formatters
+- `RegisterFormatter(string format, IResultFormatter formatter)` - Registers a custom formatter for additional output formats
+- `ExportAsync(QueryAnalysisResult result, string filePath, string format = "json")` - Exports single analysis result to file
+- `ExportBatchAsync(List<QueryAnalysisResult> results, string filePath, string format = "json")` - Exports batch of results to file
+- `ExportMultipleFormatsAsync(QueryAnalysisResult result, string outputDirectory, params string[] formats)` - Exports results to multiple formats simultaneously
+- `ExportWithReportAsync(QueryAnalysisResult result, string outputDirectory)` - Exports analysis with summary report, recommendations, and multiple files
+- `GetSupportedFormats()` - Gets list of supported export formats
+- `IsFormatSupported(string format)` - Checks if format is supported
+
+### Supported Formats
+
+- `json` - JSON format (default)
+- `csv` - CSV format for spreadsheet applications
+- `xml` - XML format for system integration
+- `html` - HTML format for web viewing
+- `text` - Plain text format
+
+### Export Configuration
+
+The service automatically creates output directories if they don't exist and provides detailed logging for all operations. It supports:
+
+- Single file exports
+- Batch exports (multiple results to one file)
+- Multi-format exports (same data to multiple formats)
+- Complete report packages with summary, recommendations, and analysis files
+
+### Implementation Notes
+
+- Thread-safe for concurrent exports
+- Comprehensive error handling with detailed logging
+- Supports custom formatters via `RegisterFormatter` method
+- Generates human-readable summary reports with performance metrics and optimization recommendations
+
 ## HttpQueryAnalysisClient
 
 The `HttpQueryAnalysisClient` class is an HTTP client for integrating with remote SQL analyzer instances. It enables distributed analysis, API-first integration, and remote caching scenarios. The client implements retry logic with exponential backoff, connection pooling, and comprehensive error handling for reliable remote communication.
