@@ -244,6 +244,67 @@ public class CustomEventSubscriber : IAnalysisEventSubscriber
 - Errors in individual subscribers are logged but don't prevent other subscribers from receiving the event
 - The publisher is thread-safe for concurrent subscriptions/unsubscriptions
 
+## QueryRewriteExtensions
+
+The `QueryRewriteExtensions` class provides extension methods for `IQueryRewriteService` and `IEnumerable<QueryRewriteSuggestion>` that enable dependency injection registration and LINQ-style convenience operations for SQL query rewrite suggestions. These methods help filter, sort, and analyze query rewrite suggestions to identify optimal optimization opportunities.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection (ASP.NET Core example)
+services.AddQueryRewriteService();
+
+// Create a query rewrite service
+var rewriteService = new QueryRewriteService();
+
+// Analyze a query to get rewrite suggestions
+var suggestions = await rewriteService.GetRewriteSuggestionsAsync(
+    "SELECT * FROM Orders WHERE CustomerId = 1 AND Status = 'active'",
+    "GetActiveCustomerOrders"
+);
+
+// Filter suggestions
+var autoApplicable = suggestions.GetAutoApplicable();
+var nonBreaking = suggestions.GetNonBreaking();
+var whereClauseSuggestions = suggestions.ForClause("WHERE");
+
+// Order suggestions by impact
+var orderedSuggestions = suggestions.OrderByImpact();
+
+// Get index suggestions for database optimization
+var indexSuggestions = suggestions.GetAllIndexSuggestions();
+
+// Calculate total estimated improvement
+var totalImprovement = suggestions.GetTotalEstimatedImprovement();
+Console.WriteLine($"Total estimated improvement: {totalImprovement:F1}%");
+
+// Get a summary of all suggestions
+var summary = suggestions.GetRewriteSummary();
+Console.WriteLine(summary);
+
+// Filter by specific rewrite type
+var joinOptimizations = suggestions.OfType(RewriteType.JoinOptimization);
+var whereOptimizations = suggestions.OfType(RewriteType.WhereClauseOptimization);
+
+// Display top 3 suggestions by impact
+foreach (var suggestion in orderedSuggestions.Take(3))
+{
+    Console.WriteLine($"- {suggestion.Description} (Impact: {suggestion.EstimatedImprovementPercent}%)");
+}
+```
+
+### Public Members
+
+- `AddQueryRewriteService(this IServiceCollection services)` - Registers `IQueryRewriteService` with the DI container as a singleton
+- `GetAutoApplicable(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Filters suggestions to those that are safe to apply programmatically without manual review
+- `GetNonBreaking(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Filters suggestions that do not alter the observable result set
+- `OfType(this IEnumerable<QueryRewriteSuggestion> suggestions, RewriteType rewriteType)` - Returns suggestions of a specific rewrite type
+- `ForClause(this IEnumerable<QueryRewriteSuggestion> suggestions, string clause)` - Returns suggestions that target a specific SQL clause (e.g. "WHERE", "SELECT")
+- `OrderByImpact(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Orders suggestions by estimated performance improvement, highest first
+- `GetTotalEstimatedImprovement(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Calculates the sum of all estimated improvements, capped at 100%
+- `GetAllIndexSuggestions(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Collects all `IndexSuggestion` items embedded in the rewrite suggestions into a deduplicated, prioritized flat list
+- `GetRewriteSummary(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Gets a human-readable summary of the full rewrite suggestion set
+
 ## QueryPlanExtensions
 
 The `QueryPlanExtensions` class provides extension methods for `QueryPlan` that offer advanced analysis capabilities and utility functions for query performance optimization. These methods help identify expensive operations, detect performance issues, and calculate various cost metrics to assist in query optimization efforts.
