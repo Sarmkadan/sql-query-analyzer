@@ -348,6 +348,54 @@ Console.WriteLine($"Batch: {batchStats.TotalQueries} queries, avg score: {batchS
 - `BatchStatistics.QueriesWithIssues` - Number of queries with at least one issue
 
 
+## QueryAnalysisResultExtensions
+
+The `QueryAnalysisResultExtensions` class provides extension methods for `QueryAnalysisResult` that enhance functionality with convenient operations for analyzing query performance results. These methods help determine query severity levels, check performance thresholds, create deep copies of results, format summaries, and serialize results to JSON for logging or API responses.
+
+### Usage Example
+
+```csharp
+// Analyze a SQL query using the analyzer service
+var analyzer = new QueryAnalyzerService();
+var result = await analyzer.AnalyzeAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount " +
+    "FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId " +
+    "GROUP BY u.Name HAVING COUNT(o.Id) > 5 " +
+    "ORDER BY OrderCount DESC");
+
+// Check if query is high performance (score >= 90 and no critical issues)
+bool isHighPerformance = result.IsHighPerformance();
+Console.WriteLine($"High performance: {isHighPerformance}");
+
+// Check if query needs optimization (score < 70 or has critical issues)
+bool needsOptimization = result.NeedsOptimization();
+Console.WriteLine($"Needs optimization: {needsOptimization}");
+
+// Get severity level based on performance score and issues
+string severityLevel = result.GetSeverityLevel();
+Console.WriteLine($"Severity level: {severityLevel}");
+
+// Create a deep copy to prevent mutation of original result
+var resultCopy = result.DeepCopy();
+
+// Format a human-readable summary of the analysis
+string summary = result.FormatSummary();
+Console.WriteLine(summary);
+
+// Serialize to JSON for logging or API response
+string json = result.ToJsonString(indented: true);
+Console.WriteLine(json);
+```
+
+### Public Members
+
+- `IsHighPerformance(this QueryAnalysisResult result)` - Determines if query has performance score >= 90 and no critical issues
+- `NeedsOptimization(this QueryAnalysisResult result)` - Determines if query needs optimization (score < 70 or has critical issues)
+- `GetSeverityLevel(this QueryAnalysisResult result)` - Gets severity level (Critical, High, Medium, Low) based on performance score and issues
+- `DeepCopy(this QueryAnalysisResult result)` - Creates a deep copy of the query analysis result to prevent mutation of the original
+- `FormatSummary(this QueryAnalysisResult result)` - Gets a formatted string representation of the query analysis result with key metrics
+- `ToJsonString(this QueryAnalysisResult result, bool indented = false)` - Serializes the query analysis result to a JSON string with optional formatting
+
 ## QueryRewriteExtensions
 
 The `QueryRewriteExtensions` class provides extension methods for `IQueryRewriteService` and `IEnumerable<QueryRewriteSuggestion>` that enable dependency injection registration and LINQ-style convenience operations for SQL query rewrite suggestions. These methods help filter, sort, and analyze query rewrite suggestions to identify optimal optimization opportunities.
