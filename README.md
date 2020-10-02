@@ -859,6 +859,93 @@ Console.WriteLine(markdownTable);
 - `GetImprovements(this ProfileComparison comparison)` - Gets metric improvements from comparison
 - `ToMarkdownTable(this ProfileComparison comparison)` - Generates markdown comparison table
 
+## ErrorHandlingMiddlewareExtensions
+
+The `ErrorHandlingMiddlewareExtensions` class provides extension methods for `ErrorHandlingMiddleware` that enhance error handling capabilities with retry logic, error reporting, and fallback mechanisms. These methods help create robust error handling strategies for operations that may fail due to transient issues, enabling graceful degradation and recovery when possible.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection (ASP.NET Core example)
+services.AddScoped<ErrorHandlingMiddleware>();
+
+// Resolve the middleware instance
+var middleware = serviceProvider.GetRequiredService<ErrorHandlingMiddleware>();
+
+// Example 1: Execute with error handling (fire-and-forget with success tracking)
+bool success = await middleware.ExecuteWithErrorHandlingAsync(
+    async () => 
+    {
+        // Your operation here
+        await Task.Delay(100);
+        Console.WriteLine("Operation completed successfully");
+    },
+    "DatabaseBackupOperation"
+);
+
+Console.WriteLine($"Operation succeeded: {success}");
+
+// Example 2: Create error report from exception
+try
+{
+    // Some operation that might fail
+    await Task.Delay(100);
+}
+catch (Exception ex)
+{
+    string errorMessage = middleware.FormatErrorMessage(
+        ex,
+        "DatabaseBackupService.BackupDatabase"
+    );
+    logger.LogError(errorMessage);
+    
+    var errorReport = middleware.CreateErrorReport(
+        ex.Message,
+        "DatabaseBackupService.BackupDatabase"
+    );
+    
+    // Use errorReport for error tracking or monitoring
+}
+
+// Example 3: Execute with retry logic (3 attempts by default)
+var result = await middleware.ExecuteWithRetryAsync(
+    async () => 
+    {
+        // Your operation here
+        return await databaseService.GetUserAsync(123);
+    },
+    "GetUserOperation",
+    maxRetries: 5
+);
+
+Console.WriteLine($"Result: {result}");
+
+// Example 4: Execute with cache fallback
+var cachedUser = await middleware.ExecuteWithCacheFallbackAsync(
+    async () => 
+    {
+        // Try to get fresh data
+        return await databaseService.GetUserAsync(123);
+    },
+    () => 
+    {
+        // Fallback to cached data
+        return cacheService.Get<User>("user_123");
+    },
+    "GetUserWithCacheFallback"
+);
+
+Console.WriteLine($"User: {cachedUser?.Name ?? "Not found"}");
+```
+
+### Public Members
+
+- `ExecuteWithErrorHandlingAsync(this ErrorHandlingMiddleware middleware, Func<Task> action, string operationName)` - Executes an action with error handling and returns a boolean indicating success
+- `CreateErrorReport(this ErrorHandlingMiddleware middleware, string errorMessage, string context)` - Creates an error report from a string message and context
+- `ExecuteWithRetryAsync<T>(this ErrorHandlingMiddleware middleware, Func<Task<T>> operation, string operationName, int maxRetries = 3)` - Executes an operation with simple retry logic when it fails
+- `FormatErrorMessage(this ErrorHandlingMiddleware middleware, Exception ex, string context)` - Creates a formatted error message string for logging or user display
+- `ExecuteWithCacheFallbackAsync<T>(this ErrorHandlingMiddleware middleware, Func<Task<T>> operation, Func<T> cachedResultProvider, string operationName)` - Attempts to execute an operation with automatic degradation to a cached result
+
 ## WebhookNotificationService
 
 The `WebhookNotificationService` class sends webhook notifications for important SQL query analysis events to external systems like Slack, Microsoft Teams, Discord, or custom APIs. It implements the `IAnalysisEventSubscriber` interface to receive analysis events and sends notifications based on webhook configuration settings. The service includes retry logic for failed webhook deliveries and supports filtering notifications by event type (completion, failures, critical issues).
