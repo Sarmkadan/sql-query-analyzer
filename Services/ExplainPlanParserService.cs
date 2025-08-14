@@ -129,6 +129,10 @@ public class ExplainPlanParserService : IExplainPlanParserService
 
     public async Task<Dictionary<string, object>> ExtractPlanMetricsAsync(QueryPlan plan)
     {
+        // Fix: Added validation to handle null query plan edge case and prevent NullReferenceException
+        if (plan == null)
+            throw new ArgumentNullException(nameof(plan), "The query plan cannot be null when extracting metrics.");
+
         _logger.LogInformation("Extracting plan metrics");
 
         var metrics = new Dictionary<string, object>
