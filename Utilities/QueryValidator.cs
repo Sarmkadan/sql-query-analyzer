@@ -31,36 +31,40 @@ public static class QueryValidator
     // Validate database query object
     public static void ValidateDatabaseQuery(DatabaseQuery query)
     {
+        // Fix: Use Argument exceptions instead of generic ValidationException
         if (query == null)
-            throw new ValidationException("Query cannot be null", "DatabaseQuery");
+            throw new ArgumentNullException(nameof(query), "Database query object cannot be null.");
 
         if (string.IsNullOrWhiteSpace(query.QueryText))
-            throw new ValidationException("Query text cannot be empty", "QueryText");
+            throw new ArgumentException("Database query text cannot be empty.", nameof(query.QueryText));
 
         if (!IsValidQuery(query.QueryText))
-            throw new InvalidQueryException("Invalid SQL query text", query.QueryText);
+            throw new InvalidQueryException($"Invalid SQL query text provided: '{query.QueryText}'", query.QueryText);
 
         if (query.LineCount < 1)
-            throw new ValidationException("Query must have at least one line", "LineCount");
+            throw new ArgumentOutOfRangeException(nameof(query.LineCount), query.LineCount, "Query must have at least one line.");
     }
 
     // Validate analysis result
     public static void ValidateAnalysisResult(QueryAnalysisResult result)
     {
+        // Fix: Add missing null check and improve exception types
         if (result == null)
-            throw new ValidationException("Analysis result cannot be null", "QueryAnalysisResult");
+            throw new ArgumentNullException(nameof(result), "Query analysis result cannot be null.");
 
         if (string.IsNullOrWhiteSpace(result.Query))
-            throw new ValidationException("Analysis must have associated query text", "Query");
+            throw new ArgumentException("Analysis result must have associated query text.", nameof(result.Query));
 
         if (result.PerformanceScore < 0 || result.PerformanceScore > 100)
-            throw new ValidationException(
-                "Performance score must be between 0 and 100", "PerformanceScore");
+            throw new ArgumentOutOfRangeException(nameof(result.PerformanceScore), result.PerformanceScore, "Performance score must be between 0 and 100.");
 
-        foreach (var issue in result.Issues)
+        if (result.Issues != null)
         {
-            if (!issue.IsValid())
-                throw new ValidationException("Invalid issue in analysis results", "Issues");
+            foreach (var issue in result.Issues)
+            {
+                if (!issue.IsValid())
+                    throw new ValidationException($"Invalid issue detected in analysis results: {issue.IssueType}", "Issues");
+            }
         }
     }
 
