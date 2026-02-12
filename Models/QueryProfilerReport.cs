@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -14,7 +15,7 @@ namespace SqlQueryAnalyzer.Models;
 /// Per-invocation configuration overrides for a profiler run.
 /// Passed to <c>IQueryProfilerService.ProfileQueryAsync</c> to tune what data is collected.
 /// </summary>
-public class ProfilerOptions
+public sealed class ProfilerOptions
 {
     /// <summary>Capture and embed the execution plan in the profiler report.</summary>
     public bool CaptureExecutionPlan { get; set; } = true;
@@ -42,7 +43,7 @@ public class ProfilerOptions
 /// Complete profiling report produced by the query profiler.
 /// Combines pipeline stage timings, execution plan analysis, resource usage, and ranked suggestions.
 /// </summary>
-public class QueryProfilerReport
+public sealed class QueryProfilerReport
 {
     /// <summary>Unique identifier that matches the originating <see cref="DatabaseQuery.QueryId"/>.</summary>
     public string QueryId { get; set; } = Guid.NewGuid().ToString();
@@ -139,7 +140,7 @@ public class QueryProfilerReport
 /// <summary>
 /// A single timed pipeline stage captured during a profiling run.
 /// </summary>
-public class ExecutionStage
+public sealed class ExecutionStage
 {
     /// <summary>Stage label (e.g., Parse, ComplexityAnalysis, IssueDetection).</summary>
     public string Name { get; set; } = string.Empty;
@@ -163,7 +164,7 @@ public class ExecutionStage
 /// <summary>
 /// A scalar metric collected during a single profiling run.
 /// </summary>
-public class ProfilerMetric
+public sealed class ProfilerMetric
 {
     /// <summary>Machine-readable metric identifier.</summary>
     public required string Name { get; set; }
@@ -202,7 +203,7 @@ public enum MetricCategory
 /// <summary>
 /// System resource snapshot captured by the profiler at the end of an analysis run.
 /// </summary>
-public class ResourceUsage
+public sealed class ResourceUsage
 {
     /// <summary>Process working-set size at the time of capture, in bytes.</summary>
     public long WorkingSetBytes { get; set; }
@@ -266,7 +267,7 @@ public enum SuggestionCategory
 /// A single, actionable optimization suggestion produced by the profiler.
 /// Suggestions are ranked by <see cref="Priority"/> and <see cref="EstimatedImpactPercent"/>.
 /// </summary>
-public class ProfilerSuggestion
+public sealed class ProfilerSuggestion
 {
     /// <summary>Semantic category this suggestion belongs to.</summary>
     public SuggestionCategory Category { get; set; }
@@ -303,7 +304,7 @@ public class ProfilerSuggestion
 /// Structured comparison between a baseline <see cref="QueryProfilerReport"/> and a candidate,
 /// typically produced after rewriting or tuning a query.
 /// </summary>
-public class ProfileComparison
+public sealed class ProfileComparison
 {
     /// <summary>Query ID of the baseline (original) report.</summary>
     public string BaselineQueryId { get; set; } = string.Empty;
@@ -351,7 +352,7 @@ public class ProfileComparison
 /// <summary>
 /// The delta for a single metric between two compared profiler reports.
 /// </summary>
-public class MetricDelta
+public sealed class MetricDelta
 {
     /// <summary>Name of the compared metric.</summary>
     public string MetricName { get; set; } = string.Empty;
@@ -383,7 +384,7 @@ public class MetricDelta
 /// Fully rendered textual representation of a <see cref="QueryPlan"/>.
 /// Produced by the execution plan visualizer and embedded in <see cref="QueryProfilerReport"/>.
 /// </summary>
-public class PlanVisualization
+public sealed class PlanVisualization
 {
     /// <summary>ASCII tree rendering of all plan nodes with cost annotations.</summary>
     public string TextTree { get; set; } = string.Empty;
@@ -429,7 +430,7 @@ public class PlanVisualization
 /// <summary>
 /// Identifies a high-cost operator in the execution plan and provides a targeted recommendation.
 /// </summary>
-public class BottleneckAnnotation
+public sealed class BottleneckAnnotation
 {
     /// <summary>Unique node identifier from the plan tree.</summary>
     public string NodeId { get; set; } = string.Empty;

@@ -1,3 +1,5 @@
+#nullable enable
+
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -14,7 +16,7 @@ namespace SqlQueryAnalyzer.Caching;
 /// Improves performance by avoiding re-analysis of identical queries.
 /// Implements LRU eviction strategy when cache exceeds size limits.
 /// </summary>
-public class QueryAnalysisCache
+public sealed class QueryAnalysisCache
 {
     private readonly ILogger<QueryAnalysisCache> _logger;
     private readonly QueryCacheKeyGenerator _keyGenerator;
@@ -224,7 +226,7 @@ private class CacheEntry
 /// <summary>
 /// Cache performance statistics.
 /// </summary>
-public class CacheStatistics
+public sealed class CacheStatistics
 {
     public int TotalEntries { get; set; }
     public int MaxEntries { get; set; }

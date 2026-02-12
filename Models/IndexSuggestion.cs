@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace SqlQueryAnalyzer.Models;
 /// <summary>
 /// Represents an index suggestion to improve query performance
 /// </summary>
-public class IndexSuggestion
+public sealed class IndexSuggestion
 {
     public string SuggestionId { get; set; } = Guid.NewGuid().ToString();
     public string TableName { get; set; } = string.Empty;

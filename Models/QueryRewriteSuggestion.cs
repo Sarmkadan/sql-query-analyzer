@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -45,7 +46,7 @@ public enum RewriteType
 /// A suggested SQL query rewrite together with the index recommendations
 /// that make the transformation most effective.
 /// </summary>
-public class QueryRewriteSuggestion
+public sealed class QueryRewriteSuggestion
 {
     /// <summary>Gets or sets the unique identifier for this suggestion.</summary>
     public string SuggestionId { get; set; } = Guid.NewGuid().ToString();

@@ -33,6 +33,17 @@ csharp_new_line_before_finally = true
 csharp_new_line_before_members_in_object_initializers = true
 csharp_new_line_before_members_in_anonymous_types = true
 
+# Using directives
+dotnet_separate_import_directive_groups = true
+dotnet_sort_system_directives_first = true
+file_header_template = unset
+
+# Namespace preferences (assuming block-scoped is fine for existing code)
+csharp_style_namespace_declarations = block_scoped:suggestion
+
+# Null check preferences - to be consistent with the later changes
+csharp_style_null_checking_preference = is_null_expression:suggestion
+
 # Space preferences
 csharp_space_after_cast = false
 csharp_space_after_keywords_in_control_flow_statements = true
