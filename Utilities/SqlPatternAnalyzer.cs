@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 
 namespace SqlQueryAnalyzer.Utilities;
 
@@ -69,6 +70,7 @@ public static class SqlPatternAnalyzer
     }
 
     // Detect missing WHERE clause
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasMissingWhereClause(string query)
     {
         var isSelect = query.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase);

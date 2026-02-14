@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 
 namespace SqlQueryAnalyzer.Utilities;
 
@@ -16,6 +17,7 @@ namespace SqlQueryAnalyzer.Utilities;
 public static class StringExtensions
 {
     // Normalize whitespace in SQL queries
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string NormalizeSqlWhitespace(this string query)
     {
         if (string.IsNullOrEmpty(query))
