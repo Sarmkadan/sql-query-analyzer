@@ -214,7 +214,7 @@ public sealed class QueryAnalysisCache
 /// <summary>
 /// Represents a single cached analysis result.
 /// </summary>
-private class CacheEntry
+internal class CacheEntry
 {
     public string Key { get; set; } = string.Empty;
     public QueryAnalysisResult Result { get; set; } = null!;
