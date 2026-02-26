@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace SqlQueryAnalyzer.Models;
 /// <summary>
 /// Represents a database index
 /// </summary>
-public class Index
+public sealed class Index
 {
     public string IndexId { get; set; } = Guid.NewGuid().ToString();
     public string IndexName { get; set; } = string.Empty;
@@ -153,7 +154,7 @@ public class Index
 /// <summary>
 /// Represents a column in an index
 /// </summary>
-public class IndexColumn
+public sealed class IndexColumn
 {
     public string ColumnName { get; set; } = string.Empty;
     public int KeyOrdinal { get; set; }
