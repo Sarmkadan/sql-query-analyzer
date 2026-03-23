@@ -21,20 +21,18 @@ public class AnalysisPipeline
     private readonly List<IAnalysisMiddleware> _middlewares = new();
     private readonly ILogger<AnalysisPipeline> _logger;
     private readonly IQueryAnalyzerService _analyzer;
-    private readonly QueryValidator _validator;
 
     public AnalysisPipeline(
         ILogger<AnalysisPipeline> logger,
-        IQueryAnalyzerService analyzer,
-        QueryValidator validator)
+        IQueryAnalyzerService analyzer)
     {
         _logger = logger;
         _analyzer = analyzer;
-        _validator = validator;
+
 
         // Register middleware in order of execution
         RegisterMiddleware(new LoggingMiddleware(logger));
-        RegisterMiddleware(new ValidationMiddleware(validator, logger));
+        RegisterMiddleware(new ValidationMiddleware(logger));
         RegisterMiddleware(new QueryNormalizationMiddleware(logger));
         RegisterMiddleware(new AnalysisMiddleware(analyzer, logger));
         RegisterMiddleware(new OptimizationMiddleware(logger));
@@ -138,20 +136,18 @@ public class LoggingMiddleware : IAnalysisMiddleware
 /// </summary>
 public class ValidationMiddleware : IAnalysisMiddleware
 {
-    private readonly QueryValidator _validator;
     private readonly ILogger<ValidationMiddleware> _logger;
 
-    public ValidationMiddleware(QueryValidator validator, ILogger<ValidationMiddleware> logger)
+    public ValidationMiddleware(ILogger<ValidationMiddleware> logger)
     {
-        _validator = validator;
         _logger = logger;
     }
 
-    public async Task ExecuteAsync(AnalysisContext context)
+    public Task ExecuteAsync(AnalysisContext context)
     {
         try
         {
-            var isValid = await _validator.ValidateQueryAsync(context.Query);
+            var isValid = QueryValidator.IsValidQuery(context.Query);
             if (!isValid)
             {
                 _logger.LogWarning("Query validation failed");
@@ -166,6 +162,8 @@ public class ValidationMiddleware : IAnalysisMiddleware
             _logger.LogError(ex, "Validation middleware error");
             throw;
         }
+
+        return Task.CompletedTask;
     }
 }
 

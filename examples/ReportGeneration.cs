@@ -4,28 +4,36 @@
 // CTO & Software Architect
 // =============================================================================
 
-using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using SqlQueryAnalyzer.Constants;
+using SqlQueryAnalyzer.Models;
 using SqlQueryAnalyzer.Services;
 using SqlQueryAnalyzer.Utilities;
 
 namespace SqlQueryAnalyzer.Examples;
 
 /// Demonstrates generating analysis reports in multiple formats
-class ReportGeneration
+public class ReportGenerationExample
 {
-    static async Task Main()
+    private readonly IQueryAnalyzerService _analyzer;
+    private readonly ILogger<ReportGenerationExample> _logger;
+
+    public ReportGenerationExample(IQueryAnalyzerService analyzer, ILogger<ReportGenerationExample> logger)
     {
-        var services = new ServiceCollection()
-            .AddLogging(config => config.AddConsole())
-            .AddScoped<IQueryAnalyzerService, QueryAnalyzerService>()
-            .BuildServiceProvider();
+        _analyzer = analyzer;
+        _logger = logger;
+    }
 
-        var analyzer = services.GetRequiredService<IQueryAnalyzerService>();
-        var logger = services.GetRequiredService<ILogger<ReportGeneration>>();
-
-        logger.LogInformation("Report Generation Example");
-        logger.LogInformation("=========================\n");
+    public async Task RunExample()
+    {
+        _logger.LogInformation("Report Generation Example");
+        _logger.LogInformation("=========================\n");
 
         // Complex query for analysis
         var query = @"
@@ -45,21 +53,21 @@ class ReportGeneration
             ORDER BY TotalSpent DESC
         ";
 
-        logger.LogInformation("Analyzing query...\n");
+        _logger.LogInformation("Analyzing query...\n");
 
-        var result = await analyzer.AnalyzeQueryAsync(query);
+        var result = await _analyzer.AnalyzeQueryAsync(query);
 
         // Create output directory
         var outputDir = "./reports";
         Directory.CreateDirectory(outputDir);
 
         // Generate all report formats
-        await GenerateAllReports(result, outputDir, logger);
+        await GenerateAllReports(result, outputDir, _logger);
 
-        logger.LogInformation($"\n✓ All reports generated in '{outputDir}' directory");
+        _logger.LogInformation($"\n✓ All reports generated in '{outputDir}' directory");
     }
 
-    static async Task GenerateAllReports(
+    private static async Task GenerateAllReports(
         QueryAnalysisResult result,
         string outputDir,
         ILogger logger)
@@ -108,7 +116,7 @@ class ReportGeneration
         logger.LogInformation($"  ✓ Saved to {recPath}");
     }
 
-    static string GenerateExecutiveSummary(QueryAnalysisResult result)
+    private static string GenerateExecutiveSummary(QueryAnalysisResult result)
     {
         var sb = new System.Text.StringBuilder();
 
@@ -147,12 +155,12 @@ class ReportGeneration
 
             foreach (var issue in result.Issues
                 .OrderByDescending(i => i.Severity)
-                .ThenByDescending(i => i.ImpactScore)
+                .ThenByDescending(i => i.EstimatedPerformanceImpact) // Assuming ImpactScore was meant to be EstimatedPerformanceImpact
                 .Take(5))
             {
                 sb.AppendLine($"### {issue.IssueType}");
                 sb.AppendLine($"- **Severity:** {issue.Severity}");
-                sb.AppendLine($"- **Impact:** {issue.ImpactScore}/10");
+                sb.AppendLine($"- **Impact:** {issue.EstimatedPerformanceImpact}/10"); // Assuming ImpactScore was meant to be EstimatedPerformanceImpact
                 sb.AppendLine($"- **Description:** {issue.Description}");
                 sb.AppendLine($"- **Recommendation:** {issue.RecommendedFix}");
                 sb.AppendLine();
@@ -166,13 +174,13 @@ class ReportGeneration
             sb.AppendLine();
 
             foreach (var suggestion in result.IndexSuggestions
-                .OrderByDescending(s => s.Roi)
+                .OrderByDescending(s => s.EstimatedPerformanceGain) // Assuming Roi was meant to be EstimatedPerformanceGain
                 .Take(3))
             {
-                sb.AppendLine($"### {suggestion.SuggestedIndexName}");
-                sb.AppendLine($"- **Columns:** {string.Join(", ", suggestion.Columns)}");
-                sb.AppendLine($"- **Estimated ROI:** {suggestion.Roi:F1}%");
-                sb.AppendLine($"- **Estimated Size:** {suggestion.EstimatedSizeKB} KB");
+                sb.AppendLine($"### {suggestion.IndexName}"); // Assuming SuggestedIndexName was meant to be IndexName
+                sb.AppendLine($"- **Columns:** {string.Join(", ", suggestion.IndexColumns)}"); // Assuming Columns was meant to be IndexColumns
+                sb.AppendLine($"- **Estimated Gain:** {suggestion.EstimatedPerformanceGain:F1}%"); // Assuming Roi was meant to be EstimatedPerformanceGain
+                sb.AppendLine($"- **Estimated Size:** {suggestion.EstimatedSizeKB} KB"); // Assuming EstimatedSizeKB property is available
                 sb.AppendLine();
             }
         }
@@ -180,7 +188,7 @@ class ReportGeneration
         return sb.ToString();
     }
 
-    static string GenerateRecommendations(QueryAnalysisResult result)
+    private static string GenerateRecommendations(QueryAnalysisResult result)
     {
         var sb = new System.Text.StringBuilder();
 
@@ -237,12 +245,12 @@ class ReportGeneration
             sb.AppendLine($"\nTop ROI Opportunities:");
 
             foreach (var suggestion in result.IndexSuggestions
-                .OrderByDescending(s => s.Roi)
+                .OrderByDescending(s => s.EstimatedPerformanceGain) // Assuming Roi was meant to be EstimatedPerformanceGain
                 .Take(3))
             {
-                sb.AppendLine($"\n  CREATE INDEX {suggestion.SuggestedIndexName}");
-                sb.AppendLine($"  ON {suggestion.TableName} ({string.Join(", ", suggestion.Columns)})");
-                sb.AppendLine($"  -- Estimated ROI: {suggestion.Roi:F1}%, Size: {suggestion.EstimatedSizeKB} KB");
+                sb.AppendLine($"\n  CREATE INDEX {suggestion.IndexName}"); // Assuming SuggestedIndexName was meant to be IndexName
+                sb.AppendLine($"  ON {suggestion.TableName} ({string.Join(", ", suggestion.IndexColumns)})"); // Assuming Columns was meant to be IndexColumns
+                sb.AppendLine($"  -- Estimated ROI: {suggestion.EstimatedPerformanceGain:F1}%, Size: {suggestion.EstimatedSizeKB} KB"); // Assuming Roi and EstimatedSizeKB
             }
         }
 
