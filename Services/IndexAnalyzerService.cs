@@ -27,6 +27,10 @@ public class IndexAnalyzerService : IIndexAnalyzerService
 
     public async Task<List<IndexSuggestion>> AnalyzeIndexesAsync(string tableName)
     {
+        // Fix: Ensure table name is provided before querying the database repository
+        if (string.IsNullOrWhiteSpace(tableName))
+            throw new ArgumentException("Table name must be provided to analyze indexes.", nameof(tableName));
+
         _logger.LogInformation($"Analyzing indexes for table: {tableName}");
 
         var suggestions = new List<IndexSuggestion>();

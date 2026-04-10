@@ -19,6 +19,10 @@ public static class ReportGenerator
     // Generate text report
     public static string GenerateTextReport(QueryAnalysisResult analysis)
     {
+        // Fix: Add missing input validation
+        if (analysis == null)
+            throw new ArgumentNullException(nameof(analysis), "Analysis result cannot be null.");
+
         var sb = new StringBuilder();
 
         sb.AppendLine("═════════════════════════════════════════════════════════════");
