@@ -83,6 +83,10 @@ public class ExportService
         string filePath,
         string format = "json")
     {
+        // Fix: Prevent ArgumentNullException on results count logging and formatting
+        if (results == null)
+            throw new ArgumentNullException(nameof(results), "Cannot export a null list of analysis results.");
+
         try
         {
             if (!_formatters.TryGetValue(format.ToLower(), out var formatter))
