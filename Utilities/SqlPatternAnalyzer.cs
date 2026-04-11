@@ -4,66 +4,114 @@
 // =============================================================================
 
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace SqlQueryAnalyzer.Utilities;
 
 /// <summary>
-/// Analyzes SQL patterns and identifies optimization opportunities
+/// Analyzes SQL patterns and identifies optimization opportunities.
+/// All Regex fields are source-generated ([GeneratedRegex]) — no runtime compilation overhead.
+/// FrozenSet is used for O(1) keyword membership tests on hot paths.
 /// </summary>
-public static class SqlPatternAnalyzer
+public static partial class SqlPatternAnalyzer
 {
+    // FrozenSet gives a read-only perfect-hash lookup, faster than array + Any() + per-call Regex.
+    private static readonly FrozenSet<string> s_functionNames =
+        new[] { "UPPER", "LOWER", "CONVERT", "CAST", "DATEPART", "YEAR", "MONTH", "DAY" }
+        .ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly FrozenSet<string> s_aggregateNames =
+        new[] { "SUM", "COUNT", "AVG", "MIN", "MAX", "STRING_AGG", "GROUP_CONCAT" }
+        .ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+
+    // ── Source-generated regexes ─────────────────────────────────────────────
+    // Previously, several methods created a new Regex (or called Regex.Matches with
+    // a fresh pattern string) on every invocation. [GeneratedRegex] compiles these
+    // to a state machine at build time — zero allocation at call time.
+
+    [GeneratedRegex(@"SELECT\s+\*", RegexOptions.IgnoreCase)]
+    private static partial Regex SelectStarRegex();
+
+    [GeneratedRegex(@"LIKE\s+'%", RegexOptions.IgnoreCase)]
+    private static partial Regex LeadingWildcardRegex();
+
+    // Single alternation replaces the original loop of per-function Regex.IsMatch calls.
+    [GeneratedRegex(@"\b(UPPER|LOWER|CONVERT|CAST|DATEPART|YEAR|MONTH|DAY)\s*\(", RegexOptions.IgnoreCase)]
+    private static partial Regex FunctionOnColumnRegex();
+
+    [GeneratedRegex(@"FROM\s+\w+\s*,\s*\w+", RegexOptions.IgnoreCase)]
+    private static partial Regex ImplicitJoinRegex();
+
+    [GeneratedRegex(@"\bOR\b", RegexOptions.IgnoreCase)]
+    private static partial Regex OrConditionRegex();
+
+    [GeneratedRegex(@"SELECT\s+.*FROM\s+\(", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
+    private static partial Regex SubqueryRegex();
+
+    [GeneratedRegex(@"\bUNION\b", RegexOptions.IgnoreCase)]
+    private static partial Regex UnionRegex();
+
+    [GeneratedRegex(@"\bCASE\b", RegexOptions.IgnoreCase)]
+    private static partial Regex CaseRegex();
+
+    // Single alternation replaces the original loop of per-aggregate Regex.IsMatch calls.
+    [GeneratedRegex(@"\b(SUM|COUNT|AVG|MIN|MAX|STRING_AGG|GROUP_CONCAT)\s*\(", RegexOptions.IgnoreCase)]
+    private static partial Regex AggregateFunctionRegex();
+
+    [GeneratedRegex(@"OVER\s*\(", RegexOptions.IgnoreCase)]
+    private static partial Regex WindowFunctionRegex();
+
+    [GeneratedRegex(@"WHERE\s+(.+?)(?=GROUP|ORDER|UNION|LIMIT|$)", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
+    private static partial Regex WhereClauseRegex();
+
+    [GeneratedRegex(@"ON\s+(.+?)(?=WHERE|GROUP|ORDER|UNION|$)", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
+    private static partial Regex JoinConditionRegex();
+
+    // Combined FROM/JOIN/INTO/UPDATE into one pass — previously four separate Regex.Matches calls.
+    [GeneratedRegex(@"(?:FROM|JOIN|INTO|UPDATE)\s+(\w+)", RegexOptions.IgnoreCase)]
+    private static partial Regex TableNameRegex();
+
+    // ── Public API ───────────────────────────────────────────────────────────
+
     // Detect N+1 query patterns
     public static bool DetectNPlusOnePattern(List<string> queries)
     {
         if (queries.Count < 2)
             return false;
 
-        var groupedByTable = new Dictionary<string, int>();
+        var groupedByTable = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var query in queries)
         {
-            var tables = ExtractTablesFromQuery(query);
-            foreach (var table in tables)
+            foreach (var table in ExtractTablesFromQuery(query))
             {
-                if (!groupedByTable.ContainsKey(table))
-                    groupedByTable[table] = 0;
-                groupedByTable[table]++;
+                groupedByTable.TryGetValue(table, out int count);
+                groupedByTable[table] = count + 1;
             }
         }
 
-        // If same table is accessed multiple times, likely N+1
-        return groupedByTable.Values.Any(count => count > 5);
+        foreach (var count in groupedByTable.Values)
+        {
+            if (count > 5) return true;
+        }
+        return false;
     }
 
-    // Extract table names from query
+    // Extract table names from query — single regex pass (was 4 passes).
     public static List<string> ExtractTablesFromQuery(string query)
     {
         var tables = new List<string>();
-        var patterns = new[]
-        {
-            @"FROM\s+(\w+)",
-            @"JOIN\s+(\w+)",
-            @"INTO\s+(\w+)",
-            @"UPDATE\s+(\w+)"
-        };
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        var seen = new HashSet<string>();
-
-        foreach (var pattern in patterns)
+        foreach (Match match in TableNameRegex().Matches(query))
         {
-            var matches = Regex.Matches(query, pattern, RegexOptions.IgnoreCase);
-            foreach (Match match in matches)
-            {
-                var table = match.Groups[1].Value;
-                if (!string.IsNullOrWhiteSpace(table) && seen.Add(table))
-                {
-                    tables.Add(table);
-                }
-            }
+            var table = match.Groups[1].Value;
+            if (!string.IsNullOrWhiteSpace(table) && seen.Add(table))
+                tables.Add(table);
         }
 
         return tables;
@@ -78,33 +126,25 @@ public static class SqlPatternAnalyzer
     }
 
     // Detect SELECT *
-    public static bool HasSelectStar(string query)
-    {
-        return Regex.IsMatch(query, @"SELECT\s+\*", RegexOptions.IgnoreCase);
-    }
+    public static bool HasSelectStar(string query) =>
+        SelectStarRegex().IsMatch(query);
 
     // Detect LIKE with leading wildcard
-    public static bool HasLeadingWildcardLike(string query)
-    {
-        return Regex.IsMatch(query, @"LIKE\s+'%", RegexOptions.IgnoreCase);
-    }
+    public static bool HasLeadingWildcardLike(string query) =>
+        LeadingWildcardRegex().IsMatch(query);
 
-    // Detect function on column in WHERE
+    // Detect function on column in WHERE — was looping over array + per-function Regex.
     public static bool HasFunctionOnColumn(string query)
     {
         if (!query.Contains("WHERE", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        var functions = new[] { "UPPER", "LOWER", "CONVERT", "CAST", "DATEPART", "YEAR", "MONTH", "DAY" };
-        return functions.Any(func =>
-            Regex.IsMatch(query, $@"\b{func}\s*\(", RegexOptions.IgnoreCase));
+        return FunctionOnColumnRegex().IsMatch(query);
     }
 
     // Detect implicit JOIN (comma-separated tables in FROM)
-    public static bool HasImplicitJoin(string query)
-    {
-        return Regex.IsMatch(query, @"FROM\s+\w+\s*,\s*\w+", RegexOptions.IgnoreCase);
-    }
+    public static bool HasImplicitJoin(string query) =>
+        ImplicitJoinRegex().IsMatch(query);
 
     // Detect DISTINCT without ORDER BY
     public static bool HasDistinctWithoutOrder(string query)
@@ -120,112 +160,86 @@ public static class SqlPatternAnalyzer
         if (!query.Contains("WHERE", StringComparison.OrdinalIgnoreCase))
             return 0;
 
-        var whereClause = ExtractWhereClause(query);
-        var orMatches = Regex.Matches(whereClause, @"\bOR\b", RegexOptions.IgnoreCase);
-        return orMatches.Count;
+        return OrConditionRegex().Matches(ExtractWhereClause(query)).Count;
     }
 
     // Detect subquery pattern
-    public static bool HasSubquery(string query)
-    {
-        return Regex.IsMatch(query, @"SELECT\s+.*FROM\s+\(", RegexOptions.IgnoreCase);
-    }
+    public static bool HasSubquery(string query) =>
+        SubqueryRegex().IsMatch(query);
 
     // Detect UNION vs UNION ALL
-    public static int CountUnion(string query)
-    {
-        var unionMatches = Regex.Matches(query, @"\bUNION\b", RegexOptions.IgnoreCase);
-        return unionMatches.Count;
-    }
+    public static int CountUnion(string query) =>
+        UnionRegex().Matches(query).Count;
 
     // Detect JOIN conditions
     public static List<string> ExtractJoinConditions(string query)
     {
         var conditions = new List<string>();
-        var pattern = @"ON\s+(.+?)(?=WHERE|GROUP|ORDER|UNION|$)";
-        var matches = Regex.Matches(query, pattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-        foreach (Match match in matches)
-        {
+        foreach (Match match in JoinConditionRegex().Matches(query))
             conditions.Add(match.Groups[1].Value.Trim());
-        }
-
         return conditions;
     }
 
     // Extract WHERE clause
     public static string ExtractWhereClause(string query)
     {
-        var match = Regex.Match(query, @"WHERE\s+(.+?)(?=GROUP|ORDER|UNION|LIMIT|$)",
-            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        var match = WhereClauseRegex().Match(query);
         return match.Success ? match.Groups[1].Value : string.Empty;
     }
 
     // Detect CASE statement complexity
-    public static int CountCaseStatements(string query)
-    {
-        var caseMatches = Regex.Matches(query, @"\bCASE\b", RegexOptions.IgnoreCase);
-        return caseMatches.Count;
-    }
+    public static int CountCaseStatements(string query) =>
+        CaseRegex().Matches(query).Count;
 
-    // Detect aggregate functions
-    public static bool HasAggregateFunction(string query)
-    {
-        var aggregates = new[] { "SUM", "COUNT", "AVG", "MIN", "MAX", "STRING_AGG", "GROUP_CONCAT" };
-        return aggregates.Any(agg =>
-            Regex.IsMatch(query, $@"\b{agg}\s*\(", RegexOptions.IgnoreCase));
-    }
+    // Detect aggregate functions — was looping over array + per-aggregate Regex.
+    public static bool HasAggregateFunction(string query) =>
+        AggregateFunctionRegex().IsMatch(query);
 
     // Detect window functions
-    public static bool HasWindowFunction(string query)
-    {
-        return Regex.IsMatch(query, @"OVER\s*\(", RegexOptions.IgnoreCase);
-    }
+    public static bool HasWindowFunction(string query) =>
+        WindowFunctionRegex().IsMatch(query);
 
     // Analyze query readability score (0-100)
     public static double CalculateReadabilityScore(string query)
     {
         var score = 100.0;
 
-        // Penalize for SELECT *
         if (HasSelectStar(query))
             score -= 10;
 
-        // Penalize for implicit JOINs
         if (HasImplicitJoin(query))
             score -= 20;
 
-        // Penalize for missing WHERE on SELECT
         if (HasMissingWhereClause(query) && !query.Contains("LIMIT", StringComparison.OrdinalIgnoreCase))
             score -= 15;
 
-        // Penalize for complex nesting
-        var nestingLevel = CountParentheses(query);
-        score -= Math.Min(20, nestingLevel * 2);
+        score -= Math.Min(20, CountParentheses(query) * 2);
 
-        // Penalize for leading wildcards
         if (HasLeadingWildcardLike(query))
             score -= 10;
 
-        // Penalize for functions on columns
         if (HasFunctionOnColumn(query))
             score -= 5;
 
         return Math.Max(0, score);
     }
 
-    // Count parentheses level (nesting indicator)
+    /// <summary>
+    /// Count maximum parenthesis nesting depth.
+    /// Uses ReadOnlySpan&lt;char&gt; to iterate without per-character boxing.
+    /// </summary>
     public static int CountParentheses(string query)
     {
-        var maxLevel = 0;
-        var currentLevel = 0;
+        var span = query.AsSpan();
+        int maxLevel = 0;
+        int currentLevel = 0;
 
-        foreach (var c in query)
+        foreach (var c in span)
         {
             if (c == '(')
             {
-                currentLevel++;
-                maxLevel = Math.Max(maxLevel, currentLevel);
+                if (++currentLevel > maxLevel)
+                    maxLevel = currentLevel;
             }
             else if (c == ')')
             {
