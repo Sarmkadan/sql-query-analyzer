@@ -1,63 +1,35 @@
-# =============================================================================
-# Author: Vladyslav Zaiets | https://sarmkadan.com
-# CTO & Software Architect
-# =============================================================================
-
-version: '3.8'
-
+version: '3'
 services:
-  # SQL Server database
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sql-query-analyzer-sqlserver
+  sql-query-analyzer:
+    build: .
     environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "YourPassword123!"
-      MSSQL_PID: Developer
-    ports:
-      - "1433:1433"
+      - DB_SERVER=localhost
+      - DB_PORT=1433
+      - DB_USER=sa
+      - DB_PASSWORD=YourPassword123!
+      - DB_NAME=QueryAnalyzer
+      - ANALYZER_LOG_LEVEL=Information
     volumes:
-      - sqlserver-data:/var/opt/mssql
-    networks:
-      - analyzer-network
-    healthcheck:
-      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourPassword123!", "-Q", "SELECT 1"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-
-  # SQL Query Analyzer application
-  analyzer:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: sql-query-analyzer-app
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-    environment:
-      DB_SERVER: sqlserver
-      DB_PORT: 1433
-      DB_USER: sa
-      DB_PASSWORD: "YourPassword123!"
-      DB_NAME: QueryAnalyzer
-      DB_TIMEOUT: 30
-      ANALYZER_LOG_LEVEL: Information
-      ANALYZER_ENABLE_CACHE: "true"
-      ANALYZER_CACHE_TTL: 3600
+      - ./data:/app/data
     ports:
       - "5000:5000"
+    healthcheck:
+      test: ["curl", "--fail", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      - redis
+      - postgres
+  redis:
+    image: redis:alpine
     volumes:
-      - ./logs:/app/logs
-      - ./reports:/app/reports
-    networks:
-      - analyzer-network
-    restart: unless-stopped
-
-networks:
-  analyzer-network:
-    driver: bridge
-
-volumes:
-  sqlserver-data:
-    driver: local
+      - ./redis-data:/data
+  postgres:
+    image: postgres:alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=YourPassword123!
+      - POSTGRES_DB=QueryAnalyzer
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
