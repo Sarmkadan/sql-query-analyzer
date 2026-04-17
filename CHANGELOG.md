@@ -10,30 +10,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-12-22
+## [2.0.0] - 2026-02-22
 
 ### Added
-- **Stable Public Release**: All core features production-ready
-- **REST API**: ASP.NET Core endpoints for remote analysis integration
-- **Background Queue Processing**: Async batch analysis via hosted service
-- **Docker Compose**: Multi-database profiles (SQL Server, PostgreSQL)
-- **Full Documentation**: API reference, architecture guide, deployment docs
-- **Unit Tests**: 150+ test cases covering analyzers, validators, and formatters
-- **Rate Limiting Middleware**: Protect API endpoints from abuse
-- **Health Check Endpoint**: Kubernetes readiness/liveness probe support
-- **NuGet Package**: Published `Zaiets.sql.query.analyzer` to NuGet gallery
+- **Query Profiler**: Execution plan visualization and performance suggestions
+- **Docker Support**: Multi-stage builds with health check endpoints (/health, /health/ready)
+- **Integration Test Suite**: Comprehensive xUnit test coverage
+- **Migration Guide**: v2.0 migration guide and Docker documentation
 
 ### Changed
-- Performance scoring algorithm refined based on beta feedback
-- Index suggestion ROI calculation accounts for write/read ratio
-- CLI output improved with color-coded severity levels
-- Error messages made more actionable with suggested fixes
+- Upgraded to .NET 10.0
+- Modern C# features (records, primary constructors)
+- Improved API consistency across all services
 
 ### Fixed
-- False positive `LeadingWildcard` detection when ESCAPE clause is present
-- Fragmentation percentage calculation off-by-one for partitioned indexes
-- Subquery detection incorrectly flagging CTEs as optimization candidates
-- Cache key collision for queries differing only in whitespace
+- Various edge cases found through integration testing
 
 ## [0.9.0] - 2025-11-17
 
