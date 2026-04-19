@@ -1,3 +1,5 @@
+#nullable enable
+
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -14,7 +16,7 @@ namespace SqlQueryAnalyzer.API;
 /// Handles HTTP requests for analyzing queries and retrieving results.
 /// Can be used with ASP.NET Core or similar web frameworks.
 /// </summary>
-public class AnalysisController
+public sealed class AnalysisController
 {
     private readonly IQueryAnalyzerService _analyzerService;
     private readonly ILogger<AnalysisController> _logger;
