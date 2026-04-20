@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -298,7 +299,7 @@ public static class QueryProfilerExtensions
 /// Aggregated statistics for a batch of <see cref="QueryProfilerReport"/> instances.
 /// Produced by <see cref="QueryProfilerExtensions.GetBatchSummary"/>.
 /// </summary>
-public class ProfilerBatchSummary
+public sealed class ProfilerBatchSummary
 {
     /// <summary>Total number of reports in the batch (includes failed ones).</summary>
     public int TotalReports { get; set; }

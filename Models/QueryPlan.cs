@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace SqlQueryAnalyzer.Models;
 /// <summary>
 /// Represents a parsed SQL execution plan
 /// </summary>
-public class QueryPlan
+public sealed class QueryPlan
 {
     public string PlanId { get; set; } = Guid.NewGuid().ToString();
     public string DatabaseName { get; set; } = string.Empty;
@@ -116,7 +117,7 @@ public class QueryPlan
 /// <summary>
 /// Represents a single node in the execution plan tree
 /// </summary>
-public class PlanNode
+public sealed class PlanNode
 {
     public string NodeId { get; set; } = Guid.NewGuid().ToString();
     public string NodeType { get; set; } = string.Empty; // Table Scan, Index Seek, etc.
@@ -134,7 +135,7 @@ public class PlanNode
 /// <summary>
 /// Represents table access information from a plan
 /// </summary>
-public class TableAccess
+public sealed class TableAccess
 {
     public string TableName { get; set; } = string.Empty;
     public string AccessMethod { get; set; } = string.Empty;
@@ -145,7 +146,7 @@ public class TableAccess
 /// <summary>
 /// Represents join information from a plan
 /// </summary>
-public class Join
+public sealed class Join
 {
     public string JoinType { get; set; } = string.Empty;
     public int EstimatedRows { get; set; }
