@@ -167,7 +167,7 @@ public class AnalysisRequest
 /// </summary>
 public class BatchAnalysisRequest
 {
-    public string[] Queries { get; set; } = Array.Empty<string>();
+    public string[] Queries { get; set; } = [];
     public int? MaxDegreeOfParallelism { get; set; }
 }
 

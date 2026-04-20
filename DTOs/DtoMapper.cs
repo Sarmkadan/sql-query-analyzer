@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -149,7 +150,7 @@ public static class DtoMapper
 /// <summary>
 /// DTO for query details
 /// </summary>
-public class QueryDetailDto
+public sealed class QueryDetailDto
 {
     public string QueryId { get; set; } = string.Empty;
     public string QueryText { get; set; } = string.Empty;
