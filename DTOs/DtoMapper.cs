@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SqlQueryAnalyzer.Models;
+using ModelIndex = SqlQueryAnalyzer.Models.Index;
+using SqlQueryAnalyzer.Constants;
 
 namespace SqlQueryAnalyzer.DTOs;
 
@@ -63,7 +65,7 @@ public static class DtoMapper
     }
 
     // Map Index to IndexDetailDto
-    public static IndexDetailDto ToIndexDetailDto(Index index)
+    public static IndexDetailDto ToIndexDetailDto(ModelIndex index)
     {
         return new IndexDetailDto
         {
@@ -81,7 +83,7 @@ public static class DtoMapper
     // Map Index list to IndexAnalysisResponseDto
     public static IndexAnalysisResponseDto ToIndexAnalysisResponseDto(
         string tableName,
-        List<Index> indexes,
+        List<ModelIndex> indexes,
         List<IndexSuggestion> suggestions,
         List<string> scripts)
     {

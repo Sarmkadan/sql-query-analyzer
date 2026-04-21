@@ -20,6 +20,7 @@
     <Copyright>Copyright © 2026 Vladyslav Zaiets</Copyright>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

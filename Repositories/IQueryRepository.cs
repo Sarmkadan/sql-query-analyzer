@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using SqlQueryAnalyzer.Models;
+using ModelIndex = SqlQueryAnalyzer.Models.Index;
+using SqlQueryAnalyzer.Constants;
 
 namespace SqlQueryAnalyzer.Repositories;
 
@@ -28,38 +30,7 @@ public interface IQueryRepository
     Task<int> GetQueryCountAsync();
 }
 
-/// <summary>
-/// Repository interface for analysis results
-/// </summary>
-public interface IAnalysisRepository
-{
-    Task<QueryAnalysisResult?> GetAnalysisAsync(string queryId);
-    Task<List<QueryAnalysisResult>> GetAllAnalysesAsync();
-    Task<List<QueryAnalysisResult>> GetAnalysesByDateRangeAsync(DateTime startDate, DateTime endDate);
-    Task<QueryAnalysisResult> SaveAnalysisAsync(QueryAnalysisResult analysis);
-    Task DeleteAnalysisAsync(string queryId);
-    Task<List<PerformanceIssue>> GetIssuesByTypeAsync(IssueType issueType);
-    Task<List<PerformanceIssue>> GetCriticalIssuesAsync();
-    Task<int> GetTotalIssueCountAsync();
-}
 
-/// <summary>
-/// Repository interface for index operations
-/// </summary>
-public interface IIndexRepository
-{
-    Task<Index?> GetIndexByNameAsync(string indexName);
-    Task<List<Index>> GetIndexesByTableAsync(string tableName);
-    Task<List<Index>> GetAllIndexesAsync();
-    Task<List<Index>> GetUnusedIndexesAsync();
-    Task<List<Index>> GetFragmentedIndexesAsync();
-    Task<Index> AddIndexAsync(Index index);
-    Task UpdateIndexAsync(Index index);
-    Task DeleteIndexAsync(string indexId);
-    Task<List<IndexSuggestion>> GetSuggestionsAsync();
-    Task SaveSuggestionAsync(IndexSuggestion suggestion);
-    Task<int> GetIndexCountAsync();
-}
 
 /// <summary>
 /// In-memory implementation of query repository for Phase 1
@@ -247,7 +218,7 @@ public class AnalysisRepository : IAnalysisRepository
         {
             var issues = _analyses
                 .SelectMany(a => a.Issues)
-                .Where(i => i.IsCritical)
+                .Where(i => i.Severity == IssueSeverity.Critical)
                 .OrderByDescending(i => i.EstimatedPerformanceImpact)
                 .ToList();
             return Task.FromResult(issues);
@@ -261,6 +232,31 @@ public class AnalysisRepository : IAnalysisRepository
             return Task.FromResult(_analyses.Sum(a => a.Issues.Count));
         }
     }
+
+    // New method for IAnalysisRepository.GetAnalysesForQueryAsync
+    public Task<List<QueryAnalysisResult>> GetAnalysesForQueryAsync(string queryHash)
+    {
+        lock (_lock)
+        {
+            var results = _analyses
+                .Where(a => a.Query.QueryHash == queryHash) // Assuming QueryHash is available in Query
+                .ToList();
+            return Task.FromResult(results);
+        }
+    }
+
+    // New method for IAnalysisRepository.GetRecentAnalysesAsync
+    public Task<List<QueryAnalysisResult>> GetRecentAnalysesAsync(int count = 100)
+    {
+        lock (_lock)
+        {
+            var results = _analyses
+                .OrderByDescending(a => a.AnalyzedAt)
+                .Take(count)
+                .ToList();
+            return Task.FromResult(results);
+        }
+    }
 }
 
 /// <summary>
@@ -268,11 +264,11 @@ public class AnalysisRepository : IAnalysisRepository
 /// </summary>
 public class IndexRepository : IIndexRepository
 {
-    private readonly List<Index> _indexes = [];
+    private readonly List<ModelIndex> _indexes = [];
     private readonly List<IndexSuggestion> _suggestions = [];
     private readonly object _lock = new();
 
-    public Task<Index?> GetIndexByNameAsync(string indexName)
+    public Task<ModelIndex?> GetIndexByNameAsync(string indexName)
     {
         lock (_lock)
         {
@@ -281,7 +277,7 @@ public class IndexRepository : IIndexRepository
         }
     }
 
-    public Task<List<Index>> GetIndexesByTableAsync(string tableName)
+    public Task<List<ModelIndex>> GetIndexesByTableAsync(string tableName)
     {
         lock (_lock)
         {
@@ -290,15 +286,15 @@ public class IndexRepository : IIndexRepository
         }
     }
 
-    public Task<List<Index>> GetAllIndexesAsync()
+    public Task<List<ModelIndex>> GetAllIndexesAsync()
     {
         lock (_lock)
         {
-            return Task.FromResult(new List<Index>(_indexes));
+            return Task.FromResult(new List<ModelIndex>(_indexes));
         }
     }
 
-    public Task<List<Index>> GetUnusedIndexesAsync()
+    public Task<List<ModelIndex>> GetUnusedIndexesAsync()
     {
         lock (_lock)
         {
@@ -307,7 +303,7 @@ public class IndexRepository : IIndexRepository
         }
     }
 
-    public Task<List<Index>> GetFragmentedIndexesAsync()
+    public Task<List<ModelIndex>> GetFragmentedIndexesAsync()
     {
         lock (_lock)
         {
@@ -316,7 +312,7 @@ public class IndexRepository : IIndexRepository
         }
     }
 
-    public Task<Index> AddIndexAsync(Index index)
+    public Task<ModelIndex> AddIndexAsync(ModelIndex index)
     {
         lock (_lock)
         {
@@ -325,7 +321,7 @@ public class IndexRepository : IIndexRepository
         }
     }
 
-    public Task UpdateIndexAsync(Index index)
+    public Task UpdateIndexAsync(ModelIndex index)
     {
         lock (_lock)
         {
@@ -344,8 +340,9 @@ public class IndexRepository : IIndexRepository
         lock (_lock)
         {
             _indexes.RemoveAll(i => i.IndexId == indexId);
-            return Task.CompletedTask;
         }
+
+        return Task.CompletedTask;
     }
 
     public Task<List<IndexSuggestion>> GetSuggestionsAsync()

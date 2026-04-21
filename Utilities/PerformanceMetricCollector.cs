@@ -181,7 +181,7 @@ public class PerformanceMetricCollector
 /// <summary>
 /// Individual analysis metric record.
 /// </summary>
-private class AnalysisMetric
+internal class AnalysisMetric
 {
     public string QueryId { get; set; } = string.Empty;
     public double ExecutionTimeMs { get; set; }

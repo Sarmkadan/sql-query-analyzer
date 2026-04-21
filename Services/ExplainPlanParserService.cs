@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Models;
+using System.Text.Json;
 
 namespace SqlQueryAnalyzer.Services;
 
@@ -55,16 +56,60 @@ public class ExplainPlanParserService : IExplainPlanParserService
 
         try
         {
-            // Simple JSON-based parsing for PostgreSQL EXPLAIN output
-            // In production, would use a proper JSON parser
-            if (jsonPlan.Contains("\"Planning Time\""))
+            // Hotfix: Replaced rudimentary string-based parsing with System.Text.Json for robust handling of
+            // PostgreSQL EXPLAIN (FORMAT JSON) output, especially for new formats like PostgreSQL 17.
+            // Extracts Planning Time, Execution Time, Total Cost, and Actual Total Time.
+
+            using var document = System.Text.Json.JsonDocument.Parse(jsonPlan);
+            var root = document.RootElement;
+
+            if (root.ValueKind == System.Text.Json.JsonValueKind.Array && root.GetArrayLength() > 0)
             {
-                // Extract planning and execution times
-                var planningMatch = System.Text.RegularExpressions.Regex.Match(
-                    jsonPlan, @"""Planning Time"":\s*([\d.]+)");
-                if (planningMatch.Success && double.TryParse(planningMatch.Groups[1].Value, out var planningTime))
+                // Assuming the top-level object contains the overall plan details
+                var topLevelPlan = root[0];
+
+                // Try to extract Planning Time from the top level
+                if (topLevelPlan.TryGetProperty("Planning Time", out var planningTimeElement) &&
+                    planningTimeElement.ValueKind == System.Text.Json.JsonValueKind.Number)
                 {
-                    plan.TotalEstimatedCpuCost = planningTime;
+                    plan.TotalEstimatedCpuCost = planningTimeElement.GetDouble();
+                }
+
+                // Try to extract Execution Time from the top level
+                if (topLevelPlan.TryGetProperty("Execution Time", out var executionTimeElement) &&
+                    executionTimeElement.ValueKind == System.Text.Json.JsonValueKind.Number)
+                {
+                    plan.TotalElapsedTime = TimeSpan.FromMilliseconds(executionTimeElement.GetDouble());
+                }
+
+                // If a "Plan" property exists, try to extract more details from it
+                if (topLevelPlan.TryGetProperty("Plan", out var planElement) &&
+                    planElement.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    // Extract Total Cost if available from the nested "Plan" object
+                    if (planElement.TryGetProperty("Total Cost", out var totalCostElement) &&
+                        totalCostElement.ValueKind == System.Text.Json.JsonValueKind.Number)
+                    {
+                        plan.TotalEstimatedCost = totalCostElement.GetDouble();
+                    }
+
+                    // Extract Actual Total Time if available from the nested "Plan" object
+                    if (planElement.TryGetProperty("Actual Total Time", out var actualTotalTimeElement) &&
+                        actualTotalTimeElement.ValueKind == System.Text.Json.JsonValueKind.Number)
+                    {
+                        // Prioritize Actual Total Time for TotalElapsedTime if available and not already set
+                        if (plan.TotalElapsedTime == TimeSpan.Zero)
+                        {
+                            plan.TotalElapsedTime = TimeSpan.FromMilliseconds(actualTotalTimeElement.GetDouble());
+                        }
+                    }
+
+                    // Extract Plan Rows
+                    if (planElement.TryGetProperty("Plan Rows", out var planRowsElement) &&
+                        planRowsElement.ValueKind == System.Text.Json.JsonValueKind.Number)
+                    {
+                        plan.TotalEstimatedRows = planRowsElement.GetDouble();
+                    }
                 }
             }
 
