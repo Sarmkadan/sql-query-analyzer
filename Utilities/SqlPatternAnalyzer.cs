@@ -76,6 +76,10 @@ public static partial class SqlPatternAnalyzer
     [GeneratedRegex(@"(?:FROM|JOIN|INTO|UPDATE)\s+(\w+)", RegexOptions.IgnoreCase)]
     private static partial Regex TableNameRegex();
 
+    // Matches CTE alias names declared in WITH clauses.
+    [GeneratedRegex(@"\bWITH\s+(\w+)\s+AS\s*\(", RegexOptions.IgnoreCase)]
+    private static partial Regex CteNameRegex();
+
     // ── Public API ───────────────────────────────────────────────────────────
 
     // Detect N+1 query patterns
@@ -102,16 +106,30 @@ public static partial class SqlPatternAnalyzer
         return false;
     }
 
+    /// <summary>
+    /// Extracts CTE alias names declared in WITH clauses.
+    /// These aliases are virtual — they should not be counted as physical table references.
+    /// </summary>
+    public static HashSet<string> ExtractCteNames(string query)
+    {
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (Match match in CteNameRegex().Matches(query))
+            names.Add(match.Groups[1].Value);
+        return names;
+    }
+
     // Extract table names from query — single regex pass (was 4 passes).
+    // CTE alias names are excluded to prevent false-positive N+1 detection on CTE queries.
     public static List<string> ExtractTablesFromQuery(string query)
     {
         var tables = new List<string>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var cteNames = ExtractCteNames(query);
 
         foreach (Match match in TableNameRegex().Matches(query))
         {
             var table = match.Groups[1].Value;
-            if (!string.IsNullOrWhiteSpace(table) && seen.Add(table))
+            if (!string.IsNullOrWhiteSpace(table) && !cteNames.Contains(table) && seen.Add(table))
                 tables.Add(table);
         }
 

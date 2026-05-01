@@ -106,6 +106,15 @@ public sealed class DatabaseQuery
 
     private void ExtractTables()
     {
+        // Extract CTE alias names first — they are virtual and must not be counted
+        // as physical table references, which would cause false-positive N+1 detection.
+        var ctePattern = @"\bWITH\s+(\w+)\s+AS\s*\(";
+        var cteRegex = new System.Text.RegularExpressions.Regex(ctePattern,
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        var cteNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (System.Text.RegularExpressions.Match cteMatch in cteRegex.Matches(NormalizedQuery))
+            cteNames.Add(cteMatch.Groups[1].Value);
+
         // Simple extraction - in real scenario would use proper SQL parser
         var pattern = @"FROM\s+(\w+)|JOIN\s+(\w+)|INTO\s+(\w+)|UPDATE\s+(\w+)";
         var regex = new System.Text.RegularExpressions.Regex(pattern,
@@ -118,7 +127,7 @@ public sealed class DatabaseQuery
         {
             var table = match.Groups[1].Value ?? match.Groups[2].Value ??
                        match.Groups[3].Value ?? match.Groups[4].Value;
-            if (!string.IsNullOrWhiteSpace(table) && seenTables.Add(table))
+            if (!string.IsNullOrWhiteSpace(table) && !cteNames.Contains(table) && seenTables.Add(table))
                 ReferencedTables.Add(table);
         }
     }
