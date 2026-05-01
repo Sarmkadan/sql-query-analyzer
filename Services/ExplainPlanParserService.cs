@@ -136,32 +136,11 @@ public class ExplainPlanParserService : IExplainPlanParserService
 
         try
         {
-            // Parse MySQL EXPLAIN JSON format
-            // Extract key metrics
-            if (jsonPlan.Contains("\"type\""))
-            {
-                // Analyze access types
-                var accessTypes = new[] { "system", "const", "eq_ref", "ref", "range", "index", "ALL" };
-                foreach (var accessType in accessTypes)
-                {
-                    if (jsonPlan.Contains($"\"{accessType}\""))
-                    {
-                        // Estimate cost based on access type
-                        var estimatedCost = accessType switch
-                        {
-                            "ALL" => 100.0,  // Full table scan
-                            "index" => 50.0, // Index scan
-                            "range" => 30.0,
-                            "ref" => 10.0,
-                            "eq_ref" => 5.0,
-                            "const" => 1.0,
-                            "system" => 0.5,
-                            _ => 50.0
-                        };
-                        plan.TotalEstimatedCost += estimatedCost;
-                    }
-                }
-            }
+            var trimmed = jsonPlan.AsSpan().TrimStart();
+            if (trimmed.StartsWith("{") || trimmed.StartsWith("["))
+                ParseMySqlJsonFormat(plan, jsonPlan);
+            else
+                ParseMySqlTabularFormat(plan, jsonPlan);
 
             plan.Initialize();
         }
@@ -171,6 +150,139 @@ public class ExplainPlanParserService : IExplainPlanParserService
         }
 
         return await Task.FromResult(plan);
+    }
+
+    /// <summary>
+    /// Parses MySQL EXPLAIN FORMAT=JSON output.
+    /// Extracts cost_info, used_columns, access types, and nested join details
+    /// for accurate index recommendations.
+    /// </summary>
+    private void ParseMySqlJsonFormat(QueryPlan plan, string jsonPlan)
+    {
+        using var document = JsonDocument.Parse(jsonPlan);
+        var root = document.RootElement;
+
+        // MySQL FORMAT=JSON wraps everything in a top-level "query_block" object.
+        var queryBlock = root.ValueKind == JsonValueKind.Object &&
+                         root.TryGetProperty("query_block", out var qb) ? qb : root;
+
+        // Top-level query cost
+        if (queryBlock.TryGetProperty("cost_info", out var topCostInfo) &&
+            topCostInfo.TryGetProperty("query_cost", out var queryCostEl) &&
+            double.TryParse(queryCostEl.GetString(),
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out var queryCost))
+        {
+            plan.TotalEstimatedCost = queryCost;
+        }
+
+        var nodes = new List<PlanNode>();
+        ExtractMySqlJsonTables(queryBlock, nodes, plan);
+        plan.RootNode = nodes.Count > 0 ? nodes[0] : null;
+    }
+
+    /// <summary>
+    /// Recursively extracts table nodes from a MySQL EXPLAIN FORMAT=JSON element.
+    /// Handles both direct "table" entries and "nested_loop" arrays.
+    /// </summary>
+    private void ExtractMySqlJsonTables(JsonElement element, List<PlanNode> nodes, QueryPlan plan)
+    {
+        // Direct table entry
+        if (element.TryGetProperty("table", out var tableEl))
+        {
+            var node = new PlanNode();
+
+            if (tableEl.TryGetProperty("table_name", out var tn))
+                node.ObjectName = tn.GetString() ?? string.Empty;
+
+            if (tableEl.TryGetProperty("access_type", out var at))
+                node.NodeType = MapMySqlAccessTypeToNodeType(at.GetString() ?? string.Empty);
+
+            if (tableEl.TryGetProperty("rows_examined_per_scan", out var rows) &&
+                rows.ValueKind == JsonValueKind.Number)
+                node.EstimatedRows = rows.GetInt32();
+
+            if (tableEl.TryGetProperty("cost_info", out var ci) &&
+                ci.TryGetProperty("prefix_cost", out var pc) &&
+                double.TryParse(pc.GetString(),
+                    System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out var prefixCost))
+                node.EstimatedCost = prefixCost;
+
+            // used_columns enables covering-index opportunity detection
+            if (tableEl.TryGetProperty("used_columns", out var usedCols) &&
+                usedCols.ValueKind == JsonValueKind.Array)
+            {
+                var cols = new List<string>();
+                foreach (var col in usedCols.EnumerateArray())
+                    cols.Add(col.GetString() ?? string.Empty);
+                node.Properties["used_columns"] = string.Join(", ", cols);
+            }
+
+            // possible_keys and key used for unused-index detection
+            if (tableEl.TryGetProperty("possible_keys", out var possibleKeys) &&
+                possibleKeys.ValueKind == JsonValueKind.Array)
+            {
+                var keys = new List<string>();
+                foreach (var key in possibleKeys.EnumerateArray())
+                    keys.Add(key.GetString() ?? string.Empty);
+                node.Properties["possible_keys"] = string.Join(", ", keys);
+            }
+
+            if (tableEl.TryGetProperty("key", out var keyUsed))
+                node.Properties["key"] = keyUsed.GetString() ?? string.Empty;
+
+            plan.TotalEstimatedRows += node.EstimatedRows;
+            nodes.Add(node);
+        }
+
+        // nested_loop appears when multiple tables are joined
+        if (element.TryGetProperty("nested_loop", out var nestedLoop) &&
+            nestedLoop.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in nestedLoop.EnumerateArray())
+                ExtractMySqlJsonTables(item, nodes, plan);
+        }
+    }
+
+    private static string MapMySqlAccessTypeToNodeType(string accessType) =>
+        accessType.ToUpperInvariant() switch
+        {
+            "ALL"    => "Table Scan",
+            "INDEX"  => "Index Scan",
+            "RANGE"  => "Index Range Scan",
+            "REF"    => "Index Seek",
+            "EQ_REF" => "Index Seek",
+            "CONST"  => "Index Seek",
+            "SYSTEM" => "Index Seek",
+            _        => accessType
+        };
+
+    /// <summary>
+    /// Fallback heuristic for MySQL default tabular EXPLAIN format.
+    /// </summary>
+    private static void ParseMySqlTabularFormat(QueryPlan plan, string textPlan)
+    {
+        var accessTypes = new[] { "system", "const", "eq_ref", "ref", "range", "index", "ALL" };
+        foreach (var accessType in accessTypes)
+        {
+            if (textPlan.Contains(accessType, StringComparison.OrdinalIgnoreCase))
+            {
+                plan.TotalEstimatedCost += accessType switch
+                {
+                    "ALL"    => 100.0,
+                    "index"  => 50.0,
+                    "range"  => 30.0,
+                    "ref"    => 10.0,
+                    "eq_ref" => 5.0,
+                    "const"  => 1.0,
+                    "system" => 0.5,
+                    _        => 50.0
+                };
+            }
+        }
     }
 
     public async Task<Dictionary<string, object>> ExtractPlanMetricsAsync(QueryPlan plan)
