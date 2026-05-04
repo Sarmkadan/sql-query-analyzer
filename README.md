@@ -859,6 +859,57 @@ Console.WriteLine(markdownTable);
 - `GetImprovements(this ProfileComparison comparison)` - Gets metric improvements from comparison
 - `ToMarkdownTable(this ProfileComparison comparison)` - Generates markdown comparison table
 
+## DatabaseConnectionValidatorExtensions
+
+The `DatabaseConnectionValidatorExtensions` class provides extension methods for validating database connections and formatting SQL queries without executing them. These methods help verify database connectivity, check query syntax, and generate diagnostic reports for troubleshooting connection and formatting issues.
+
+### Usage Example
+
+```csharp
+// Assume we have a database connection string
+string connectionString = "Server=localhost;Database=TestDB;User Id=sa;Password=your_password;";
+
+// Validate database connection asynchronously
+var validationResult = await DatabaseConnectionValidatorExtensions.ValidateConnectionAsync(connectionString);
+
+if (validationResult.IsConnectionSuccessful)
+{
+    Console.WriteLine("✅ Connection successful!");
+    Console.WriteLine($"Database version: {validationResult.GetFormattedVersion()}");
+}
+else
+{
+    Console.WriteLine("❌ Connection failed!");
+    Console.WriteLine($"Error: {validationResult.GetErrorSummary()}");
+}
+
+// Validate query format only (without executing)
+bool isValidFormat = await DatabaseConnectionValidatorExtensions.ValidateFormatOnlyAsync(
+    "SELECT * FROM Users WHERE Id = 1 AND Status = 'active'"
+);
+Console.WriteLine($"Query format is valid: {isValidFormat}");
+
+// Generate a comprehensive diagnostic report
+string diagnosticReport = validationResult.GenerateDiagnosticReport();
+Console.WriteLine("Diagnostic Report:");
+Console.WriteLine(diagnosticReport);
+
+// Check specific validation properties
+if (validationResult.IsConnectionSuccessful && validationResult.GetErrorSummary().Length == 0)
+{
+    Console.WriteLine("✅ All connection checks passed!");
+}
+```
+
+### Public Members
+
+- `ValidateConnectionAsync(string connectionString)` - Validates database connection and returns connection validation result
+- `ValidateFormatOnlyAsync(string query)` - Validates SQL query format without executing it
+- `GetErrorSummary(this ConnectionValidationResult result)` - Gets a summary of connection errors
+- `IsConnectionSuccessful(this ConnectionValidationResult result)` - Checks if connection was successful
+- `GetFormattedVersion(this ConnectionValidationResult result)` - Gets formatted database version information
+- `GenerateDiagnosticReport(this ConnectionValidationResult result)` - Generates a comprehensive diagnostic report
+
 ## SqlQueryAnalyzerOptionsExtensions
 
 The `SqlQueryAnalyzerOptionsExtensions` class provides extension methods for `SqlQueryAnalyzerOptions` that validate configuration, retrieve normalized values, and determine feature availability. These methods ensure consistent access to configuration values and provide safe defaults for missing or invalid settings.
