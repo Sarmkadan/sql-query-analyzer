@@ -6,7 +6,7 @@
 
 SQL Query Analyzer is a comprehensive .NET 10 tool that provides deep insights into SQL query performance. It detects anti-patterns, suggests index optimizations, analyzes execution plans, and generates actionable recommendations to keep your database running at peak efficiency.
 
-## 🎯 Key Features
+## Key Features
 
 ### Query Performance Analysis
 - **Comprehensive Scoring**: Rate queries on a 0-100 scale with detailed breakdowns
@@ -51,7 +51,7 @@ SQL Query Analyzer is a comprehensive .NET 10 tool that provides deep insights i
 
 ---
 
-## 📐 Architecture
+## Architecture
 
 ### System Design
 
@@ -151,7 +151,7 @@ Query Text  Validators   Pattern Match      Issue Detection
 
 ---
 
-## 🚀 Installation Guide
+## Installation Guide
 
 ### System Requirements
 - **Runtime**: .NET 10 SDK or later
@@ -227,7 +227,7 @@ dotnet run --project sql-query-analyzer.csproj
 
 ---
 
-## 📖 Usage Examples
+## Usage Examples
 
 ### Example 1: Analyze a Single Query
 
@@ -487,7 +487,7 @@ if (nplusOneIssues.Any())
 
 ---
 
-## 🔧 Configuration Reference
+## Configuration Reference
 
 ### Environment Variables
 
@@ -546,7 +546,7 @@ ANALYZER_PARSE_PLANS=true        # Enable execution plan parsing
 
 ---
 
-## 📊 Performance Scoring System
+## Performance Scoring System
 
 The analyzer uses a weighted scoring algorithm:
 
@@ -562,15 +562,15 @@ The analyzer uses a weighted scoring algorithm:
 
 | Score | Rating | Status | Action Required |
 |-------|--------|--------|-----------------|
-| 90-100 | ⭐⭐⭐⭐⭐ Excellent | Optimal performance | Monitor only |
-| 75-89 | ⭐⭐⭐⭐ Good | Minor optimizations available | Review suggestions |
-| 60-74 | ⭐⭐⭐ Acceptable | Moderate improvements needed | Implement recommendations |
-| 40-59 | ⭐⭐ Poor | Significant issues present | Schedule optimization |
-| 0-39 | ⭐ Critical | Severe performance risk | Immediate action needed |
+| 90-100 | Excellent | Optimal performance | Monitor only |
+| 75-89 | Good | Minor optimizations available | Review suggestions |
+| 60-74 | Acceptable | Moderate improvements needed | Implement recommendations |
+| 40-59 | Poor | Significant issues present | Schedule optimization |
+| 0-39 | Critical | Severe performance risk | Immediate action needed |
 
 ---
 
-## 🐛 Issue Types Reference
+## Issue Types Reference
 
 ### Critical Severity
 - **CrossJoin**: Missing join condition creates Cartesian product
@@ -594,7 +594,7 @@ The analyzer uses a weighted scoring algorithm:
 
 ---
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 ### Using Docker Compose (Recommended)
 
@@ -624,7 +624,7 @@ docker run --env-file .env sql-query-analyzer:1.0.0
 
 ---
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Connection Issues
 
@@ -681,7 +681,7 @@ ANALYZER_LOG_LEVEL=Debug
 
 ---
 
-## 📚 Complete API Reference
+## Complete API Reference
 
 ### Main Service Interface
 
@@ -734,7 +734,7 @@ public interface IIndexAnalyzerService
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 This is an actively maintained open-source project. Contributions are welcome!
 
@@ -750,7 +750,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ---
 
-## 📄 License
+## License
 
 MIT License - Copyright © 2026 Vladyslav Zaiets
 
@@ -760,7 +760,7 @@ See [LICENSE](LICENSE) file for complete details.
 
 ---
 
-## 🆘 Support & Resources
+## Support & Resources
 
 - **Documentation**: [docs/](./docs/)
 - **Examples**: [examples/](./examples/)

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Console">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -12,7 +12,7 @@
     <Authors>Vladyslav Zaiets</Authors>
     <Description>Advanced SQL query analyzer for performance optimization and issue detection</Description>
     <RepositoryUrl>https://github.com/sarmkadan/sql-query-analyzer</RepositoryUrl>
-    <License>MIT</License>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
