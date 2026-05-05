@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using SqlQueryAnalyzer.Configuration;
 using SqlQueryAnalyzer.Constants;
 using SqlQueryAnalyzer.Models;
 
@@ -24,10 +25,17 @@ namespace SqlQueryAnalyzer.Services;
 public partial class PerformanceIssueDetectorService : IPerformanceIssueDetectorService
 {
     private readonly ILogger<PerformanceIssueDetectorService> _logger;
+    private readonly IndexSeverityThresholds _indexSeverity;
 
     public PerformanceIssueDetectorService(ILogger<PerformanceIssueDetectorService> logger)
+        : this(logger, null) { }
+
+    public PerformanceIssueDetectorService(
+        ILogger<PerformanceIssueDetectorService> logger,
+        AnalyzerSettings? settings)
     {
         _logger = logger;
+        _indexSeverity = settings?.Analysis?.IndexSeverity ?? new IndexSeverityThresholds();
     }
 
     // ── Source-generated regexes ─────────────────────────────────────────────
@@ -153,10 +161,13 @@ public partial class PerformanceIssueDetectorService : IPerformanceIssueDetector
 
         if (conditions.Contains(" OR ", StringComparison.OrdinalIgnoreCase))
         {
+            var orSeverity = _indexSeverity.ResolveSeverity(
+                rowCount: query.ReferencedTables.Count > 0 ? null : null,
+                estimatedCost: 20.0);
             issues.Add(new PerformanceIssue
             {
                 IssueType = IssueType.OrCondition,
-                Severity = IssueSeverity.Warning,
+                Severity = orSeverity,
                 Description = "OR condition in WHERE clause may prevent index usage",
                 AffectedClause = "WHERE",
                 EstimatedPerformanceImpact = 20.0,
@@ -168,10 +179,11 @@ public partial class PerformanceIssueDetectorService : IPerformanceIssueDetector
 
         if (conditions.Contains("LIKE '%", StringComparison.OrdinalIgnoreCase))
         {
+            var wildcardSeverity = _indexSeverity.ResolveSeverity(estimatedCost: 30.0);
             issues.Add(new PerformanceIssue
             {
                 IssueType = IssueType.LeadingWildcard,
-                Severity = IssueSeverity.Warning,
+                Severity = wildcardSeverity,
                 Description = "LIKE with leading wildcard prevents index usage",
                 AffectedClause = "WHERE",
                 EstimatedPerformanceImpact = 30.0,
