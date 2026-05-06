@@ -9,10 +9,21 @@
 
 If you discover a security vulnerability in SQL Query Analyzer, **do not** open a public GitHub issue. Instead:
 
-1. **Email**: Contact the maintainer with security details
-2. **Include**: Vulnerability description, reproduction steps, potential impact
-3. **Timeline**: Allow 90 days for patching before public disclosure
-4. **Do Not**: Publicly disclose vulnerability until patch is released
+### Report Via:
+
+1. **GitHub Private Vulnerability Reporting** (Recommended)
+   - Visit: https://github.com/sarmkadan/sql-query-analyzer/security/advisories/new
+   - Use the private reporting feature to disclose the vulnerability securely
+
+2. **Email** (Alternative)
+   - Contact: rutova2@gmail.com
+   - Include vulnerability description, reproduction steps, and potential impact
+
+### Timeline
+
+- **Acknowledgment**: 48 hours
+- **Assessment**: 1 week
+- **Do Not**: Publicly disclose until patch is released
 
 We take all security reports seriously and appreciate responsible disclosure.
 
@@ -246,7 +257,11 @@ spec:
 3. GitHub security page updated
 4. CVE assigned if applicable
 
-### Timeline
+### Supported Versions
+
+Only v1.x receives security updates. Other versions may not be patched.
+
+### Patch Timeline
 - **Critical**: Patched within 7 days
 - **High**: Patched within 30 days
 - **Medium**: Patched within 90 days
@@ -280,9 +295,9 @@ When we receive security vulnerability reports:
 
 ## Contact
 
-For security issues, contact the maintainers through responsible disclosure channels. Do not use public issue tracker.
+For security issues, use the channels above - do not open public issues or discussions.
 
 ---
 
-**Last Updated**: 2026-05-04  
-**Policy Version**: 1.0
+**Last Updated**: 2026-05-06  
+**Policy Version**: 1.1

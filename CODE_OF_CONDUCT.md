@@ -87,7 +87,7 @@ Project maintainers have additional responsibilities:
 
 ## Acknowledgment
 
-This Code of Conduct is adapted from the Contributor Covenant (https://www.contributor-covenant.org), version 2.1, available at https://www.contributor-covenant.org/version/2/1/code_of_conduct.html.
+This Code of Conduct is the Contributor Covenant version 2.1, available at https://www.contributor-covenant.org/version/2/1/code_of_conduct.html.
 
 ## Questions?
 
@@ -95,5 +95,5 @@ If you have questions about this Code of Conduct, please reach out to the projec
 
 ---
 
-**Effective Date**: 2026-05-04  
-**Version**: 1.0
+**Effective Date**: 2026-05-06  
+**Version**: 2.1
