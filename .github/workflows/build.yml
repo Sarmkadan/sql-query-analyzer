@@ -17,7 +17,7 @@ jobs:
 
     steps:
       # Checkout code
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Setup .NET 10
       - name: Setup .NET 10
@@ -57,7 +57,7 @@ jobs:
     needs: build
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Build Docker image
         run: docker build -t sql-query-analyzer:latest .
@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
