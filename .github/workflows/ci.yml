@@ -1,22 +1,25 @@
-name: Build & Test
+name: CI
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [ main ]
 
 jobs:
-  build:
+  build-and-test:
+    name: Build & Test (.NET ${{ matrix.dotnet-version }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         dotnet-version: ['10.0.x']
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-    - name: Setup .NET
+    - name: Setup .NET ${{ matrix.dotnet-version }}
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
@@ -29,12 +32,11 @@ jobs:
 
     - name: Test
       run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
-      continue-on-error: false
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-results-${{ matrix.dotnet-version }}
+        name: test-results-dotnet-${{ matrix.dotnet-version }}
         path: '**/TestResults/*.trx'
         retention-days: 7
