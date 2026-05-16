@@ -44,7 +44,7 @@ public static partial class SqlPatternAnalyzer
     [GeneratedRegex(@"\b(UPPER|LOWER|CONVERT|CAST|DATEPART|YEAR|MONTH|DAY)\s*\(", RegexOptions.IgnoreCase)]
     private static partial Regex FunctionOnColumnRegex();
 
-    [GeneratedRegex(@"FROM\s+\w+\s*,\s*\w+", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"FROM\s+\w+(?:\s+\w+)?\s*,\s*\w+(?:\s+\w+)?", RegexOptions.IgnoreCase)]
     private static partial Regex ImplicitJoinRegex();
 
     [GeneratedRegex(@"\bOR\b", RegexOptions.IgnoreCase)]

@@ -239,7 +239,7 @@ public class AnalysisRepository : IAnalysisRepository
         lock (_lock)
         {
             var results = _analyses
-                .Where(a => a.Query.QueryHash == queryHash) // Assuming QueryHash is available in Query
+                .Where(a => string.Equals(a.Query, queryHash, StringComparison.Ordinal) || string.Equals(a.QueryId, queryHash, StringComparison.Ordinal))
                 .ToList();
             return Task.FromResult(results);
         }
@@ -283,6 +283,31 @@ public class IndexRepository : IIndexRepository
         {
             var indexes = _indexes.Where(i => i.TableName == tableName).ToList();
             return Task.FromResult(indexes);
+        }
+    }
+
+    public async Task SaveIndexAsync(ModelIndex index)
+    {
+        await AddIndexAsync(index);
+    }
+
+    public Task<List<ModelIndex>> GetIndexesForTableAsync(string tableName)
+    {
+        lock (_lock)
+        {
+            var indexes = _indexes
+                .Where(i => string.Equals(i.TableName, tableName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            return Task.FromResult(indexes);
+        }
+    }
+
+    public Task<ModelIndex?> GetIndexAsync(string indexId)
+    {
+        lock (_lock)
+        {
+            var index = _indexes.FirstOrDefault(i => i.IndexId == indexId);
+            return Task.FromResult(index);
         }
     }
 

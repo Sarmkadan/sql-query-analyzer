@@ -42,6 +42,57 @@ public sealed class IndexSuggestion
     public List<string> ConflictingIndexes { get; set; } = [];
     public bool AlreadyExists { get; set; }
 
+    public string? ColumnName
+    {
+        get => IndexColumns.FirstOrDefault();
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return;
+
+            if (IndexColumns.Count == 0)
+                IndexColumns.Add(value);
+            else
+                IndexColumns[0] = value;
+        }
+    }
+
+    public List<string> Columns
+    {
+        get => IndexColumns;
+        set => IndexColumns = value ?? [];
+    }
+
+    public List<string> IncludedColumns
+    {
+        get => IncludeColumns;
+        set => IncludeColumns = value ?? [];
+    }
+
+    public string SuggestedIndexName
+    {
+        get => IndexName;
+        set => IndexName = value;
+    }
+
+    public double Roi
+    {
+        get => EstimatedPerformanceGain;
+        set => EstimatedPerformanceGain = value;
+    }
+
+    public int EstimatedSizeKB
+    {
+        get => EstimatedIndexSizeKB ?? 0;
+        set => EstimatedIndexSizeKB = value;
+    }
+
+    public double EstimatedImprovementPercent
+    {
+        get => EstimatedExecutionTimeReduction;
+        set => EstimatedExecutionTimeReduction = value;
+    }
+
     // Validate suggestion
     public bool IsValid() =>
         !string.IsNullOrWhiteSpace(TableName) &&
@@ -97,5 +148,16 @@ public sealed class IndexSuggestion
         if (maintenanceCost >= 5 || sizeKB > 10000)
             return "MEDIUM";
         return "LOW";
+    }
+
+    public string ToCreateIndexSql()
+    {
+        if (string.IsNullOrWhiteSpace(IndexName))
+            GenerateIndexName();
+
+        if (string.IsNullOrWhiteSpace(GeneratedCreateScript))
+            GenerateCreateScript();
+
+        return GeneratedCreateScript;
     }
 }

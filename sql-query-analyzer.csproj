@@ -43,6 +43,7 @@
   <ItemGroup>
     <!-- Exclude benchmark and test projects from the library compile glob -->
     <Compile Remove="benchmarks/**/*.cs" />
+    <Compile Remove="examples/**/*.cs" />
     <Compile Remove="tests/**/*.cs" />
   </ItemGroup>
 

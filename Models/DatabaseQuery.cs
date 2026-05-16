@@ -19,6 +19,7 @@ public sealed class DatabaseQuery
     public string? ProcedureName { get; set; }
     public string? ModuleName { get; set; }
     public string? ApplicationName { get; set; }
+    public string? DatabaseName { get; set; }
 
     // Classification
     public QueryType QueryType { get; set; } = QueryType.Unknown;
