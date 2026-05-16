@@ -45,6 +45,12 @@ public sealed class Index
 
     // Fragmentation
     public double FragmentationPercentage { get; set; }
+    public double FragmentationPercent
+    {
+        get => FragmentationPercentage;
+        set => FragmentationPercentage = value;
+    }
+
     public int FragmentCount { get; set; }
 
     // Maintenance
@@ -139,6 +145,14 @@ public sealed class Index
                $"ON {SchemaName}.{TableName} ({columnList}) " +
                $"{includeClause}{filterClause};";
     }
+
+    public long SizeInKB
+    {
+        get => SizeInBytes / 1024;
+        set => SizeInBytes = value * 1024;
+    }
+
+    public int UnusedDays => TotalUsageCount > 0 ? 0 : Math.Max(0, (int)(DateTime.UtcNow - CreatedDate).TotalDays);
 
     // Get usage summary
     public string GetUsageSummary() =>

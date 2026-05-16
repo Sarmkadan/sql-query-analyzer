@@ -37,7 +37,7 @@ public class IndexAnalyzerService : IIndexAnalyzerService
         _logger.LogInformation($"Analyzing indexes for table: {tableName}");
 
         var suggestions = new List<IndexSuggestion>();
-        var existingIndexes = await _repository.GetIndexesByTableAsync(tableName);
+        var existingIndexes = await _repository.GetIndexesForTableAsync(tableName);
 
         // Check for missing indexes on foreign keys
         var fkSuggestion = new IndexSuggestion
@@ -63,7 +63,6 @@ public class IndexAnalyzerService : IIndexAnalyzerService
                 EstimatedPerformanceGain = 35.0,
                 EstimatedExecutionTimeReduction = 30.0,
                 IndexType = "NONCLUSTERED",
-                IsCovering = true,
                 Rationale = "Composite index could cover multiple query patterns"
             };
             compositeSuggestion.GenerateIndexName();

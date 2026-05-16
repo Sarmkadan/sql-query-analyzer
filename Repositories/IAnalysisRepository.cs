@@ -242,6 +242,23 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
+    public async Task SaveIndexAsync(ModelIndex index)
+    {
+        await AddIndexAsync(index);
+    }
+
+    public Task<List<ModelIndex>> GetIndexesForTableAsync(string tableName)
+    {
+        lock (_lock)
+        {
+            var results = _indexes.Values
+                .Where(i => string.Equals(i.TableName, tableName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            return Task.FromResult(results);
+        }
+    }
+
     public Task UpdateIndexAsync(ModelIndex index)
     {
         lock (_lock)

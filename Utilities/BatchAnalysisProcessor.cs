@@ -20,7 +20,7 @@ public class BatchAnalysisProcessor
     private readonly IQueryAnalyzerService _analyzerService;
     private readonly ILogger<BatchAnalysisProcessor> _logger;
     private int _maxParallel;
-    private Progress<BatchProgress>? _progressReporter;
+    private IProgress<BatchProgress>? _progressReporter;
 
     public BatchAnalysisProcessor(
         IQueryAnalyzerService analyzerService,

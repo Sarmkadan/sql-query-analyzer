@@ -23,6 +23,7 @@ public sealed class PerformanceIssue
 
     // Impact metrics
     public double EstimatedPerformanceImpact { get; set; } // 0-100 scale
+    public double ImpactScore => EstimatedPerformanceImpact;
     public int? AffectedRowCount { get; set; }
     public TimeSpan? EstimatedTimeIncrease { get; set; }
 
