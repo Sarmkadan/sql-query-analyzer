@@ -89,6 +89,9 @@ OPTIONS:
     --execution-plan           Include execution plan in output
     --severity <level>         Filter by severity: Critical|Warning|Info
     --max-results <n>          Limit results to N issues
+    --parse-slow-log           Parse slow query log file
+    --slow-log-file <path>     Path to slow query log file
+    --slow-log-format <fmt>    Log format: mysql|postgresql|sqlserver (default: mysql)
 
   Performance:
     --batch                    Enable batch mode for multiple queries
@@ -167,6 +170,12 @@ EXAMPLES:
             case "cache-path":
                 args.CachePath = value;
                 break;
+            case "slow-log" or "slow-log-file":
+                args.SlowLogFile = value;
+                break;
+            case "slow-log-format":
+                args.SlowLogFormat = value;
+                break;
         }
     }
 
@@ -200,6 +209,9 @@ EXAMPLES:
                 break;
             case "version":
                 args.ShowVersion = value;
+                break;
+            case "parse-slow-log":
+                args.ParseSlowLog = value;
                 break;
         }
     }
