@@ -10,15 +10,38 @@ using System.Collections.Generic;
 namespace SqlQueryAnalyzer.Models;
 
 /// <summary>
-/// Represents a database query with metadata and lineage
+/// Represents a database query with metadata and lineage.
 /// </summary>
 public sealed class DatabaseQuery
 {
+    /// <summary>
+    /// Gets or sets the unique identifier for the query.
+    /// </summary>
     public string QueryId { get; set; } = Guid.NewGuid().ToString();
+
+    /// <summary>
+    /// Gets or sets the raw SQL query text.
+    /// </summary>
     public string QueryText { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the name of the stored procedure, if applicable.
+    /// </summary>
     public string? ProcedureName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the module name.
+    /// </summary>
     public string? ModuleName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the application name.
+    /// </summary>
     public string? ApplicationName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the database name.
+    /// </summary>
     public string? DatabaseName { get; set; }
 
     // Classification
