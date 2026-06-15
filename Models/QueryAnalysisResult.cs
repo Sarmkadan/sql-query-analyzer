@@ -12,43 +12,95 @@ using SqlQueryAnalyzer.Scoring;
 namespace SqlQueryAnalyzer.Models;
 
 /// <summary>
-/// Represents the complete analysis result of a SQL query
+/// Represents the complete analysis result of a SQL query.
 /// </summary>
 public sealed class QueryAnalysisResult
 {
+    /// <summary>
+    /// Gets or sets the unique identifier for the analysis result.
+    /// </summary>
     public string QueryId { get; set; } = Guid.NewGuid().ToString();
+
+    /// <summary>
+    /// Gets or sets the SQL query string.
+    /// </summary>
     public string Query { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the SQL query text (alias for <see cref="Query"/>).
+    /// </summary>
     public string QueryText
     {
         get => Query;
         set => Query = value;
     }
 
+    /// <summary>
+    /// Gets or sets the timestamp when the analysis was performed.
+    /// </summary>
     public DateTime AnalyzedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Gets or sets the complexity level of the query.
+    /// </summary>
     public QueryComplexity Complexity { get; set; } = QueryComplexity.Medium;
-    public double PerformanceScore { get; set; } // 0-100, higher is better
+
+    /// <summary>
+    /// Gets or sets the performance score (0-100, where higher is better).
+    /// </summary>
+    public double PerformanceScore { get; set; }
+
+    /// <summary>
+    /// Gets or sets the estimated execution time for the query.
+    /// </summary>
     public TimeSpan EstimatedExecutionTime { get; set; }
 
+    /// <summary>
+    /// Gets or sets the list of performance issues detected.
+    /// </summary>
     public List<PerformanceIssue> Issues { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the list of index suggestions.
+    /// </summary>
     public List<IndexSuggestion> IndexSuggestions { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the execution plan for the query, if available.
+    /// </summary>
     public QueryPlan? ExecutionPlan { get; set; }
+
+    /// <summary>
+    /// Gets or sets the query execution statistics.
+    /// </summary>
     public QueryStatistics Statistics { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets additional metadata associated with the analysis.
+    /// </summary>
     public Dictionary<string, object> Metadata { get; set; } = [];
 
     /// <summary>
-    /// Overall complexity score computed by <see cref="Scoring.QueryComplexityScorer"/>.
+    /// Gets the overall complexity score.
     /// Higher values indicate queries that are more costly to optimize.
     /// </summary>
     public int ComplexityScore => QueryComplexityScorer.ComputeScore(this);
 
-    // Calculate if query has critical issues
+    /// <summary>
+    /// Gets a value indicating whether the query has any critical issues.
+    /// </summary>
     public bool HasCriticalIssues => Issues.Any(i => i.Severity == IssueSeverity.Critical);
 
-    // Calculate total estimated impact
+    /// <summary>
+    /// Gets the total estimated performance gain from index suggestions.
+    /// </summary>
     public double TotalOptimizationPotential =>
         IndexSuggestions.Sum(s => s.EstimatedPerformanceGain);
 
-    // Get summary of analysis
+    /// <summary>
+    /// Generates a summary string of the analysis results.
+    /// </summary>
+    /// <returns>A summary string.</returns>
     public string GetSummary()
     {
         var criticalCount = Issues.Count(i => i.Severity == IssueSeverity.Critical);
@@ -60,7 +112,10 @@ public sealed class QueryAnalysisResult
                $"Optimization: {TotalOptimizationPotential:F1}%";
     }
 
-    // Export result as structured format
+    /// <summary>
+    /// Exports the analysis result as a structured dictionary for JSON serialization.
+    /// </summary>
+    /// <returns>A dictionary representation of the analysis result.</returns>
     public Dictionary<string, object> ToJsonDictionary() =>
         new()
         {
