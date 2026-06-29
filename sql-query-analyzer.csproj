@@ -8,11 +8,11 @@
     <TrimMode>partial</TrimMode>
     <AssemblyName>SqlQueryAnalyzer</AssemblyName>
     <RootNamespace>SqlQueryAnalyzer</RootNamespace>
-    <PackageId>Zaiets.sql.query.analyzer</PackageId>
-    <Version>2.0.0</Version>
+    <PackageId>sarmkadan.sql-query-analyzer</PackageId>
+    <Version>1.0.0</Version>
     <Authors>Vladyslav Zaiets</Authors>
-    <Description>Analyze SQL queries for performance issues - missing indexes, N+1 detection, explain plan parser</Description>
-    <PackageTags>sql;query;analyzer;performance;index;optimization;database</PackageTags>
+    <Description>A comprehensive tool for analyzing SQL queries, detecting performance issues, and providing actionable optimization recommendations.</Description>
+    <PackageTags>sql;performance;analysis;optimization;database</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/sarmkadan/sql-query-analyzer</PackageProjectUrl>
     <RepositoryUrl>https://github.com/sarmkadan/sql-query-analyzer</RepositoryUrl>
