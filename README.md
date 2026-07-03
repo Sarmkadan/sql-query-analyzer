@@ -246,13 +246,16 @@ docker-compose up --build
 
 # Or run with PostgreSQL
 docker-compose -f docker-compose.yml -f docker-compose.postgres.yml up
+
+# Or run with MySQL
+docker-compose -f docker-compose.yml -f docker-compose.mysql.yml up
 ```
 
 ### Method 3: Building Custom Docker Image
 
 ```bash
 docker build -t sql-query-analyzer:latest .
-docker run -e DB_SERVER=host.docker.internal sql-query-analyzer:latest
+docker run -p 8080:8080 -e DB_SERVER=host.docker.internal sql-query-analyzer:latest
 ```
 
 ### Method 4: Package Installation
@@ -836,11 +839,12 @@ docker-compose -f docker-compose.yml -f docker-compose.mysql.yml up
 # Build image
 docker build -t sql-query-analyzer:1.0.0 .
 
-# Run with SQL Server
-docker run -e DB_SERVER=sqlserver -e DB_USER=sa sql-query-analyzer:1.0.0
+# Run with SQL Server (expose port 8080)
+docker run -p 8080:8080 -e DB_SERVER=sqlserver -e DB_USER=sa sql-query-analyzer:1.0.0
 
 # Run with environment file
-docker run --env-file .env sql-query-analyzer:1.0.0
+# Create .env file with: DB_SERVER=localhost, DB_USER=sa, DB_PASSWORD=YourPassword, etc.
+docker run -p 8080:8080 --env-file .env sql-query-analyzer:1.0.0
 ```
 
 ---
