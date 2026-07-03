@@ -12,8 +12,3 @@ services:
       - ./data:/app/data
     ports:
       - "8080:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "test -f /tmp/app-healthy || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
