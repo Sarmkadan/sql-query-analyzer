@@ -11,4 +11,4 @@ COPY --from=build /app/out/ .
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/api/health || exit 1
-ENTRYPOINT ["dotnet", "sql-query-analyzer.dll"]
+ENTRYPOINT ["dotnet", "SqlQueryAnalyzer.dll"]
