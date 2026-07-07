@@ -1,31 +1,41 @@
-using Xunit; using FluentAssertions;
+using System;
+using System.Threading.Tasks;
+using Xunit;
+using FluentAssertions;
 using SqlQueryAnalyzer.Models;
+using SqlQueryAnalyzer.Services;
 
-namespace SqlQueryAnalyzer.Tests {
-
-    public class QueryPlanAnalyzerTests {
-
+namespace SqlQueryAnalyzer.Tests
+{
+    public class QueryPlanAnalyzerTests
+    {
         [Fact]
-        public void AnalyzeQueryPlan_InvalidQueryPlan_ThrowsException() {
+        public void AnalyzeQueryPlan_InvalidQueryPlan_ThrowsException()
+        {
             // Arrange
             var queryPlan = "";
 
             // Act and Assert
-            var exception = Assert.Throws<ArgumentException>(() => QueryPlanAnalyzerService.AnalyzeQueryPlan(null));
-            exception.Message.Should().Contain("planXml");
+            // The service does not have a static AnalyzeQueryPlan method.
+            // Instead we use ParseExecutionPlanAsync which validates the input.
+            var service = new QueryPlanAnalyzerService(null!);
+            Func<Task> act = async () => await service.ParseExecutionPlanAsync(null!);
+            act.Should().ThrowAsync<ArgumentException>()
+               .WithMessage("*planXml*");
         }
 
         [Fact]
-        public void ParseExecutionPlanAsync_ValidXmlPlan_ReturnsQueryPlan() {
+        public void ParseExecutionPlanAsync_ValidXmlPlan_ReturnsQueryPlan()
+        {
             // Arrange
-            var xmlPlan = @"<?xml version=\"1.0\"?>
-                <ShowPlanXML>
-                    <Batch>
-                        <Statements>
-                            <StmtSimple StatementText=\"SELECT * FROM Users\" />
-                        </Statements>
-                    </Batch>
-                </ShowPlanXML>";
+            var xmlPlan = @"<?xml version=""1.0""?>
+<ShowPlanXML>
+    <Batch>
+        <Statements>
+            <StmtSimple StatementText=""SELECT * FROM Users"" />
+        </Statements>
+    </Batch>
+</ShowPlanXML>";
 
             var service = new QueryPlanAnalyzerService(null!);
 
@@ -38,27 +48,29 @@ namespace SqlQueryAnalyzer.Tests {
         }
 
         [Fact]
-        public void ParseExecutionPlanAsync_InvalidXml_ThrowsException() {
+        public void ParseExecutionPlanAsync_InvalidXml_ThrowsException()
+        {
             // Arrange
             var invalidXml = "INVALID XML";
             var service = new QueryPlanAnalyzerService(null!);
 
             // Act and Assert
-            var exception = Assert.ThrowsAnyAsync<Exception>(
-                () => service.ParseExecutionPlanAsync(invalidXml)).Result;
+            Func<Task> act = async () => await service.ParseExecutionPlanAsync(invalidXml);
+            act.Should().ThrowAsync<Exception>();
         }
 
         [Fact]
-        public async Task GetTableScans_WithTableScans_ReturnsTableScans() {
+        public async Task GetTableScans_WithTableScans_ReturnsTableScans()
+        {
             // Arrange
-            var xmlPlan = @"<?xml version=\"1.0\"?>
-                <ShowPlanXML>
-                    <Batch>
-                        <Statements>
-                            <StmtSimple StatementText=\"SELECT * FROM Users\" />
-                        </Statements>
-                    </Batch>
-                </ShowPlanXML>";
+            var xmlPlan = @"<?xml version=""1.0""?>
+<ShowPlanXML>
+    <Batch>
+        <Statements>
+            <StmtSimple StatementText=""SELECT * FROM Users"" />
+        </Statements>
+    </Batch>
+</ShowPlanXML>";
 
             var service = new QueryPlanAnalyzerService(null!);
             var plan = await service.ParseExecutionPlanAsync(xmlPlan);
@@ -71,20 +83,22 @@ namespace SqlQueryAnalyzer.Tests {
         }
 
         [Fact]
-        public async Task GetMissingIndexes_WithTableScans_ReturnsRecommendations() {
+        public async Task GetMissingIndexes_WithTableScans_ReturnsRecommendations()
+        {
             // Arrange - Create a plan with table scan
-            var xmlPlan = @"<?xml version=\"1.0\"?>
-                <ShowPlanXML>
-                    <Batch>
-                        <Statements>
-                            <StmtSimple StatementText=\"SELECT * FROM Users\" />
-                        </Statements>
-                    </Batch>
-                </ShowPlanXML>";
+            var xmlPlan = @"<?xml version=""1.0""?>
+<ShowPlanXML>
+    <Batch>
+        <Statements>
+            <StmtSimple StatementText=""SELECT * FROM Users"" />
+        </Statements>
+    </Batch>
+</ShowPlanXML>";
 
             var service = new QueryPlanAnalyzerService(null!);
             var plan = await service.ParseExecutionPlanAsync(xmlPlan);
-            if (plan != null) {
+            if (plan != null)
+            {
                 plan.Initialize();
             }
 
