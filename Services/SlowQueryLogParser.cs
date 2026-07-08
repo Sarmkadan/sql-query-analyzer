@@ -48,6 +48,11 @@ public sealed partial class SlowQueryLogParser : ISlowQueryLogParser
     /// <inheritdoc/>
     public Task<List<SlowQueryEntry>> ParseMySqlLogAsync(string logContent)
     {
+        if (logContent == null)
+        {
+            throw new ArgumentNullException(nameof(logContent), "Log content cannot be null.");
+        }
+        
         var entries = new List<SlowQueryEntry>();
         foreach (var block in SplitMySqlBlocks(logContent))
         {
@@ -94,7 +99,8 @@ public sealed partial class SlowQueryLogParser : ISlowQueryLogParser
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Skipping malformed MySQL slow-log block");
+                _logger.LogError(ex, "Error parsing MySQL slow-log block");
+                // Do not rethrow so that parsing can continue for other blocks
             }
         }
 
@@ -104,6 +110,11 @@ public sealed partial class SlowQueryLogParser : ISlowQueryLogParser
     /// <inheritdoc/>
     public Task<List<SlowQueryEntry>> ParsePostgreSqlLogAsync(string logContent)
     {
+        if (logContent == null)
+        {
+            throw new ArgumentNullException(nameof(logContent), "Log content cannot be null.");
+        }
+
         var entries = new List<SlowQueryEntry>();
         foreach (Match match in PostgreSqlLogRegex().Matches(logContent))
         {
@@ -121,7 +132,7 @@ public sealed partial class SlowQueryLogParser : ISlowQueryLogParser
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Skipping malformed PostgreSQL slow-log entry");
+                _logger.LogError(ex, "Error parsing PostgreSQL slow-log entry");
             }
         }
 
@@ -131,6 +142,11 @@ public sealed partial class SlowQueryLogParser : ISlowQueryLogParser
     /// <inheritdoc/>
     public Task<List<SlowQueryEntry>> ParseSqlServerLogAsync(string logContent)
     {
+        if (logContent == null)
+        {
+            throw new ArgumentNullException(nameof(logContent), "Log content cannot be null.");
+        }
+
         var entries = new List<SlowQueryEntry>();
         var lines = logContent.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n', StringSplitOptions.RemoveEmptyEntries);
         if (lines.Length <= 1)
@@ -164,7 +180,7 @@ public sealed partial class SlowQueryLogParser : ISlowQueryLogParser
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Skipping malformed SQL Server slow-log row");
+                _logger.LogError(ex, "Error parsing SQL Server slow-log row");
             }
         }
 

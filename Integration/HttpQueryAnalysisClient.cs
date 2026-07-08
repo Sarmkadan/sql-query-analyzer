@@ -43,11 +43,16 @@ public class HttpQueryAnalysisClient
     /// Sends query to remote analyzer and waits for result.
     /// Implements exponential backoff retry strategy for transient failures.
     /// </summary>
-    public async Task<QueryAnalysisResult?> AnalyzeQueryAsync(
+    public async Task<QueryAnalysisResult> AnalyzeQueryAsync(
         string query,
         int maxRetries = 3,
         int backoffMs = 500)
     {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            throw new ArgumentNullException(nameof(query), "Query cannot be null or empty.");
+        }
+
         var attempt = 0;
 
         while (attempt < maxRetries)
@@ -68,7 +73,7 @@ public class HttpQueryAnalysisClient
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();
                     _logger.LogInformation("Remote analysis completed successfully");
-                    return ParseAnalysisResponse(jsonContent);
+                    return ParseAnalysisResponse(jsonContent) ?? throw new Exceptions.AnalysisException("Failed to parse analysis response.");
                 }
 
                 if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable ||
@@ -86,7 +91,7 @@ public class HttpQueryAnalysisClient
                 }
 
                 _logger.LogError($"Remote analysis failed: {response.StatusCode}");
-                return null;
+                throw new Exceptions.AnalysisException($"Remote analysis failed with status: {response.StatusCode}");
             }
             catch (HttpRequestException ex)
             {
@@ -99,16 +104,16 @@ public class HttpQueryAnalysisClient
                     continue;
                 }
 
-                throw;
+                throw new Exceptions.RepositoryException("HTTP request failed after retries.", "HTTP_POST", ex);
             }
             catch (TaskCanceledException ex)
             {
                 _logger.LogError($"Remote analysis timed out after {_timeoutSeconds}s");
-                throw;
+                throw new Exceptions.AnalysisException("Remote analysis timed out.", ex);
             }
         }
 
-        return null;
+        throw new Exceptions.AnalysisException("Remote analysis failed after maximum retries.");
     }
 
     /// <summary>
