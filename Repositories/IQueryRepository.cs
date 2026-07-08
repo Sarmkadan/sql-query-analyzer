@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Models;
 using ModelIndex = SqlQueryAnalyzer.Models.Index;
 using SqlQueryAnalyzer.Constants;
@@ -39,9 +40,16 @@ public class QueryRepository : IQueryRepository
 {
     private readonly List<DatabaseQuery> _queries = [];
     private readonly object _lock = new();
+    private readonly ILogger<QueryRepository> _logger;
+
+    public QueryRepository(ILogger<QueryRepository> logger)
+    {
+        _logger = logger;
+    }
 
     public Task<DatabaseQuery?> GetQueryByIdAsync(string queryId)
     {
+        _logger.LogDebug("Retrieving query by ID: {QueryId}", queryId);
         lock (_lock)
         {
             var query = _queries.FirstOrDefault(q => q.QueryId == queryId);
@@ -51,6 +59,7 @@ public class QueryRepository : IQueryRepository
 
     public Task<List<DatabaseQuery>> GetAllQueriesAsync()
     {
+        _logger.LogInformation("Retrieving all queries");
         lock (_lock)
         {
             return Task.FromResult(new List<DatabaseQuery>(_queries));
@@ -79,6 +88,7 @@ public class QueryRepository : IQueryRepository
 
     public Task<DatabaseQuery> AddQueryAsync(DatabaseQuery query)
     {
+        _logger.LogInformation("Adding new query: {QueryId}", query.QueryId);
         lock (_lock)
         {
             if (string.IsNullOrWhiteSpace(query.QueryHash))
@@ -90,6 +100,7 @@ public class QueryRepository : IQueryRepository
 
     public Task UpdateQueryAsync(DatabaseQuery query)
     {
+        _logger.LogInformation("Updating query: {QueryId}", query.QueryId);
         lock (_lock)
         {
             var existing = _queries.FirstOrDefault(q => q.QueryId == query.QueryId);
@@ -104,6 +115,7 @@ public class QueryRepository : IQueryRepository
 
     public Task DeleteQueryAsync(string queryId)
     {
+        _logger.LogInformation("Deleting query: {QueryId}", queryId);
         lock (_lock)
         {
             _queries.RemoveAll(q => q.QueryId == queryId);
@@ -136,6 +148,7 @@ public class QueryRepository : IQueryRepository
 
     public Task<int> GetQueryCountAsync()
     {
+        _logger.LogDebug("Getting query count: {Count}", _queries.Count);
         lock (_lock)
         {
             return Task.FromResult(_queries.Count);

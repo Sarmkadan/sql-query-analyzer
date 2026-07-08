@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Models;
 using ModelIndex = SqlQueryAnalyzer.Models.Index;
 
@@ -50,9 +51,16 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
 {
     private readonly Dictionary<string, QueryAnalysisResult> _analyses = new();
     private readonly object _lock = new object();
+    private readonly ILogger<InMemoryAnalysisRepository> _logger;
+
+    public InMemoryAnalysisRepository(ILogger<InMemoryAnalysisRepository> logger)
+    {
+        _logger = logger;
+    }
 
     public Task<QueryAnalysisResult> SaveAnalysisAsync(QueryAnalysisResult result)
     {
+        _logger.LogInformation("Saving analysis for query: {QueryId}", result.QueryId);
         lock (_lock)
         {
             _analyses[result.QueryId] = result;
@@ -63,6 +71,7 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
 
     public Task<QueryAnalysisResult?> GetAnalysisAsync(string analysisId)
     {
+        _logger.LogDebug("Retrieving analysis: {AnalysisId}", analysisId);
         lock (_lock)
         {
             _analyses.TryGetValue(analysisId, out var result);
@@ -72,6 +81,7 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
 
     public Task<List<QueryAnalysisResult>> GetAllAnalysesAsync()
     {
+        _logger.LogInformation("Retrieving all analyses");
         lock (_lock)
         {
             return Task.FromResult(_analyses.Values.ToList());
@@ -103,6 +113,7 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
 
     public Task DeleteAnalysisAsync(string analysisId)
     {
+        _logger.LogInformation("Deleting analysis: {AnalysisId}", analysisId);
         lock (_lock)
         {
             _analyses.Remove(analysisId);
@@ -185,9 +196,16 @@ public class InMemoryIndexRepository : IIndexRepository
     private readonly Dictionary<string, ModelIndex> _indexes = new();
     private readonly List<IndexSuggestion> _suggestions = new();
     private readonly object _lock = new object();
+    private readonly ILogger<InMemoryIndexRepository> _logger;
+
+    public InMemoryIndexRepository(ILogger<InMemoryIndexRepository> logger)
+    {
+        _logger = logger;
+    }
 
     public Task<ModelIndex?> GetIndexByNameAsync(string indexName)
     {
+        _logger.LogDebug("Retrieving index by name: {IndexName}", indexName);
         lock (_lock)
         {
             var index = _indexes.Values.FirstOrDefault(i => i.IndexName == indexName);
@@ -235,6 +253,7 @@ public class InMemoryIndexRepository : IIndexRepository
 
     public Task<ModelIndex> AddIndexAsync(ModelIndex index)
     {
+        _logger.LogInformation("Adding index: {IndexName} for table {TableName}", index.IndexName, index.TableName);
         lock (_lock)
         {
             _indexes[index.IndexId] = index;
@@ -261,6 +280,7 @@ public class InMemoryIndexRepository : IIndexRepository
 
     public Task UpdateIndexAsync(ModelIndex index)
     {
+        _logger.LogInformation("Updating index: {IndexName}", index.IndexName);
         lock (_lock)
         {
             if (_indexes.ContainsKey(index.IndexId))
@@ -282,6 +302,7 @@ public class InMemoryIndexRepository : IIndexRepository
 
     public Task DeleteIndexAsync(string indexId)
     {
+        _logger.LogInformation("Deleting index with ID: {IndexId}", indexId);
         lock (_lock)
         {
             _indexes.Remove(indexId);
