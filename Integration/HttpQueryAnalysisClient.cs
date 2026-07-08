@@ -50,6 +50,7 @@ public class HttpQueryAnalysisClient
     {
         if (string.IsNullOrWhiteSpace(query))
         {
+            _logger.LogError("Query cannot be null or empty.");
             throw new ArgumentNullException(nameof(query), "Query cannot be null or empty.");
         }
 
