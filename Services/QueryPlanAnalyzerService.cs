@@ -29,6 +29,11 @@ public class QueryPlanAnalyzerService : IQueryPlanAnalyzerService
 
     public async Task<QueryPlan?> ParseExecutionPlanAsync(string planXml)
     {
+        if (string.IsNullOrWhiteSpace(planXml))
+        {
+            throw new ArgumentNullException(nameof(planXml), "Execution plan XML cannot be null or empty.");
+        }
+
         try
         {
             _logger.LogInformation("Parsing execution plan XML");
@@ -48,17 +53,27 @@ public class QueryPlanAnalyzerService : IQueryPlanAnalyzerService
             }
 
             plan.Initialize();
-            return await Task.FromResult(plan);
+            return plan;
+        }
+        catch (System.Xml.XmlException ex)
+        {
+            _logger.LogError(ex, "Invalid execution plan XML");
+            throw new Exceptions.QueryPlanException("Invalid execution plan XML format.", ex);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error parsing execution plan");
-            return null;
+            throw new Exceptions.QueryPlanException("An unexpected error occurred while parsing the execution plan.", ex);
         }
     }
 
     public async Task<List<string>> GetMissingIndexesAsync(QueryPlan plan)
     {
+        if (plan == null)
+        {
+            throw new ArgumentNullException(nameof(plan), "Query plan cannot be null.");
+        }
+
         _logger.LogInformation("Analyzing plan for missing indexes");
 
         var missingIndexes = new List<string>();
@@ -84,11 +99,16 @@ public class QueryPlanAnalyzerService : IQueryPlanAnalyzerService
             }
         }
 
-        return await Task.FromResult(missingIndexes);
+        return missingIndexes;
     }
 
     public async Task<List<PerformanceIssue>> AnalyzePlanAsync(QueryPlan plan)
     {
+        if (plan == null)
+        {
+            throw new ArgumentNullException(nameof(plan), "Query plan cannot be null.");
+        }
+
         _logger.LogInformation("Analyzing execution plan for performance issues");
 
         var issues = new List<PerformanceIssue>();
@@ -129,7 +149,7 @@ public class QueryPlanAnalyzerService : IQueryPlanAnalyzerService
             }
         }
 
-        return await Task.FromResult(issues);
+        return issues;
     }
 
     private PlanNode ParsePlanNode(XElement element, int depth)
