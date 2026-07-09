@@ -711,62 +711,24 @@ sqlanalyzer --parse-slow-log --slow-log-file qs_export.txt \
 
 ---
 
-## Configuration Reference
+## Configuration
+
+The application uses the `IOptions` pattern for configuration, supporting JSON files and environment variables. See `appsettings.example.json` for a template.
+
+### SqlQueryAnalyzerOptions
+
+| Section | Description |
+| :--- | :--- |
+| `Database` | Database connection settings (Provider, ConnectionString, etc.) |
+| `Analysis` | Analysis behavior settings (MaxThreads, Detection switches) |
+| `Cache` | Caching provider and limits |
+| `Performance` | Timeout, rate limiting, and batching settings |
+| `Logging` | Logging level, file paths, and rotation settings |
 
 ### Environment Variables
 
-```bash
-# Database Configuration
-DB_SERVER=localhost              # SQL Server: localhost, [hostname\instance]
-DB_PORT=1433                     # SQL Server port (default 1433)
-DB_NAME=YourDatabase             # Database name
-DB_USER=sa                       # Username
-DB_PASSWORD=YourPassword123!     # Password
-DB_TIMEOUT=30                    # Connection timeout (seconds)
+Configuration can be overridden using environment variables with the prefix `SQA_`. For example, to override `Database:ConnectionString`, set `SQA_Database__ConnectionString`.
 
-# PostgreSQL Configuration
-DB_PORT=5432                     # PostgreSQL port (default 5432)
-DB_USER=postgres                 # PostgreSQL user
-DB_PASSWORD=postgres             # PostgreSQL password
-
-# Analyzer Configuration
-ANALYZER_LOG_LEVEL=Information   # Logging level: Debug, Info, Warning, Error
-ANALYZER_ENABLE_CACHE=true       # Enable result caching
-ANALYZER_CACHE_TTL=3600          # Cache time-to-live (seconds)
-
-# Advanced Configuration
-ANALYZER_MAX_QUERY_SIZE=100000   # Maximum query size (bytes)
-ANALYZER_DETECT_NPLUS_ONE=true   # Enable N+1 detection
-ANALYZER_SUGGEST_INDEXES=true    # Enable index suggestions
-ANALYZER_PARSE_PLANS=true        # Enable execution plan parsing
-```
-
-### Configuration File (appsettings.json)
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=YourDB;User Id=sa;Password=YourPassword"
-  },
-  "AnalyzerSettings": {
-    "EnableNPlusOneDetection": true,
-    "EnableIndexAnalysis": true,
-    "EnablePlanAnalysis": true,
-    "MaxQuerySize": 100000,
-    "CacheEnabled": true,
-    "CacheTtlSeconds": 3600,
-    "LogLevel": "Information"
-  },
-  "Database": {
-    "Type": "SqlServer",
-    "Server": "localhost",
-    "Name": "QueryAnalyzer",
-    "User": "sa",
-    "Password": "YourPassword123!",
-    "Timeout": 30
-  }
-}
-```
 
 ---
 
