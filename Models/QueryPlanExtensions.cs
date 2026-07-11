@@ -22,8 +22,13 @@ public static class QueryPlanExtensions
     /// <param name="plan">The query plan</param>
     /// <param name="node">The plan node to analyze</param>
     /// <returns>Cost percentage (0-100)</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="node"/> is <see langword="null"/></exception>
     public static double GetCostPercentage(this QueryPlan plan, PlanNode node)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+        ArgumentNullException.ThrowIfNull(node);
+
         if (plan.TotalEstimatedCost <= 0 || node.EstimatedCost <= 0)
             return 0;
 
@@ -36,8 +41,13 @@ public static class QueryPlanExtensions
     /// <param name="plan">The query plan</param>
     /// <param name="threshold">Minimum cost threshold to include</param>
     /// <returns>List of nodes exceeding the threshold</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="threshold"/> is negative</exception>
     public static List<PlanNode> GetNodesAboveThreshold(this QueryPlan plan, double threshold)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+        ArgumentOutOfRangeException.ThrowIfNegative(threshold);
+
         return plan.AllNodes
             .Where(n => n.EstimatedCost >= threshold)
             .OrderByDescending(n => n.EstimatedCost)
@@ -49,8 +59,11 @@ public static class QueryPlanExtensions
     /// </summary>
     /// <param name="plan">The query plan</param>
     /// <returns>Sum of all node costs</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
     public static double CalculateCumulativeCost(this QueryPlan plan)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+
         return plan.AllNodes.Sum(n => n.EstimatedCost);
     }
 
@@ -59,8 +72,11 @@ public static class QueryPlanExtensions
     /// </summary>
     /// <param name="plan">The query plan</param>
     /// <returns>The table access with highest estimated cost, or null if none</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
     public static TableAccess? GetMostExpensiveTableAccess(this QueryPlan plan)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+
         return plan.TableAccesses
             .OrderByDescending(ta => ta.EstimatedCost)
             .FirstOrDefault();
@@ -71,8 +87,11 @@ public static class QueryPlanExtensions
     /// </summary>
     /// <param name="plan">The query plan</param>
     /// <returns>The join with highest estimated cost, or null if none</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
     public static Join? GetMostExpensiveJoin(this QueryPlan plan)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+
         return plan.Joins
             .OrderByDescending(j => j.EstimatedCost)
             .FirstOrDefault();
@@ -83,8 +102,11 @@ public static class QueryPlanExtensions
     /// </summary>
     /// <param name="plan">The query plan</param>
     /// <returns>True if any table scans exist, false otherwise</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
     public static bool HasTableScans(this QueryPlan plan)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+
         return plan.GetTableScans().Any();
     }
 
@@ -93,12 +115,15 @@ public static class QueryPlanExtensions
     /// </summary>
     /// <param name="plan">The query plan</param>
     /// <returns>List of filtering nodes</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
     public static List<PlanNode> GetFilteringNodes(this QueryPlan plan)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+
         return plan.AllNodes
             .Where(n => n.NodeType.Contains("Filter") ||
-                        n.Properties.ContainsKey("Predicate") ||
-                        n.NodeType.Contains("Compute Scalar"))
+                         n.Properties.ContainsKey("Predicate") ||
+                         n.NodeType.Contains("Compute Scalar"))
             .ToList();
     }
 
@@ -107,8 +132,11 @@ public static class QueryPlanExtensions
     /// </summary>
     /// <param name="plan">The query plan</param>
     /// <returns>CPU/I/O cost ratio (CPU cost divided by I/O cost)</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
     public static double GetCpuToIoCostRatio(this QueryPlan plan)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+
         if (plan.TotalEstimatedIoCost <= 0)
             return plan.TotalEstimatedCpuCost > 0 ? double.PositiveInfinity : 0;
 
@@ -120,12 +148,15 @@ public static class QueryPlanExtensions
     /// </summary>
     /// <param name="plan">The query plan</param>
     /// <returns>List of sorting nodes</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
     public static List<PlanNode> GetSortingNodes(this QueryPlan plan)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+
         return plan.AllNodes
             .Where(n => n.NodeType.Contains("Sort") ||
-                        n.NodeType.Contains("Top N Sort") ||
-                        n.NodeType.Contains("Stream Aggregate"))
+                         n.NodeType.Contains("Top N Sort") ||
+                         n.NodeType.Contains("Stream Aggregate"))
             .ToList();
     }
 
@@ -134,8 +165,11 @@ public static class QueryPlanExtensions
     /// </summary>
     /// <param name="plan">The query plan</param>
     /// <returns>Dictionary with performance metrics</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
     public static Dictionary<string, object> GetPerformanceSummary(this QueryPlan plan)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+
         var expensiveOps = plan.GetExpensiveOperations(10);
         var tableScans = plan.GetTableScans();
         var indexOps = plan.GetIndexOperations();
@@ -181,8 +215,11 @@ public static class QueryPlanExtensions
     /// <param name="maxTableScans">Maximum allowed table scans for efficiency</param>
     /// <param name="maxCost">Maximum acceptable total cost</param>
     /// <returns>True if plan is efficient, false otherwise</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
     public static bool IsEfficient(this QueryPlan plan, int maxTableScans = 2, double maxCost = 1000.0)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+
         var tableScans = plan.GetTableScans();
         var expensiveOps = plan.GetNodesAboveThreshold(maxCost / 10);
 
@@ -199,8 +236,13 @@ public static class QueryPlanExtensions
     /// <param name="plan">The query plan</param>
     /// <param name="tableName">Name of the table to find</param>
     /// <returns>List of nodes accessing the specified table</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentException"><paramref name="tableName"/> is null or whitespace</exception>
     public static List<PlanNode> GetNodesForTable(this QueryPlan plan, string tableName)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+        ArgumentException.ThrowIfNullOrEmpty(tableName);
+
         return plan.AllNodes
             .Where(n => string.Equals(n.ObjectName, tableName, StringComparison.OrdinalIgnoreCase))
             .ToList();
