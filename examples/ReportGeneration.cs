@@ -18,19 +18,37 @@ using SqlQueryAnalyzer.Utilities;
 
 namespace SqlQueryAnalyzer.Examples;
 
-/// Demonstrates generating analysis reports in multiple formats
+/// Demonstrates generating analysis reports in multiple formats including text, HTML, JSON, CSV,
+/// executive summaries, and recommendations for SQL query analysis results.
+///
+/// This example shows how to use the ReportGenerator service to create various report formats
+/// from a query analysis result and save them to disk.
 public class ReportGenerationExample
 {
     private readonly IQueryAnalyzerService _analyzer;
     private readonly ILogger<ReportGenerationExample> _logger;
 
-    public ReportGenerationExample(IQueryAnalyzerService analyzer, ILogger<ReportGenerationExample> logger)
+    /// Initializes a new instance of the <see cref="ReportGenerationExample"/> class.
+///
+/// <param name="analyzer">The query analyzer service used to analyze SQL queries.</param>
+/// <param name="logger">The logger for recording example execution and output.</param>
+public ReportGenerationExample(IQueryAnalyzerService analyzer, ILogger<ReportGenerationExample> logger)
     {
         _analyzer = analyzer;
         _logger = logger;
     }
 
-    public async Task RunExample()
+    /// Runs the complete report generation example demonstrating how to analyze a SQL query
+/// and generate multiple report formats (text, HTML, JSON, CSV, executive summary, and recommendations).
+///
+/// This method:
+/// 1. Defines a sample SQL query for customer order analysis
+/// 2. Uses the query analyzer service to analyze the query
+/// 3. Creates a reports directory
+/// 4. Generates all report formats using GenerateAllReports
+/// 5. Logs completion information
+///
+/// <returns>A task representing the asynchronous operation.</returns>
     {
         _logger.LogInformation("Report Generation Example");
         _logger.LogInformation("=========================\n");
@@ -67,7 +85,15 @@ public class ReportGenerationExample
         _logger.LogInformation($"\n✓ All reports generated in '{outputDir}' directory");
     }
 
-    private static async Task GenerateAllReports(
+    /// <summary>
+/// Generates all report formats (text, HTML, JSON, CSV, executive summary, and recommendations)
+/// from a query analysis result and saves them to the specified output directory.
+/// </summary>
+/// <param name="result">The query analysis result containing performance metrics and issues.</param>
+/// <param name="outputDir">The directory where generated reports will be saved.</param>
+/// <param name="logger">The logger for recording report generation progress.</param>
+/// <returns>A task representing the asynchronous operation.</returns>
+private static async Task GenerateAllReports(
         QueryAnalysisResult result,
         string outputDir,
         ILogger logger)
@@ -116,7 +142,12 @@ public class ReportGenerationExample
         logger.LogInformation($"  ✓ Saved to {recPath}");
     }
 
-    private static string GenerateExecutiveSummary(QueryAnalysisResult result)
+    /// <summary>
+/// Generates an executive summary markdown document from a query analysis result.
+/// </summary>
+/// <param name="result">The query analysis result containing performance metrics, complexity, issues, and index suggestions.</param>
+/// <returns>A markdown-formatted executive summary string with performance score, issues breakdown, and optimization recommendations.</returns>
+private static string GenerateExecutiveSummary(QueryAnalysisResult result)
     {
         var sb = new System.Text.StringBuilder();
 
@@ -188,7 +219,12 @@ public class ReportGenerationExample
         return sb.ToString();
     }
 
-    private static string GenerateRecommendations(QueryAnalysisResult result)
+    /// <summary>
+/// Generates a recommendations report with prioritized action items for query optimization.
+/// </summary>
+/// <param name="result">The query analysis result containing issues and index suggestions to base recommendations on.</param>
+/// <returns>A formatted text report with priority actions, critical issues, warnings, and index optimization opportunities.</returns>
+private static string GenerateRecommendations(QueryAnalysisResult result)
     {
         var sb = new System.Text.StringBuilder();
 
