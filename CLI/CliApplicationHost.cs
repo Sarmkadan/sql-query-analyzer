@@ -25,6 +25,31 @@ public class CliApplicationHost
     private readonly IQueryAnalyzerService _analyzer;
     private readonly AnalysisPipeline _pipeline;
 
+    /// <summary>
+    /// Gets or sets the SQL query being analyzed.
+    /// </summary>
+    public string Query { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the command-line arguments.
+    /// </summary>
+    public CommandLineArguments Arguments { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the analysis result.
+    /// </summary>
+    public QueryAnalysisResult? Result { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether analysis should continue.
+    /// </summary>
+    public bool ShouldContinue { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets metadata dictionary.
+    /// </summary>
+    public Dictionary<string, object> Metadata { get; set; } = new();
+
     public CliApplicationHost(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
