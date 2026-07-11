@@ -15,19 +15,36 @@ using SqlQueryAnalyzer.Constants; // For IssueSeverity
 
 namespace SqlQueryAnalyzer.Examples;
 
-/// Demonstrates execution plan analysis and bottleneck identification
+/// <summary>
+/// Demonstrates execution plan analysis and bottleneck identification by parsing SQL Server execution plans,
+/// analyzing performance issues, and identifying the most expensive operations in query execution.
+/// </summary>
+/// <remarks>
+/// This example shows how to use the QueryPlanAnalyzerService to parse execution plan XML,
+/// analyze it for performance issues, and identify bottlenecks that impact query performance.
+/// </remarks>
 public class ExecutionPlanAnalysisExample
 {
     private readonly IQueryPlanAnalyzerService _planAnalyzer;
     private readonly ILogger<ExecutionPlanAnalysisExample> _logger;
 
-    public ExecutionPlanAnalysisExample(IQueryPlanAnalyzerService planAnalyzer, ILogger<ExecutionPlanAnalysisExample> logger)
+    /// <summary>
+/// Initializes a new instance of the ExecutionPlanAnalysisExample class.
+/// </summary>
+/// <param name="planAnalyzer">Service for analyzing SQL query execution plans.</param>
+/// <param name="logger">Logger for recording execution and analysis process.</param>
+public ExecutionPlanAnalysisExample(IQueryPlanAnalyzerService planAnalyzer, ILogger<ExecutionPlanAnalysisExample> logger)
     {
         _planAnalyzer = planAnalyzer;
         _logger = logger;
     }
 
-    public async Task RunExample()
+    /// <summary>
+/// Runs the execution plan analysis example demonstrating how to parse, analyze, and identify bottlenecks
+/// in SQL Server execution plans.
+/// </summary>
+/// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+public async Task RunExample()
     {
         _logger.LogInformation("Execution Plan Analysis Example");
         _logger.LogInformation("================================\n");
@@ -88,7 +105,12 @@ public class ExecutionPlanAnalysisExample
         }
     }
 
-    static void DisplayPlanSummary(QueryPlan plan, ILogger logger)
+    /// <summary>
+/// Displays a summary of the execution plan including total cost, estimated rows, and resource usage.
+/// </summary>
+/// <param name="plan">The parsed query execution plan to display.</param>
+/// <param name="logger">Logger for outputting the summary information.</param>
+static void DisplayPlanSummary(QueryPlan plan, ILogger logger)
     {
         logger.LogInformation("EXECUTION PLAN SUMMARY");
         logger.LogInformation("=====================\n");
@@ -101,7 +123,12 @@ public class ExecutionPlanAnalysisExample
         logger.LogInformation($"Plan Format: {plan.Format}");
     }
 
-    static void DisplayCostAnalysis(List<PlanNode> operations, ILogger logger)
+    /// <summary>
+/// Displays a cost breakdown analysis showing the most expensive operations in the execution plan.
+/// </summary>
+/// <param name="operations">List of plan nodes to analyze and display.</param>
+/// <param name="logger">Logger for outputting the cost breakdown information.</param>
+static void DisplayCostAnalysis(List<PlanNode> operations, ILogger logger)
     {
         logger.LogInformation("COST BREAKDOWN BY OPERATION");
         logger.LogInformation("===========================\n");
@@ -118,7 +145,12 @@ public class ExecutionPlanAnalysisExample
         }
     }
 
-    static void DisplayPlanIssues(List<PerformanceIssue> issues, ILogger logger)
+    /// <summary>
+/// Displays a list of performance issues found during execution plan analysis, grouped by severity.
+/// </summary>
+/// <param name="issues">List of performance issues detected in the execution plan.</param>
+/// <param name="logger">Logger for outputting the issues and recommendations.</param>
+static void DisplayPlanIssues(List<PerformanceIssue> issues, ILogger logger)
     {
         logger.LogInformation("PLAN ANALYSIS ISSUES");
         logger.LogInformation("====================\n");
@@ -145,7 +177,12 @@ public class ExecutionPlanAnalysisExample
         }
     }
 
-    static void DisplayBottlenecks(List<PlanNode> bottlenecks, ILogger logger)
+    /// <summary>
+/// Displays the most expensive operations identified as performance bottlenecks in the execution plan.
+/// </summary>
+/// <param name="bottlenecks">List of plan nodes identified as performance bottlenecks, ordered by cost.</param>
+/// <param name="logger">Logger for outputting the bottleneck information and recommendations.</param>
+static void DisplayBottlenecks(List<PlanNode> bottlenecks, ILogger logger)
     {
         logger.LogInformation("PERFORMANCE BOTTLENECKS");
         logger.LogInformation("=======================\n");
