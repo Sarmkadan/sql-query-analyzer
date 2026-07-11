@@ -28,9 +28,9 @@ public static class QueryProfilerExtensions
     /// <para>
     /// Prerequisites — the following services must already be registered before calling this method:
     /// <list type="bullet">
-    ///   <item><see cref="IQueryAnalyzerService"/></item>
-    ///   <item><see cref="IQueryPlanAnalyzerService"/></item>
-    ///   <item><see cref="IPerformanceIssueDetectorService"/></item>
+    /// <item><see cref="IQueryAnalyzerService"/></item>
+    /// <item><see cref="IQueryPlanAnalyzerService"/></item>
+    /// <item><see cref="IPerformanceIssueDetectorService"/></item>
     /// </list>
     /// </para>
     /// </summary>
@@ -39,10 +39,12 @@ public static class QueryProfilerExtensions
     /// Optional profiler settings. When <c>null</c>, <see cref="ProfilerSettings"/> defaults are used.
     /// </param>
     /// <returns>The same <paramref name="services"/> instance for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is null.</exception>
     public static IServiceCollection AddQueryProfiler(
         this IServiceCollection services,
         ProfilerSettings? settings = null)
     {
+        ArgumentNullException.ThrowIfNull(services);
         services.AddSingleton(settings ?? new ProfilerSettings());
         services.AddSingleton<IExecutionPlanVisualizer, ExecutionPlanVisualizer>();
         services.AddSingleton<IQueryProfilerService, QueryProfilerService>();
@@ -58,10 +60,13 @@ public static class QueryProfilerExtensions
     /// <param name="services">The service collection to configure.</param>
     /// <param name="environmentName">The hosting environment name (e.g., "Development", "Staging", "Production").</param>
     /// <returns>The same <paramref name="services"/> instance for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> or <paramref name="environmentName"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="environmentName"/> is empty or whitespace.</exception>
     public static IServiceCollection AddQueryProfilerForEnvironment(
         this IServiceCollection services,
         string environmentName)
     {
+        ArgumentNullException.ThrowIfNull(services);
         ArgumentException.ThrowIfNullOrWhiteSpace(environmentName);
 
         var settings = environmentName.Contains("Development", StringComparison.OrdinalIgnoreCase)
@@ -75,64 +80,109 @@ public static class QueryProfilerExtensions
 
     /// <summary>
     /// Returns the slowest pipeline stage in the report.
-    /// Returns <c>null</c> when <see cref="QueryProfilerReport.ExecutionStages"/> is empty.
+    /// Returns <c>null</c> when <see cref="QueryProfilerReport.ExecutionStages"/> is empty or null.
     /// </summary>
-    public static ExecutionStage? GetBottleneckStage(this QueryProfilerReport report) =>
-        report.ExecutionStages.MaxBy(s => s.DurationMs);
+    /// <param name="report">The profiler report to analyze.</param>
+    /// <returns>The stage with the maximum duration, or null if no stages exist.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="report"/> is null.</exception>
+    public static ExecutionStage? GetBottleneckStage(this QueryProfilerReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        return report.ExecutionStages?.MaxBy(s => s.DurationMs);
+    }
 
     /// <summary>
     /// Returns all stages whose duration exceeds the specified threshold in milliseconds.
     /// </summary>
-    public static List<ExecutionStage> GetSlowStages(this QueryProfilerReport report, double thresholdMs = 100.0) =>
-        report.ExecutionStages.Where(s => s.DurationMs > thresholdMs).ToList();
+    /// <param name="report">The profiler report to analyze.</param>
+    /// <param name="thresholdMs">The duration threshold in milliseconds. Defaults to 100.0.</param>
+    /// <returns>A list of slow stages, or empty list if no stages exceed the threshold.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="report"/> is null.</exception>
+    public static List<ExecutionStage> GetSlowStages(
+        this QueryProfilerReport report,
+        double thresholdMs = 100.0)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        return report.ExecutionStages
+            .Where(s => s.DurationMs > thresholdMs)
+            .ToList();
+    }
 
     /// <summary>
     /// Returns metrics whose value exceeds the given numeric threshold.
     /// </summary>
+    /// <param name="report">The profiler report to analyze.</param>
+    /// <param name="threshold">The numeric threshold for filtering metrics.</param>
+    /// <returns>A list of critical metrics, or empty list if no metrics exceed the threshold.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="report"/> is null.</exception>
     public static List<ProfilerMetric> GetCriticalMetrics(
         this QueryProfilerReport report,
         double threshold)
     {
+        ArgumentNullException.ThrowIfNull(report);
         return report.Metrics.Where(m => m.Value > threshold).ToList();
     }
 
     /// <summary>
     /// Returns metrics belonging to the specified category.
     /// </summary>
+    /// <param name="report">The profiler report to analyze.</param>
+    /// <param name="category">The metric category to filter by.</param>
+    /// <returns>A list of metrics in the specified category, or empty list if none found.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="report"/> is null.</exception>
     public static List<ProfilerMetric> GetMetricsByCategory(
         this QueryProfilerReport report,
         MetricCategory category)
     {
+        ArgumentNullException.ThrowIfNull(report);
         return report.Metrics.Where(m => m.Category == category).ToList();
     }
 
     /// <summary>
     /// Returns all suggestions that belong to the specified category.
     /// </summary>
+    /// <param name="report">The profiler report to analyze.</param>
+    /// <param name="category">The suggestion category to filter by.</param>
+    /// <returns>A list of suggestions in the specified category, or empty list if none found.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="report"/> is null.</exception>
     public static List<ProfilerSuggestion> GetSuggestionsByCategory(
         this QueryProfilerReport report,
         SuggestionCategory category)
     {
+        ArgumentNullException.ThrowIfNull(report);
         return report.Suggestions.Where(s => s.Category == category).ToList();
     }
 
     /// <summary>
     /// Returns all suggestions at or above the specified severity level.
     /// </summary>
+    /// <param name="report">The profiler report to analyze.</param>
+    /// <param name="minimumSeverity">The minimum severity level to include.</param>
+    /// <returns>A list of suggestions meeting the severity criteria, or empty list if none found.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="report"/> is null.</exception>
     public static List<ProfilerSuggestion> GetSuggestionsBySeverity(
         this QueryProfilerReport report,
         SuggestionSeverity minimumSeverity)
     {
+        ArgumentNullException.ThrowIfNull(report);
         return report.Suggestions.Where(s => s.Severity >= minimumSeverity).ToList();
     }
 
     /// <summary>
     /// Returns the top <paramref name="count"/> suggestions ordered by estimated impact (highest first).
     /// </summary>
+    /// <param name="report">The profiler report to analyze.</param>
+    /// <param name="count">The maximum number of suggestions to return. Defaults to 5.</param>
+    /// <returns>A list of top suggestions by estimated impact, or empty list if no suggestions exist.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="report"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
     public static List<ProfilerSuggestion> GetTopSuggestions(
         this QueryProfilerReport report,
         int count = 5)
     {
+        ArgumentNullException.ThrowIfNull(report);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+
         return report.Suggestions
             .OrderByDescending(s => s.EstimatedImpactPercent)
             .Take(count)
@@ -143,15 +193,29 @@ public static class QueryProfilerExtensions
     /// Returns <c>true</c> when the performance score is below the specified threshold.
     /// The default threshold of 70 is aligned with the v1.x analysis scoring contract.
     /// </summary>
-    public static bool NeedsOptimization(this QueryProfilerReport report, double threshold = 70.0) =>
-        report.PerformanceScore < threshold;
+    /// <param name="report">The profiler report to analyze.</param>
+    /// <param name="threshold">The performance threshold below which optimization is needed. Defaults to 70.0.</param>
+    /// <returns><c>true</c> if the performance score is below threshold; otherwise <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="report"/> is null.</exception>
+    public static bool NeedsOptimization(
+        this QueryProfilerReport report,
+        double threshold = 70.0)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        return report.PerformanceScore < threshold;
+    }
 
     /// <summary>
     /// Returns a flat export dictionary combining all metrics and stage timings.
     /// Suitable for structured logging, telemetry pipelines, or JSON serialization.
     /// </summary>
+    /// <param name="report">The profiler report to export.</param>
+    /// <returns>A dictionary containing all metrics, suggestions, and stage information.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="report"/> is null.</exception>
     public static Dictionary<string, object> ToExportDictionary(this QueryProfilerReport report)
     {
+        ArgumentNullException.ThrowIfNull(report);
+
         var dict = report.ToMetricsDictionary();
 
         dict["suggestions"] = report.Suggestions.Select(s => s.ToString()).ToList();
@@ -171,46 +235,75 @@ public static class QueryProfilerExtensions
     /// Returns the single metric with the given name, or <c>null</c> if not present.
     /// The name comparison is case-insensitive.
     /// </summary>
-    public static ProfilerMetric? FindMetric(this QueryProfilerReport report, string metricName) =>
-        report.Metrics.FirstOrDefault(m =>
+    /// <param name="report">The profiler report to search.</param>
+    /// <param name="metricName">The name of the metric to find.</param>
+    /// <returns>The metric with the matching name, or null if not found.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="report"/> or <paramref name="metricName"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="metricName"/> is empty or whitespace.</exception>
+    public static ProfilerMetric? FindMetric(
+        this QueryProfilerReport report,
+        string metricName)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        ArgumentException.ThrowIfNullOrWhiteSpace(metricName);
+
+        return report.Metrics.FirstOrDefault(m =>
             m.Name.Equals(metricName, StringComparison.OrdinalIgnoreCase));
+    }
 
     // ── Batch extensions ──────────────────────────────────────────────────────
 
     /// <summary>
     /// Filters reports that contain at least one suggestion with critical severity.
     /// </summary>
+    /// <param name="reports">The collection of reports to filter.</param>
+    /// <returns>A list of reports containing critical suggestions.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="reports"/> is null.</exception>
     public static List<QueryProfilerReport> WithCriticalSuggestions(
         this IEnumerable<QueryProfilerReport> reports)
     {
+        ArgumentNullException.ThrowIfNull(reports);
         return reports.Where(r => r.HasCriticalSuggestions).ToList();
     }
 
     /// <summary>
     /// Filters reports that scored below the performance threshold and require optimization.
     /// </summary>
+    /// <param name="reports">The collection of reports to filter.</param>
+    /// <param name="threshold">The performance threshold. Defaults to 70.0.</param>
+    /// <returns>A list of reports needing optimization.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="reports"/> is null.</exception>
     public static List<QueryProfilerReport> NeedingOptimization(
         this IEnumerable<QueryProfilerReport> reports,
         double threshold = 70.0)
     {
+        ArgumentNullException.ThrowIfNull(reports);
         return reports.Where(r => r.NeedsOptimization(threshold)).ToList();
     }
 
     /// <summary>
     /// Returns reports ordered by performance score, worst-performing first.
     /// </summary>
+    /// <param name="reports">The collection of reports to order.</param>
+    /// <returns>An ordered enumerable sorted by performance score ascending (worst first).</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="reports"/> is null.</exception>
     public static IOrderedEnumerable<QueryProfilerReport> OrderByWorstFirst(
         this IEnumerable<QueryProfilerReport> reports)
     {
+        ArgumentNullException.ThrowIfNull(reports);
         return reports.OrderBy(r => r.PerformanceScore);
     }
 
     /// <summary>
     /// Filters out reports that encountered an error during profiling.
     /// </summary>
+    /// <param name="reports">The collection of reports to filter.</param>
+    /// <returns>A list of reports that completed successfully without errors.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="reports"/> is null.</exception>
     public static List<QueryProfilerReport> SuccessfulOnly(
         this IEnumerable<QueryProfilerReport> reports)
     {
+        ArgumentNullException.ThrowIfNull(reports);
         return reports.Where(r => !r.HasError).ToList();
     }
 
@@ -218,9 +311,14 @@ public static class QueryProfilerExtensions
     /// Aggregates summary statistics for a batch of profiler reports.
     /// Returns a zeroed <see cref="ProfilerBatchSummary"/> when the sequence is empty.
     /// </summary>
+    /// <param name="reports">The collection of reports to summarize.</param>
+    /// <returns>A batch summary containing aggregated statistics.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="reports"/> is null.</exception>
     public static ProfilerBatchSummary GetBatchSummary(
         this IEnumerable<QueryProfilerReport> reports)
     {
+        ArgumentNullException.ThrowIfNull(reports);
+
         var list = reports.ToList();
         if (list.Count == 0)
             return new ProfilerBatchSummary();
@@ -248,33 +346,50 @@ public static class QueryProfilerExtensions
     /// Returns metric deltas that represent measurable regressions:
     /// timing/resource metrics that increased, or quality issue counts that increased.
     /// </summary>
-    public static List<MetricDelta> GetRegressions(this ProfileComparison comparison) =>
-        comparison.MetricDeltas
+    /// <param name="comparison">The profile comparison to analyze.</param>
+    /// <returns>A list of regression deltas, ordered by impact percentage descending.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="comparison"/> is null.</exception>
+    public static List<MetricDelta> GetRegressions(this ProfileComparison comparison)
+    {
+        ArgumentNullException.ThrowIfNull(comparison);
+        return comparison.MetricDeltas
             .Where(d =>
                 (d.Category == MetricCategory.Timing && d.Delta > 0) ||
                 (d.Category == MetricCategory.Resource && d.Delta > 0) ||
                 (d.Category == MetricCategory.Quality && d.MetricName.Contains("Issue", StringComparison.OrdinalIgnoreCase) && d.Delta > 0))
             .OrderByDescending(d => d.DeltaPercent)
             .ToList();
+    }
 
     /// <summary>
     /// Returns metric deltas that represent measurable improvements:
     /// score metrics that increased, timing that decreased, or issue counts that decreased.
     /// </summary>
-    public static List<MetricDelta> GetImprovements(this ProfileComparison comparison) =>
-        comparison.MetricDeltas
+    /// <param name="comparison">The profile comparison to analyze.</param>
+    /// <returns>A list of improvement deltas, ordered by impact percentage ascending.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="comparison"/> is null.</exception>
+    public static List<MetricDelta> GetImprovements(this ProfileComparison comparison)
+    {
+        ArgumentNullException.ThrowIfNull(comparison);
+        return comparison.MetricDeltas
             .Where(d =>
                 (d.Category == MetricCategory.Quality && d.MetricName.Contains("Score", StringComparison.OrdinalIgnoreCase) && d.Delta > 0) ||
                 (d.Category == MetricCategory.Timing && d.Delta < 0) ||
                 (d.Category == MetricCategory.Quality && d.MetricName.Contains("Issue", StringComparison.OrdinalIgnoreCase) && d.Delta < 0))
             .OrderBy(d => d.DeltaPercent)
             .ToList();
+    }
 
     /// <summary>
     /// Returns a formatted Markdown-style comparison table of all metric deltas.
     /// </summary>
+    /// <param name="comparison">The profile comparison to format.</param>
+    /// <returns>A markdown table string, or a message indicating no comparable metrics were found.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="comparison"/> is null.</exception>
     public static string ToMarkdownTable(this ProfileComparison comparison)
     {
+        ArgumentNullException.ThrowIfNull(comparison);
+
         if (comparison.MetricDeltas.Count == 0)
             return "_No comparable metrics found._";
 
