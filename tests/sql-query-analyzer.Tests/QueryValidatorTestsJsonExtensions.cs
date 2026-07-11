@@ -50,8 +50,11 @@ public static class QueryValidatorTestsJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized instance, or null if the JSON is null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     public static QueryValidatorTests? FromJson(string json)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         if (string.IsNullOrWhiteSpace(json) || json == "null")
         {
             return null;
@@ -66,8 +69,11 @@ public static class QueryValidatorTestsJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized instance if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out QueryValidatorTests? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         value = default;
 
         if (string.IsNullOrWhiteSpace(json) || json == "null")
