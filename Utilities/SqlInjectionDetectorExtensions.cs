@@ -25,16 +25,18 @@ public static class SqlInjectionDetectorExtensions
     /// <param name="issues">List of detected vulnerabilities</param>
     /// <param name="minSeverity">Minimum severity level to include (Critical, High, Medium, Low)</param>
     /// <returns>Filtered list of vulnerabilities</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="detector"/> is null.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="issues"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="minSeverity"/> is not a valid severity level.</exception>
     public static List<SqlInjectionIssue> FilterBySeverity(
         this SqlInjectionDetector detector,
         List<SqlInjectionIssue> issues,
         string minSeverity = "Medium")
     {
-        if (detector == null)
-            throw new ArgumentNullException(nameof(detector));
+        ArgumentNullException.ThrowIfNull(detector);
+        ArgumentNullException.ThrowIfNull(issues);
 
-        if (issues == null)
-            throw new ArgumentNullException(nameof(issues));
+        ArgumentException.ThrowIfNullOrEmpty(minSeverity);
 
         var severityLevels = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
         {
@@ -45,12 +47,13 @@ public static class SqlInjectionDetectorExtensions
         };
 
         if (!severityLevels.TryGetValue(minSeverity, out var minLevel))
-            throw new ArgumentException($"Invalid severity level: {minSeverity}. Expected: Critical, High, Medium, or Low");
+        {
+            throw new ArgumentException($"Invalid severity level: {minSeverity}. Expected: Critical, High, Medium, or Low", nameof(minSeverity));
+        }
 
-        return issues.Where(issue =>
-            severityLevels.TryGetValue(issue.Severity, out var issueLevel) &&
-            issueLevel >= minLevel
-        ).ToList();
+        return issues
+            .Where(issue => severityLevels.TryGetValue(issue?.Severity ?? string.Empty, out var issueLevel) && issueLevel >= minLevel)
+            .ToList();
     }
 
     /// <summary>
@@ -60,15 +63,14 @@ public static class SqlInjectionDetectorExtensions
     /// <param name="detector">The detector instance</param>
     /// <param name="issues">List of detected vulnerabilities</param>
     /// <returns>Dictionary grouping issues by type</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="detector"/> is null.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="issues"/> is null.</exception>
     public static Dictionary<string, List<SqlInjectionIssue>> GroupByType(
         this SqlInjectionDetector detector,
         List<SqlInjectionIssue> issues)
     {
-        if (detector == null)
-            throw new ArgumentNullException(nameof(detector));
-
-        if (issues == null)
-            throw new ArgumentNullException(nameof(issues));
+        ArgumentNullException.ThrowIfNull(detector);
+        ArgumentNullException.ThrowIfNull(issues);
 
         return issues
             .GroupBy(issue => issue.Type)
@@ -86,15 +88,14 @@ public static class SqlInjectionDetectorExtensions
     /// <param name="detector">The detector instance</param>
     /// <param name="issues">List of detected vulnerabilities</param>
     /// <returns>Formatted summary report string</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="detector"/> is null.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="issues"/> is null.</exception>
     public static string GenerateSummaryReport(
         this SqlInjectionDetector detector,
         List<SqlInjectionIssue> issues)
     {
-        if (detector == null)
-            throw new ArgumentNullException(nameof(detector));
-
-        if (issues == null)
-            throw new ArgumentNullException(nameof(issues));
+        ArgumentNullException.ThrowIfNull(detector);
+        ArgumentNullException.ThrowIfNull(issues);
 
         var report = new StringBuilder();
         report.AppendLine("=== SQL Injection Detection Summary Report ===");
@@ -119,7 +120,7 @@ public static class SqlInjectionDetectorExtensions
             report.AppendLine("Issues by Type:");
             foreach (var group in groupedByType)
             {
-                report.AppendLine($"  {group.Key}: {group.Value.Count}");
+                report.AppendLine($" {group.Key}: {group.Value.Count}");
             }
             report.AppendLine();
 
@@ -133,7 +134,7 @@ public static class SqlInjectionDetectorExtensions
 
             foreach (var patternGroup in topPatterns)
             {
-                report.AppendLine($"  {patternGroup.Count}x: {patternGroup.Pattern}");
+                report.AppendLine($" {patternGroup.Count}x: {patternGroup.Pattern}");
             }
         }
         else
@@ -155,19 +156,17 @@ public static class SqlInjectionDetectorExtensions
     /// <param name="issues">List of detected vulnerabilities</param>
     /// <param name="query">The original query being analyzed</param>
     /// <returns>Formatted detailed report string</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="detector"/> is null.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="issues"/> is null.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="query"/> is null.</exception>
     public static string GenerateDetailedReport(
         this SqlInjectionDetector detector,
         List<SqlInjectionIssue> issues,
         string query)
     {
-        if (detector == null)
-            throw new ArgumentNullException(nameof(detector));
-
-        if (issues == null)
-            throw new ArgumentNullException(nameof(issues));
-
-        if (query == null)
-            throw new ArgumentNullException(nameof(query));
+        ArgumentNullException.ThrowIfNull(detector);
+        ArgumentNullException.ThrowIfNull(issues);
+        ArgumentNullException.ThrowIfNull(query);
 
         var report = new StringBuilder();
         report.AppendLine("=== SQL Injection Detailed Analysis Report ===");
@@ -190,16 +189,16 @@ public static class SqlInjectionDetectorExtensions
         foreach (var issue in sortedIssues)
         {
             report.AppendLine($"Issue #{sortedIssues.IndexOf(issue) + 1}:");
-            report.AppendLine($"  Type: {issue.Type}");
-            report.AppendLine($"  Severity: {issue.Severity}");
-            report.AppendLine($"  Location: Index {issue.Location}");
+            report.AppendLine($" Type: {issue.Type}");
+            report.AppendLine($" Severity: {issue.Severity}");
+            report.AppendLine($" Location: Index {issue.Location}");
 
             // Calculate approximate line number
             var linesBefore = query.Substring(0, Math.Min(issue.Location, query.Length)).Split('\n').Length;
-            report.AppendLine($"  Line: ~{linesBefore}");
+            report.AppendLine($" Line: ~{linesBefore}");
 
-            report.AppendLine($"  Pattern: {issue.Pattern}");
-            report.AppendLine($"  Description: {issue.Description}");
+            report.AppendLine($" Pattern: {issue.Pattern}");
+            report.AppendLine($" Description: {issue.Description}");
             report.AppendLine();
         }
 
@@ -229,15 +228,14 @@ public static class SqlInjectionDetectorExtensions
     /// <param name="detector">The detector instance</param>
     /// <param name="issues">List of detected vulnerabilities</param>
     /// <returns>True if critical/high severity issues exist</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="detector"/> is null.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="issues"/> is null.</exception>
     public static bool HasCriticalIssues(
         this SqlInjectionDetector detector,
         List<SqlInjectionIssue> issues)
     {
-        if (detector == null)
-            throw new ArgumentNullException(nameof(detector));
-
-        if (issues == null)
-            throw new ArgumentNullException(nameof(issues));
+        ArgumentNullException.ThrowIfNull(detector);
+        ArgumentNullException.ThrowIfNull(issues);
 
         return issues.Any(i =>
             string.Equals(i.Severity, "Critical", StringComparison.OrdinalIgnoreCase) ||
