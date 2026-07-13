@@ -20,6 +20,10 @@ public class QueryCacheKeyGenerator
     private const string QueryHashPrefix = "query:";
     private const string ResultHashPrefix = "result:";
 
+    // Tracks when each key was generated so callers can check key age (see IsCacheKeyExpired
+    // in QueryCacheKeyGeneratorExtensions). Keyed by the full cache key string.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, DateTimeOffset> s_keyCreatedAt = new();
+
     /// <summary>
     /// Generates a cache key for a query.
     /// Uses SHA256 hash of normalized query for efficient key generation.
@@ -31,7 +35,7 @@ public class QueryCacheKeyGenerator
 
         var normalized = NormalizeForHashing(query);
         var hash = ComputeHash(normalized);
-        return $"{KeyPrefix}{QueryHashPrefix}{hash}";
+        return TrackCreation($"{KeyPrefix}{QueryHashPrefix}{hash}");
     }
 
     /// <summary>
@@ -45,7 +49,7 @@ public class QueryCacheKeyGenerator
 
         var normalized = NormalizeForHashing(query);
         var hash = ComputeHash(normalized);
-        return $"{KeyPrefix}{ResultHashPrefix}{hash}";
+        return TrackCreation($"{KeyPrefix}{ResultHashPrefix}{hash}");
     }
 
     /// <summary>
@@ -69,7 +73,7 @@ public class QueryCacheKeyGenerator
 
         var normalized = NormalizeForHashing(builder.ToString());
         var hash = ComputeHash(normalized);
-        return $"{KeyPrefix}meta:{hash}";
+        return TrackCreation($"{KeyPrefix}meta:{hash}");
     }
 
     /// <summary>
@@ -83,8 +87,25 @@ public class QueryCacheKeyGenerator
 
         var combined = string.Join("|", queries.Select(q => ComputeHash(NormalizeForHashing(q))));
         var hash = ComputeHash(combined);
-        return $"{KeyPrefix}batch:{hash}";
+        return TrackCreation($"{KeyPrefix}batch:{hash}");
     }
+
+    /// <summary>
+    /// Records the creation time of a generated key and returns it unchanged.
+    /// </summary>
+    private static string TrackCreation(string key)
+    {
+        s_keyCreatedAt[key] = DateTimeOffset.UtcNow;
+        return key;
+    }
+
+    /// <summary>
+    /// Gets the time a cache key was generated, if this instance (or another instance in the
+    /// same process) has generated it. Returns null for keys generated in a previous process
+    /// or never seen by this generator.
+    /// </summary>
+    public DateTimeOffset? GetKeyCreatedAt(string key) =>
+        s_keyCreatedAt.TryGetValue(key, out var createdAt) ? createdAt : null;
 
     /// <summary>
     /// Normalizes query for consistent hashing.

@@ -200,16 +200,15 @@ public class HttpQueryAnalysisClient
     {
         try
         {
-            // In real implementation, use proper JSON deserialization
-            // For now, return basic result structure
-            return new QueryAnalysisResult
-            {
-                PerformanceScore = 85.0,
-                Complexity = Constants.QueryComplexity.Medium,
-                AnalyzedAt = DateTime.UtcNow
-            };
+            var apiResponse = System.Text.Json.JsonSerializer.Deserialize<API.ApiResponse<QueryAnalysisResult>>(
+                json, s_jsonOptions);
+
+            if (apiResponse is { Success: true, Data: not null })
+                return apiResponse.Data;
+
+            return System.Text.Json.JsonSerializer.Deserialize<QueryAnalysisResult>(json, s_jsonOptions);
         }
-        catch (Exception ex)
+        catch (System.Text.Json.JsonException ex)
         {
             _logger.LogError(ex, "Failed to parse analysis response");
             return null;
@@ -221,8 +220,28 @@ public class HttpQueryAnalysisClient
     /// </summary>
     private List<QueryAnalysisResult> ParseBatchAnalysisResponse(string json)
     {
-        return new List<QueryAnalysisResult>();
+        try
+        {
+            var apiResponse = System.Text.Json.JsonSerializer.Deserialize<API.ApiResponse<List<QueryAnalysisResult>>>(
+                json, s_jsonOptions);
+
+            if (apiResponse is { Success: true, Data: not null })
+                return apiResponse.Data;
+
+            return System.Text.Json.JsonSerializer.Deserialize<List<QueryAnalysisResult>>(json, s_jsonOptions)
+                ?? new List<QueryAnalysisResult>();
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to parse batch analysis response");
+            return new List<QueryAnalysisResult>();
+        }
     }
+
+    private static readonly System.Text.Json.JsonSerializerOptions s_jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
 }
 
 /// <summary>
