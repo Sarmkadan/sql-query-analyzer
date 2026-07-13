@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace sql_query_analyzer.Benchmarks
+namespace SqlQueryAnalyzer.Benchmarks
 {
     /// <summary>
     /// Extension methods for <see cref="SqlPatternAnalyzerBenchmarks"/> to analyze SQL query patterns.
@@ -19,7 +19,7 @@ namespace sql_query_analyzer.Benchmarks
         public static bool HasExcessiveOrConditions(this SqlPatternAnalyzerBenchmarks benchmarks, int threshold = 5)
         {
             ArgumentNullException.ThrowIfNull(benchmarks);
-            return benchmarks.CountOrConditions > threshold;
+            return benchmarks.CountOrConditions() > threshold;
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace sql_query_analyzer.Benchmarks
         public static bool IsReadabilityScoreLow(this SqlPatternAnalyzerBenchmarks benchmarks, double threshold = 0.5)
         {
             ArgumentNullException.ThrowIfNull(benchmarks);
-            return benchmarks.ReadabilityScoreProblematic < threshold;
+            return benchmarks.ReadabilityScoreProblematic() < threshold;
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace sql_query_analyzer.Benchmarks
         public static bool HasNestedParentheses(this SqlPatternAnalyzerBenchmarks benchmarks, int threshold = 3)
         {
             ArgumentNullException.ThrowIfNull(benchmarks);
-            return benchmarks.CountParenthesesNested > threshold;
+            return benchmarks.CountParenthesesNested() > threshold;
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace sql_query_analyzer.Benchmarks
         public static bool HasProblematicFunctionOnColumn(this SqlPatternAnalyzerBenchmarks benchmarks)
         {
             ArgumentNullException.ThrowIfNull(benchmarks);
-            return benchmarks.HasFunctionOnColumn;
+            return benchmarks.HasFunctionOnColumn();
         }
     }
 }
