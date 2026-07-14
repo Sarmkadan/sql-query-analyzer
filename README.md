@@ -1,3 +1,64 @@
+## AnalysisController
+
+The `AnalysisController` class provides REST API endpoints for SQL query analysis. It exposes three main operations: single query analysis, batch query analysis, and health checks. The controller is designed to work with ASP.NET Core or similar web frameworks and returns standardized API responses with success status, data payloads, and appropriate HTTP status codes.
+
+### Usage Example
+
+```csharp
+// Example: Analyzing a single query
+var controller = new AnalysisController(analyzerService, logger);
+
+var request = new AnalysisRequest
+{
+    Query = "SELECT * FROM Users WHERE Id = 1",
+    Options = new Dictionary<string, string>
+    {
+        {"timeout", "30"},
+        {"includeExecutionPlan", "true"}
+    }
+};
+
+var response = await controller.AnalyzeAsync(request);
+
+if (response.Success)
+{
+    Console.WriteLine($"Analysis completed: {response.Data}");
+}
+else
+{
+    Console.WriteLine($"Error: {response.Message}");
+}
+
+// Example: Batch analysis
+var batchRequest = new BatchAnalysisRequest
+{
+    Queries = new[]
+    {
+        "SELECT * FROM Orders WHERE CustomerId = 1",
+        "SELECT * FROM Products WHERE CategoryId = 5",
+        "SELECT COUNT(*) FROM Users"
+    },
+    MaxDegreeOfParallelism = 4
+};
+
+var batchResponse = await controller.AnalyzeBatchAsync(batchRequest);
+
+// Example: Health check
+var healthResponse = await controller.GetHealthAsync();
+if (healthResponse.Data?.IsHealthy == true)
+{
+    Console.WriteLine($"Service version: {healthResponse.Data.Version}");
+}
+```
+
+### Public Members
+
+- `AnalyzeAsync(AnalysisRequest request)` - Analyzes a single SQL query
+- `AnalyzeBatchAsync(BatchAnalysisRequest request)` - Analyzes multiple queries in batch
+- `GetHealthAsync()` - Gets health status of the analyzer service
+- `ApiResponse<T>` - Generic API response wrapper with properties: Success, Data, Message, StatusCode, Errors, Timestamp
+- `HealthStatus` - Health status response with properties: IsHealthy, Message, Version, Timestamp, Details
+
 ## Configuration
 
 The application uses the `IOptions` pattern for configuration, supporting JSON files and environment variables. See `appsettings.example.json` for a template.
