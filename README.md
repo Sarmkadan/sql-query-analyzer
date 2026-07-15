@@ -323,6 +323,70 @@ var patterns = benchmarks.FullPatternSuite();
 - `FullPatternSuite()` - Runs 7 different pattern checks on a complex query (returns tuple of bool/int results)
 - `ExtractJoinConditions()` - Extracts join conditions from a multi-join query
 
+## SqlPatternAnalyzerBenchmarks
+
+The `SqlPatternAnalyzerBenchmarks` class provides performance benchmarks for the `SqlPatternAnalyzer` utility, measuring the efficiency of various SQL pattern detection and analysis operations. It uses BenchmarkDotNet to benchmark N+1 query pattern detection, table extraction from complex queries, optimization recommendation generation, and various query analysis metrics like readability scoring and parentheses nesting depth.
+
+This benchmark suite helps identify performance regressions in pattern detection algorithms and provides baseline measurements for query analysis operations.
+
+### Usage Example
+
+```csharp
+// Create benchmark instance
+var benchmarks = new SqlPatternAnalyzerBenchmarks();
+
+// Initialize the benchmark setup (required before running benchmarks)
+benchmarks.Setup();
+
+// Benchmark N+1 pattern detection with repeated queries
+bool hasNPlusOne = benchmarks.DetectNPlusOneRepeated();
+Console.WriteLine($"N+1 pattern detected: {hasNPlusOne}");
+
+// Benchmark N+1 pattern detection with diverse queries
+bool hasNPlusOneDiverse = benchmarks.DetectNPlusOneDiverse();
+Console.WriteLine($"N+1 pattern detected (diverse): {hasNPlusOneDiverse}");
+
+// Benchmark table extraction from a problematic query
+var problematicTables = benchmarks.ExtractTablesProblematic();
+Console.WriteLine($"Extracted tables: {string.Join(", ", problematicTables)}");
+
+// Benchmark table extraction from a nested subquery
+var nestedTables = benchmarks.ExtractTablesNested();
+Console.WriteLine($"Extracted nested tables: {string.Join(", ", nestedTables)}");
+
+// Benchmark optimization recommendations for clean vs problematic queries
+var cleanRecommendations = benchmarks.RecommendationsClean();
+var problematicRecommendations = benchmarks.RecommendationsProblematic();
+Console.WriteLine($"Clean query has {cleanRecommendations.Count} recommendations");
+Console.WriteLine($"Problematic query has {problematicRecommendations.Count} recommendations");
+
+// Benchmark readability scoring and complexity metrics
+double readabilityScore = benchmarks.ReadabilityScoreProblematic();
+int parenthesesCount = benchmarks.CountParenthesesNested();
+Console.WriteLine($"Readability score: {readabilityScore:F2}");
+Console.WriteLine($"Parentheses nesting depth: {parenthesesCount}");
+
+// Benchmark function detection and OR condition counting
+bool hasFunction = benchmarks.HasFunctionOnColumn();
+int orCount = benchmarks.CountOrConditions();
+Console.WriteLine($"Has function on column: {hasFunction}");
+Console.WriteLine($"OR condition count: {orCount}");
+```
+
+### Public Members
+
+- `Setup()` - Initializes benchmark data (required before running benchmarks)
+- `DetectNPlusOneRepeated()` - Detects N+1 pattern in 20 repeated queries
+- `DetectNPlusOneDiverse()` - Detects N+1 pattern in 6 diverse queries
+- `ExtractTablesProblematic()` - Extracts tables from a 2-table implicit JOIN query
+- `ExtractTablesNested()` - Extracts tables from a nested subquery
+- `RecommendationsClean()` - Generates optimization recommendations for a clean query
+- `RecommendationsProblematic()` - Generates optimization recommendations for a problematic query
+- `ReadabilityScoreProblematic()` - Calculates readability score for a problematic query
+- `CountParenthesesNested()` - Counts parentheses nesting depth in a complex query
+- `HasFunctionOnColumn()` - Checks if a query contains a function on a column
+- `CountOrConditions()` - Counts the number of OR conditions in a query
+
 ## SqlQueryAnalyzerException
 
 The `SqlQueryAnalyzerException` is the base exception class for all exceptions thrown by the SQL Query Analyzer. It inherits from `System.Exception` and provides two standard constructors for creating exception instances with custom error messages and optional inner exceptions. This exception serves as the foundation for more specific exception types like `AnalysisException`, `InvalidQueryException`, `DatabaseConnectionException`, and others.
