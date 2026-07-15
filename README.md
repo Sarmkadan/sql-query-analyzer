@@ -946,6 +946,74 @@ Console.WriteLine($"Max query length: {maxQueryLength}");
 - `GetMaxQueryLength(this SqlQueryAnalyzerOptions options)` - Gets the effective maximum query length limit (minimum 1024)
 
 
+## QueryCacheKeyGeneratorExtensions
+
+The `QueryCacheKeyGeneratorExtensions` class provides extension methods for `QueryCacheKeyGenerator` that extend cache key generation and management capabilities. These methods enable composite key generation, key comparison, parameter extraction, key expiration checking, and formatted key display for advanced caching scenarios in SQL query analysis scenarios.
+
+### Usage Example
+
+```csharp
+// Create cache key generator
+var generator = new QueryCacheKeyGenerator();
+
+// Generate a cache key for a simple query
+string simpleKey = generator.GenerateQueryKey(
+    "SELECT * FROM Users WHERE Id = 1 AND Status = 'active'"
+);
+Console.WriteLine($"Simple key: {simpleKey}");
+
+// Generate a cache key for a query with parameters
+var parameters = new Dictionary<string, object>
+{
+    {"UserId", 123},
+    {"Status", "active"},
+    {"CreatedAfter", new DateTime(2024, 1, 1)}
+};
+string parameterizedKey = generator.GenerateParameterizedQueryKey(
+    "SELECT * FROM Users WHERE Id = @UserId AND Status = @Status AND CreatedAt > @CreatedAfter",
+    parameters
+);
+Console.WriteLine($"Parameterized key: {parameterizedKey}");
+
+// Create a composite key from multiple query keys
+string compositeKey = generator.CreateCompositeKey(
+    generator.GenerateQueryKey("SELECT * FROM Users"),
+    generator.GenerateQueryKey("SELECT * FROM Orders"),
+    generator.GenerateQueryKey("SELECT COUNT(*) FROM Products")
+);
+Console.WriteLine($"Composite key: {compositeKey}");
+
+// Check if two keys represent the same query
+bool sameQuery = generator.AreKeysForSameQuery(simpleKey, parameterizedKey);
+Console.WriteLine($"Keys represent same query: {sameQuery}");
+
+// Check if a cache key is expired (older than 24 hours)
+bool isExpired = generator.IsCacheKeyExpired(simpleKey, maxAgeHours: 24);
+Console.WriteLine($"Key is expired: {isExpired}");
+
+// Format a cache key for display/logging
+string formattedKey = generator.FormatCacheKey(simpleKey);
+Console.WriteLine($"Formatted key: {formattedKey}");
+
+// Extract parameters from a metadata key (returns null as parameters cannot be recovered from hash)
+var extractedParams = generator.ExtractParametersFromMetadataKey(
+    generator.GenerateParameterizedQueryKey(
+        "SELECT * FROM Users WHERE Id = @UserId",
+        new Dictionary<string, object> { {"UserId", 123} }
+    )
+);
+Console.WriteLine($"Extracted parameters: {(extractedParams == null ? "null (parameters cannot be recovered from hash)" : extractedParams.Count)}");
+```
+
+### Public Members
+
+- `CreateCompositeKey(this QueryCacheKeyGenerator generator, params string[] queryKeys)` - Creates a composite cache key from multiple query keys for combined analysis results
+- `AreKeysForSameQuery(this QueryCacheKeyGenerator generator, string key1, string key2)` - Checks if two cache keys represent the same query for deduplication
+- `ExtractParametersFromMetadataKey(this QueryCacheKeyGenerator generator, string metadataKey)` - Extracts parameters from a metadata cache key (returns null as parameters cannot be recovered from hash)
+- `GenerateParameterizedQueryKey(this QueryCacheKeyGenerator generator, string query, Dictionary<string, object>? parameters = null)` - Generates a cache key for a query with normalized parameters
+- `IsCacheKeyExpired(this QueryCacheKeyGenerator generator, string key, int maxAgeHours)` - Checks if a cache key is expired based on key age
+- `FormatCacheKey(this QueryCacheKeyGenerator generator, string key)` - Gets a display-friendly representation of a cache key for logging and debugging
+
 ## SqlInjectionDetectorExtensions
 
 The `SqlInjectionDetectorExtensions` class provides extension methods for `SqlInjectionDetector` that enhance SQL injection vulnerability detection with filtering, grouping, and reporting capabilities. These methods help analyze, categorize, and generate comprehensive reports on detected vulnerabilities, making it easier to identify and prioritize security issues in SQL queries.
