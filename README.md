@@ -414,9 +414,57 @@ catch (Exception innerEx)
 }
 ```
 
-## QueryPlanAnalyzerTests
+## QueryValidatorTests
 
-The `QueryPlanAnalyzerTests` class provides unit tests for the `QueryPlanAnalyzerService` class, which is responsible for parsing and analyzing SQL Server execution plans. It tests various scenarios including valid XML plans, invalid XML input, table scan detection, and missing index recommendations. The test suite uses xUnit and FluentAssertions for clear, expressive test assertions.
+The `QueryValidatorTests` class provides unit tests for the `QueryValidator` utility, which validates SQL queries for correctness, safety, and formatting. It tests various scenarios including well-formed queries, empty strings, queries without recognized SQL keywords, null arguments, query sanitization, key generation consistency, and custom validation rules. The test suite uses xUnit and FluentAssertions for clear, expressive test assertions.
+
+### Usage Example
+
+```csharp
+// Create validator instance
+var validator = new QueryValidator();
+
+// Validate a well-formed SELECT statement
+bool isValid = validator.IsValidQuery("SELECT * FROM Users WHERE Id = 1");
+Console.WriteLine($"Query is valid: {isValid}"); // True
+
+// Handle empty string input
+bool isEmptyValid = validator.IsValidQuery("");
+Console.WriteLine($"Empty query is valid: {isEmptyValid}"); // False
+
+// Validate query with no recognized SQL keywords
+bool isKeywordValid = validator.IsValidQuery("This is just plain text without SQL");
+Console.WriteLine($"Text without keywords is valid: {isKeywordValid}"); // False
+
+// Validate database query with null argument (throws exception)
+try
+{
+    validator.ValidateDatabaseQuery(null!);
+}
+catch (ValidationException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+
+// Sanitize a query for display (truncates long queries)
+string longQuery = new string('x', 2000);
+string sanitized = validator.SanitizeQueryForDisplay(longQuery);
+Console.WriteLine($"Sanitized length: {sanitized.Length}"); // Truncated with ellipsis
+
+// Generate consistent query key (ignores whitespace differences)
+string key1 = validator.GenerateQueryKey("SELECT * FROM Users WHERE Id=1");
+string key2 = validator.GenerateQueryKey("SELECT * FROM Users WHERE Id = 1");
+Console.WriteLine($"Keys are equal: {key1 == key2}"); // True
+
+// Generate result key with proper prefix
+string resultKey = validator.GenerateResultKey("SELECT COUNT(*) FROM Users");
+Console.WriteLine($"Result key starts with 'result_': {resultKey.StartsWith("result_")}"); // True
+
+// Register and use a custom validation rule
+validator.RegisterCustomRule(query => query.Contains("WHERE"), "Query must contain WHERE clause");
+validator.ValidateQuery("SELECT * FROM Users WHERE Id = 1", out var errors);
+Console.WriteLine($"Validation errors: {errors.Count}"); // 0 - rule satisfied
+```
 
 ### Usage Example
 
