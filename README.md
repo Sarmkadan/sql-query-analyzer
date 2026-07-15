@@ -244,6 +244,110 @@ public class CustomEventSubscriber : IAnalysisEventSubscriber
 - Errors in individual subscribers are logged but don't prevent other subscribers from receiving the event
 - The publisher is thread-safe for concurrent subscriptions/unsubscriptions
 
+## QueryAnalysisExtensions
+
+The `QueryAnalysisExtensions` class provides extension methods for `QueryAnalysisResult` and `IEnumerable<QueryAnalysisResult>` that enable convenient analysis, filtering, and aggregation operations on SQL query analysis results. These methods help identify performance issues, calculate improvement potential, and generate actionable recommendations for query optimization.
+
+### Usage Example
+
+```csharp
+// Analyze a SQL query using the analyzer service
+var analyzer = new QueryAnalyzerService();
+var result = await analyzer.AnalyzeAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount " +
+    "FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId " +
+    "GROUP BY u.Name HAVING COUNT(o.Id) > 5 " +
+    "ORDER BY OrderCount DESC");
+
+// Check if query has critical problems
+if (result.HasCriticalProblems())
+{
+    Console.WriteLine("⚠️ Critical issues detected!");
+}
+
+// Get top 5 issues by impact
+var topIssues = result.GetTopIssuesByImpact(5);
+foreach (var issue in topIssues)
+{
+    Console.WriteLine($"- {issue.IssueType}: {issue.Description} (Impact: {issue.EstimatedPerformanceImpact:F1}%)");
+}
+
+// Get top 3 index suggestions
+var topSuggestions = result.GetTopSuggestions(3);
+foreach (var suggestion in topSuggestions)
+{
+    Console.WriteLine($"- Create index on {suggestion.TableName}.{suggestion.ColumnName}");
+}
+
+// Calculate potential improvement
+var improvement = result.GetPotentialImprovement();
+Console.WriteLine($"Potential improvement: {improvement:F1} percentage points");
+
+// Check if query meets performance threshold
+if (!result.MeetsPerformanceThreshold(threshold: 80))
+{
+    Console.WriteLine("⚠️ Query performance below threshold!");
+}
+
+// Get issue summary by type
+var issueSummary = result.GetIssueSummary();
+foreach (var kvp in issueSummary)
+{
+    Console.WriteLine($"- {kvp.Key}: {kvp.Value} issues");
+}
+
+// Get criticality level (0-10 scale)
+var criticality = result.GetCriticalityLevel();
+Console.WriteLine($"Criticality level: {criticality}/10");
+
+// Get human-readable recommendation
+var recommendation = result.GetRecommendation();
+Console.WriteLine($"Recommendation: {recommendation}");
+
+// Filter results by complexity
+var complexQueries = result.FilterByComplexity(Constants.QueryComplexity.High);
+
+// Filter results by score range
+var goodQueries = result.FilterByScore(minScore: 80);
+
+// Export as JSON-compatible dictionary
+var exportData = result.ExportAsJson();
+Console.WriteLine($"Exported {exportData.Count} fields");
+
+// Batch operations with multiple results
+var batchResults = new List<QueryAnalysisResult> { result1, result2, result3 };
+var batchStats = batchResults.GetBatchStatistics();
+Console.WriteLine($"Batch: {batchStats.TotalQueries} queries, avg score: {batchStats.AverageScore:F1}");
+```
+
+### Public Members
+
+- `GetIssuesBySeverity(this QueryAnalysisResult result, Constants.IssueSeverity severity)` - Gets all issues of a specific severity level
+- `GetIssuesByType(this QueryAnalysisResult result, Constants.IssueType issueType)` - Gets all issues of a specific type
+- `GetTopIssuesByImpact(this QueryAnalysisResult result, int count = 5)` - Gets top N issues by performance impact
+- `GetTopSuggestions(this QueryAnalysisResult result, int count = 3)` - Gets top N index suggestions by performance gain
+- `HasCriticalProblems(this QueryAnalysisResult result)` - Checks if result has any issues of critical severity
+- `MeetsPerformanceThreshold(this QueryAnalysisResult result, double threshold = 70.0)` - Checks if result meets minimum performance threshold
+- `GetIssueSummary(this QueryAnalysisResult result)` - Gets issue summary grouped by type
+- `GetPotentialImprovement(this QueryAnalysisResult result)` - Calculates percentage improvement if all suggestions are implemented
+- `GetCriticalityLevel(this QueryAnalysisResult result)` - Gets criticality level (0-10 scale)
+- `GetRecommendation(this QueryAnalysisResult result)` - Gets a human-readable recommendation based on analysis
+- `Merge(this IEnumerable<QueryAnalysisResult> results)` - Merges multiple analysis results
+- `ExportAsJson(this QueryAnalysisResult result)` - Exports analysis result to dictionary for serialization
+- `FilterByComplexity(this IEnumerable<QueryAnalysisResult> results, Constants.QueryComplexity complexity)` - Filters results by complexity level
+- `FilterByScore(this IEnumerable<QueryAnalysisResult> results, double minScore, double maxScore = 100)` - Filters results by performance score threshold
+- `WithCriticalIssues(this IEnumerable<QueryAnalysisResult> results)` - Filters results that have critical issues
+- `OrderByPerformance(this IEnumerable<QueryAnalysisResult> results)` - Orders results by performance score (worst first)
+- `GetBatchStatistics(this IEnumerable<QueryAnalysisResult> results)` - Gets overall statistics for a batch of results
+
+- `BatchStatistics.TotalQueries` - Total number of queries in batch
+- `BatchStatistics.AverageScore` - Average performance score across all queries
+- `BatchStatistics.WorstScore` - Worst performance score in batch
+- `BatchStatistics.BestScore` - Best performance score in batch
+- `BatchStatistics.TotalIssuesFound` - Total number of issues across all queries
+- `BatchStatistics.QueriesWithIssues` - Number of queries with at least one issue
+
+
 ## QueryRewriteExtensions
 
 The `QueryRewriteExtensions` class provides extension methods for `IQueryRewriteService` and `IEnumerable<QueryRewriteSuggestion>` that enable dependency injection registration and LINQ-style convenience operations for SQL query rewrite suggestions. These methods help filter, sort, and analyze query rewrite suggestions to identify optimal optimization opportunities.
