@@ -859,6 +859,93 @@ Console.WriteLine(markdownTable);
 - `GetImprovements(this ProfileComparison comparison)` - Gets metric improvements from comparison
 - `ToMarkdownTable(this ProfileComparison comparison)` - Generates markdown comparison table
 
+## SqlQueryAnalyzerOptionsExtensions
+
+The `SqlQueryAnalyzerOptionsExtensions` class provides extension methods for `SqlQueryAnalyzerOptions` that validate configuration, retrieve normalized values, and determine feature availability. These methods ensure consistent access to configuration values and provide safe defaults for missing or invalid settings.
+
+### Usage Example
+
+```csharp
+// Configure SQL query analyzer options
+var options = new SqlQueryAnalyzerOptions
+{
+    Database = new DatabaseOptions
+    {
+        Provider = "SqlServer",
+        ConnectionString = "Server=localhost;Database=TestDB;User=sa;Password=your_password;",
+        ConnectionTimeoutSeconds = 30,
+        EnableConnectionLogging = true
+    },
+    Analysis = new AnalysisOptions
+    {
+        MaxThreads = 8,
+        DetectNPlusOne = true,
+        DetectMissingIndexes = true,
+        DetectJoinIssues = true,
+        AnalyzeExecutionPlans = true,
+        IndexSeverity = new Dictionary<string, int> { { "IX_Users_Email", 80 } },
+        IgnorePatterns = new List<string> { "SELECT * FROM Logs" }
+    },
+    Cache = new CacheOptions { Enabled = true },
+    Performance = new PerformanceOptions { MaxQueryLength = 2048 },
+    Logging = new LoggingOptions { MinimumLevel = "Information" }
+};
+
+// Validate configuration
+bool isValid = options.IsValid();
+Console.WriteLine($"Configuration is valid: {isValid}");
+
+// Check if analyzer is enabled
+bool isEnabled = options.IsAnalyzerEnabled();
+Console.WriteLine($"Analyzer is enabled: {isEnabled}");
+
+// Get normalized provider name
+string normalizedProvider = options.GetNormalizedProvider();
+Console.WriteLine($"Normalized provider: {normalizedProvider}");
+
+// Check if critical analysis features are enabled
+bool hasCriticalAnalysis = options.HasCriticalAnalysisEnabled();
+Console.WriteLine($"Critical analysis enabled: {hasCriticalAnalysis}");
+
+// Get connection timeout in milliseconds
+int timeoutMs = options.GetConnectionTimeoutMs();
+Console.WriteLine($"Connection timeout: {timeoutMs}ms");
+
+// Get maximum concurrent threads (clamped between 1-100)
+int maxThreads = options.GetMaxConcurrentThreads();
+Console.WriteLine($"Max concurrent threads: {maxThreads}");
+
+// Check if detailed logging should be enabled
+bool enableDetailedLogging = options.ShouldEnableDetailedLogging();
+Console.WriteLine($"Detailed logging enabled: {enableDetailedLogging}");
+
+// Get ignore patterns (returns empty list if null)
+var ignorePatterns = options.GetIgnorePatterns();
+Console.WriteLine($"Ignore patterns count: {ignorePatterns.Count}");
+
+// Check if execution plan analysis is enabled
+bool analyzeExecutionPlans = options.ShouldAnalyzeExecutionPlans();
+Console.WriteLine($"Execution plan analysis enabled: {analyzeExecutionPlans}");
+
+// Get maximum query length (minimum 1024)
+int maxQueryLength = options.GetMaxQueryLength();
+Console.WriteLine($"Max query length: {maxQueryLength}");
+```
+
+### Public Members
+
+- `IsValid(this SqlQueryAnalyzerOptions options)` - Validates that all required options are properly configured
+- `IsAnalyzerEnabled(this SqlQueryAnalyzerOptions options)` - Determines if the analyzer is enabled for execution
+- `GetNormalizedProvider(this SqlQueryAnalyzerOptions options)` - Gets the effective provider name (normalized to lowercase)
+- `HasCriticalAnalysisEnabled(this SqlQueryAnalyzerOptions options)` - Determines if any critical analysis features are enabled
+- `GetConnectionTimeoutMs(this SqlQueryAnalyzerOptions options)` - Gets the effective connection timeout in milliseconds
+- `GetMaxConcurrentThreads(this SqlQueryAnalyzerOptions options)` - Gets the effective maximum concurrent analysis threads (clamped between 1-100)
+- `ShouldEnableDetailedLogging(this SqlQueryAnalyzerOptions options)` - Determines if detailed logging should be enabled
+- `GetIgnorePatterns(this SqlQueryAnalyzerOptions options)` - Gets the list of patterns to ignore (returns empty list if null)
+- `ShouldAnalyzeExecutionPlans(this SqlQueryAnalyzerOptions options)` - Determines if execution plan analysis is enabled
+- `GetMaxQueryLength(this SqlQueryAnalyzerOptions options)` - Gets the effective maximum query length limit (minimum 1024)
+
+
 ## ErrorHandlingMiddlewareExtensions
 
 The `ErrorHandlingMiddlewareExtensions` class provides extension methods for `ErrorHandlingMiddleware` that enhance error handling capabilities with retry logic, error reporting, and fallback mechanisms. These methods help create robust error handling strategies for operations that may fail due to transient issues, enabling graceful degradation and recovery when possible.
