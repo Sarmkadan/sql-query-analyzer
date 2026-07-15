@@ -414,6 +414,46 @@ catch (Exception innerEx)
 }
 ```
 
+## SqlPatternAnalyzerTests
+
+The `SqlPatternAnalyzerTests` class provides unit tests for the `SqlPatternAnalyzer` utility, which detects common SQL anti-patterns and calculates query readability scores. It tests pattern detection methods like `HasSelectStar`, `HasLeadingWildcardLike`, `DetectNPlusOnePattern`, and `CalculateReadabilityScore`, as well as optimization recommendation generation. The test suite uses xUnit and FluentAssertions for clear, expressive test assertions.
+
+### Usage Example
+
+```csharp
+// Create test service
+var tests = new SqlPatternAnalyzerTests();
+
+// Test SELECT * detection
+tests.HasSelectStar_QueryContainsStar_ReturnsTrue();
+tests.HasSelectStar_QueryWithNamedColumns_ReturnsFalse();
+
+// Test LIKE pattern detection
+tests.HasLeadingWildcardLike_PatternStartsWithPercent_ReturnsTrue();
+
+// Test N+1 pattern detection
+tests.DetectNPlusOnePattern_SingleQueryInList_ReturnsFalse();
+tests.DetectNPlusOnePattern_SameTableAccessedMoreThanFiveTimes_ReturnsTrue();
+
+// Test readability scoring
+tests.CalculateReadabilityScore_WellWrittenQuery_ReturnsFullScore();
+tests.CalculateReadabilityScore_SelectStarWithImplicitJoin_DeductsThirtyPoints();
+
+// Test optimization recommendations
+tests.GenerateOptimizationRecommendations_SelectStarQuery_IncludesColumnReplacementAdvice();
+```
+
+### Test Methods
+
+- `HasSelectStar_QueryContainsStar_ReturnsTrue()` - Verifies SELECT * pattern detection
+- `HasSelectStar_QueryWithNamedColumns_ReturnsFalse()` - Ensures explicit column names don't trigger false positives
+- `HasLeadingWildcardLike_PatternStartsWithPercent_ReturnsTrue()` - Tests LIKE pattern with leading wildcard detection
+- `DetectNPlusOnePattern_SingleQueryInList_ReturnsFalse()` - Validates single query returns false
+- `DetectNPlusOnePattern_SameTableAccessedMoreThanFiveTimes_ReturnsTrue()` - Tests N+1 pattern detection
+- `CalculateReadabilityScore_WellWrittenQuery_ReturnsFullScore()` - Verifies perfect score for clean queries
+- `CalculateReadabilityScore_SelectStarWithImplicitJoin_DeductsThirtyPoints()` - Tests readability penalties
+- `GenerateOptimizationRecommendations_SelectStarQuery_IncludesColumnReplacementAdvice()` - Validates optimization advice generation
+
 ## QueryValidatorTests
 
 The `QueryValidatorTests` class provides unit tests for the `QueryValidator` utility, which validates SQL queries for correctness, safety, and formatting. It tests various scenarios including well-formed queries, empty strings, queries without recognized SQL keywords, null arguments, query sanitization, key generation consistency, and custom validation rules. The test suite uses xUnit and FluentAssertions for clear, expressive test assertions.
