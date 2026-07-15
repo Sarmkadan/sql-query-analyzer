@@ -244,6 +244,99 @@ public class CustomEventSubscriber : IAnalysisEventSubscriber
 - Errors in individual subscribers are logged but don't prevent other subscribers from receiving the event
 - The publisher is thread-safe for concurrent subscriptions/unsubscriptions
 
+## QueryPlanExtensions
+
+The `QueryPlanExtensions` class provides extension methods for `QueryPlan` that offer advanced analysis capabilities and utility functions for query performance optimization. These methods help identify expensive operations, detect performance issues, and calculate various cost metrics to assist in query optimization efforts.
+
+### Usage Example
+
+```csharp
+// Assume we have a parsed QueryPlan from execution plan XML
+var queryPlan = new QueryPlan
+{
+    PlanId = "Plan123",
+    DatabaseName = "SalesDB",
+    TotalEstimatedCost = 1250.5,
+    TotalEstimatedCpuCost = 850.2,
+    TotalEstimatedIoCost = 400.3,
+    TotalLogicalReads = 15678,
+    TotalElapsedTime = TimeSpan.FromMilliseconds(245)
+};
+
+// Initialize the plan with nodes, table accesses, and joins
+queryPlan.Initialize();
+
+// Calculate cost percentage of the most expensive node
+var mostExpensiveNode = queryPlan.AllNodes.OrderByDescending(n => n.EstimatedCost).First();
+double costPercentage = queryPlan.GetCostPercentage(mostExpensiveNode);
+Console.WriteLine($"Most expensive node: {costPercentage}% of total cost");
+
+// Get nodes that exceed a threshold (e.g., 100 cost units)
+var expensiveNodes = queryPlan.GetNodesAboveThreshold(100);
+Console.WriteLine($"Found {expensiveNodes.Count} nodes exceeding threshold");
+
+// Calculate cumulative cost of all operations
+double cumulativeCost = queryPlan.CalculateCumulativeCost();
+Console.WriteLine($"Cumulative cost: {cumulativeCost}");
+
+// Identify the most expensive table access
+var expensiveTableAccess = queryPlan.GetMostExpensiveTableAccess();
+if (expensiveTableAccess != null)
+{
+    Console.WriteLine($"Most expensive table: {expensiveTableAccess.ObjectName} (Cost: {expensiveTableAccess.EstimatedCost})");
+}
+
+// Identify the most expensive join operation
+var expensiveJoin = queryPlan.GetMostExpensiveJoin();
+if (expensiveJoin != null)
+{
+    Console.WriteLine($"Most expensive join: {expensiveJoin.JoinType} (Cost: {expensiveJoin.EstimatedCost})");
+}
+
+// Check for table scans (potential performance issue)
+bool hasTableScans = queryPlan.HasTableScans();
+Console.WriteLine($"Has table scans: {hasTableScans}");
+
+// Get all filtering nodes (WHERE clauses, etc.)
+var filteringNodes = queryPlan.GetFilteringNodes();
+Console.WriteLine($"Found {filteringNodes.Count} filtering operations");
+
+// Calculate CPU to I/O cost ratio
+double cpuToIoRatio = queryPlan.GetCpuToIoCostRatio();
+Console.WriteLine($"CPU/I/O cost ratio: {cpuToIoRatio:F2}");
+
+// Get all sorting operations
+var sortingNodes = queryPlan.GetSortingNodes();
+Console.WriteLine($"Found {sortingNodes.Count} sorting operations");
+
+// Get a comprehensive performance summary
+var performanceSummary = queryPlan.GetPerformanceSummary();
+Console.WriteLine($"Plan efficiency: {performanceSummary["hasTableScans"]}");
+
+// Check if the plan is considered efficient
+bool isEfficient = queryPlan.IsEfficient(maxTableScans: 1, maxCost: 1000.0);
+Console.WriteLine($"Is efficient: {isEfficient}");
+
+// Get all nodes that access a specific table
+var usersTableNodes = queryPlan.GetNodesForTable("Users");
+Console.WriteLine($"Found {usersTableNodes.Count} nodes accessing Users table");
+```
+
+### Public Members
+
+- `GetCostPercentage(PlanNode node)` - Calculates the cost percentage of a specific node relative to total plan cost
+- `GetNodesAboveThreshold(double threshold)` - Gets all nodes exceeding a specified cost threshold
+- `CalculateCumulativeCost()` - Calculates the cumulative cost of all operations in the plan
+- `GetMostExpensiveTableAccess()` - Gets the most expensive table access operation
+- `GetMostExpensiveJoin()` - Gets the most expensive join operation
+- `HasTableScans()` - Determines if the plan has any table scans (potential performance issue)
+- `GetFilteringNodes()` - Gets all nodes that perform data filtering (WHERE clauses, etc.)
+- `GetCpuToIoCostRatio()` - Calculates the estimated cost ratio between CPU and I/O operations
+- `GetSortingNodes()` - Gets all nodes that perform sorting operations
+- `GetPerformanceSummary()` - Gets a summary of plan performance characteristics
+- `IsEfficient(int maxTableScans = 2, double maxCost = 1000.0)` - Determines if the plan is considered efficient
+- `GetNodesForTable(string tableName)` - Gets all nodes that access a specific table
+
 ## QueryNormalizerBenchmarks
 
 The `QueryNormalizerBenchmarks` class provides performance benchmarks for the `QueryNormalizer` utility, measuring the efficiency of SQL query normalization, table name extraction, and column name extraction operations. It uses BenchmarkDotNet to compare different normalization scenarios including simple queries, complex multi-join queries, and queries with embedded string literals.
