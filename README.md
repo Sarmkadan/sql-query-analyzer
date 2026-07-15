@@ -507,6 +507,61 @@ catch (Exception innerEx)
 }
 ```
 
+## HttpQueryAnalysisClient
+
+The `HttpQueryAnalysisClient` class is an HTTP client for integrating with remote SQL analyzer instances. It enables distributed analysis, API-first integration, and remote caching scenarios. The client implements retry logic with exponential backoff, connection pooling, and comprehensive error handling for reliable remote communication.
+
+### Usage Example
+
+```csharp
+// Create HTTP client for remote analyzer
+var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+var logger = loggerFactory.CreateLogger<HttpQueryAnalysisClient>();
+var client = new HttpQueryAnalysisClient(logger, "http://remote-analyzer:5000", timeoutSeconds: 60);
+
+// Check service health before analysis
+bool isHealthy = await client.IsHealthyAsync();
+Console.WriteLine($"Remote analyzer is healthy: {isHealthy}");
+
+// Get version information
+string? version = await client.GetVersionAsync();
+Console.WriteLine($"Remote analyzer version: {version ?? "unknown"}");
+
+// Analyze a single query with retry logic
+var singleResult = await client.AnalyzeQueryAsync(
+    "SELECT * FROM Users WHERE CreatedAt > '2024-01-01' AND Status = 'active'",
+    maxRetries: 5,
+    backoffMs: 250
+);
+Console.WriteLine($"Single query analysis completed: {singleResult.Issues.Count} issues found");
+
+// Analyze batch of queries in parallel
+var queries = new[]
+{
+    "SELECT COUNT(*) FROM Orders WHERE OrderDate > '2024-01-01'",
+    "SELECT * FROM Products WHERE Price > 100 ORDER BY Price DESC",
+    "SELECT u.Name, COUNT(o.Id) as OrderCount FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId GROUP BY u.Name"
+};
+var batchResults = await client.AnalyzeBatchAsync(queries);
+Console.WriteLine($"Batch analysis completed: {batchResults.Count} queries analyzed");
+
+foreach (var result in batchResults)
+{
+    Console.WriteLine($"Query: {result.Query.Substring(0, Math.Min(50, result.Query.Length))}...");
+    Console.WriteLine($"  - Critical issues: {result.Issues.Count(i => i.Severity == IssueSeverity.Critical)}");
+    Console.WriteLine($"  - Performance score: {result.PerformanceScore:F1}");
+}
+```
+
+### Public Members
+
+- `AnalyzeQueryAsync(string query, int maxRetries = 3, int backoffMs = 500)` - Analyzes a single SQL query with retry logic
+- `AnalyzeBatchAsync(string[] queries)` - Analyzes multiple queries in batch for parallel processing
+- `IsHealthyAsync()` - Checks health/availability of remote analyzer service
+- `GetVersionAsync()` - Gets version information from remote analyzer
+- `AnalysisRequest` - Request DTO with properties: Query, Options
+- `BatchAnalysisRequest` - Batch request DTO with properties: Queries, MaxDegreeOfParallelism
+
 ## SqlPatternAnalyzerTests
 
 The `SqlPatternAnalyzerTests` class provides unit tests for the `SqlPatternAnalyzer` utility, which detects common SQL anti-patterns and calculates query readability scores. It tests pattern detection methods like `HasSelectStar`, `HasLeadingWildcardLike`, `DetectNPlusOnePattern`, and `CalculateReadabilityScore`, as well as optimization recommendation generation. The test suite uses xUnit and FluentAssertions for clear, expressive test assertions.
