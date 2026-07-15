@@ -946,6 +946,57 @@ Console.WriteLine($"Max query length: {maxQueryLength}");
 - `GetMaxQueryLength(this SqlQueryAnalyzerOptions options)` - Gets the effective maximum query length limit (minimum 1024)
 
 
+## SqlInjectionDetectorExtensions
+
+The `SqlInjectionDetectorExtensions` class provides extension methods for `SqlInjectionDetector` that enhance SQL injection vulnerability detection with filtering, grouping, and reporting capabilities. These methods help analyze, categorize, and generate comprehensive reports on detected vulnerabilities, making it easier to identify and prioritize security issues in SQL queries.
+
+### Usage Example
+
+```csharp
+// Create SQL injection detector
+var detector = new SqlInjectionDetector();
+
+// Analyze a query for SQL injection vulnerabilities
+var issues = detector.Analyze(
+    "SELECT * FROM Users WHERE username = '" + userInput + "' AND password = '" + passwordInput + "'"
+);
+
+// Check if any critical or high severity issues were found
+bool hasCriticalIssues = detector.HasCriticalIssues(issues);
+Console.WriteLine($"Has critical issues: {hasCriticalIssues}");
+
+// Filter issues by severity (only show Critical and High)
+var highPriorityIssues = detector.FilterBySeverity(issues, "High");
+Console.WriteLine($"High priority issues: {highPriorityIssues.Count}");
+
+// Group issues by type to see which patterns are most common
+var issuesByType = detector.GroupByType(issues);
+foreach (var group in issuesByType)
+{
+    Console.WriteLine($"- {group.Key}: {group.Value.Count} issues");
+}
+
+// Generate a summary report
+string summaryReport = detector.GenerateSummaryReport(issues);
+Console.WriteLine(summaryReport);
+
+// Generate a detailed report with line numbers
+string detailedReport = detector.GenerateDetailedReport(
+    issues, 
+    "SELECT * FROM Users WHERE username = 'admin' -- OR '1'='1'"
+);
+Console.WriteLine(detailedReport);
+```
+
+### Public Members
+
+- `FilterBySeverity(this SqlInjectionDetector detector, List<SqlInjectionIssue> issues, string minSeverity = "Medium")` - Filters detected vulnerabilities by severity level (Critical, High, Medium, Low)
+- `GroupByType(this SqlInjectionDetector detector, List<SqlInjectionIssue> issues)` - Groups detected vulnerabilities by their type
+- `GenerateSummaryReport(this SqlInjectionDetector detector, List<SqlInjectionIssue> issues)` - Generates a summary report of detected vulnerabilities with counts by severity
+- `GenerateDetailedReport(this SqlInjectionDetector detector, List<SqlInjectionIssue> issues, string query)` - Generates a detailed analysis report with location information and line numbers
+- `HasCriticalIssues(this SqlInjectionDetector detector, List<SqlInjectionIssue> issues)` - Checks if any critical or high severity vulnerabilities were detected
+
+
 ## ErrorHandlingMiddlewareExtensions
 
 The `ErrorHandlingMiddlewareExtensions` class provides extension methods for `ErrorHandlingMiddleware` that enhance error handling capabilities with retry logic, error reporting, and fallback mechanisms. These methods help create robust error handling strategies for operations that may fail due to transient issues, enabling graceful degradation and recovery when possible.
