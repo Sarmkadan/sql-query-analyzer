@@ -507,6 +507,107 @@ catch (Exception innerEx)
 }
 ```
 
+## WebhookNotificationService
+
+The `WebhookNotificationService` class sends webhook notifications for important SQL query analysis events to external systems like Slack, Microsoft Teams, Discord, or custom APIs. It implements the `IAnalysisEventSubscriber` interface to receive analysis events and sends notifications based on webhook configuration settings. The service includes retry logic for failed webhook deliveries and supports filtering notifications by event type (completion, failures, critical issues).
+
+### Usage Example
+
+```csharp
+// Setup dependency injection (ASP.NET Core example)
+services.AddSingleton<IAnalysisEventPublisher, AnalysisEventPublisher>();
+services.AddSingleton<IAnalysisEventSubscriber, WebhookNotificationService>();
+
+// Create and configure webhook notification service
+var webhookService = new WebhookNotificationService(logger);
+
+// Register webhook endpoints for different notification types
+webhookService.RegisterWebhook(new WebhookConfiguration
+{
+    Name = "Slack Alerts",
+    Url = "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+    Type = WebhookType.Slack,
+    NotifyOnCompletion = true,
+    NotifyOnCriticalIssues = true,
+    NotifyOnFailures = true,
+    CustomHeaders = new Dictionary<string, string>
+    {
+        {"X-Custom-Header", "value"}
+    }
+});
+
+webhookService.RegisterWebhook(new WebhookConfiguration
+{
+    Name = "Teams Monitoring",
+    Url = "https://your-organization.webhook.office.com/webhookb2/YOUR/TEAMS/WEBHOOK",
+    Type = WebhookType.MicrosoftTeams,
+    NotifyOnCriticalIssues = true,
+    NotifyOnFailures = true
+});
+
+// Register webhook for custom API endpoint
+webhookService.RegisterWebhook(new WebhookConfiguration
+{
+    Name = "Custom Analytics",
+    Url = "https://api.example.com/webhooks/sql-analyzer",
+    Type = WebhookType.Custom,
+    NotifyOnCompletion = true,
+    NotifyOnFailures = true,
+    CustomHeaders = new Dictionary<string, string>
+    {
+        {"Authorization", "Bearer your-token-here"},
+        {"X-API-Key", "your-api-key"}
+    }
+});
+
+// Get current webhook count
+int webhookCount = webhookService.GetWebhookCount();
+Console.WriteLine($"Registered webhooks: {webhookCount}");
+
+// Unregister a webhook when no longer needed
+webhookService.UnregisterWebhook("Teams Monitoring");
+
+// The service automatically receives events through IAnalysisEventSubscriber interface
+// No manual event handling required - webhooks are sent automatically based on configuration
+```
+
+### Public Members
+
+- `RegisterWebhook(WebhookConfiguration config)` - Registers a webhook endpoint for notifications
+- `UnregisterWebhook(string webhookName)` - Unregisters a webhook by name
+- `OnEventAsync(AnalysisEvent @event)` - Handles analysis events and sends relevant webhooks (async)
+- `GetWebhookCount()` - Gets count of registered webhooks
+- `WebhookConfiguration` - Configuration class with properties:
+  - `Name` - Webhook display name
+  - `Url` - Webhook endpoint URL
+  - `Type` - Webhook type (Slack, MicrosoftTeams, Discord, Custom)
+  - `Enabled` - Whether webhook is active
+  - `NotifyOnCompletion` - Notify on analysis completion
+  - `NotifyOnCriticalIssues` - Notify on critical issues
+  - `NotifyOnFailures` - Notify on failures
+  - `CustomHeaders` - Optional custom HTTP headers
+
+### Webhook Types
+
+- `Slack` - Slack webhook format
+- `MicrosoftTeams` - Microsoft Teams webhook format  
+- `Discard` - Discord webhook format
+- `Custom` - Generic JSON webhook format
+
+### Event Types Supported
+
+- `CriticalIssueDetectedEvent` - Critical performance issues
+- `AnalysisFailedEvent` - Analysis failures with error details
+- `AnalysisCompletedEvent` - Successful analysis completion
+
+### Implementation Notes
+
+- Webhooks are sent asynchronously to avoid blocking the analysis pipeline
+- Failed webhook deliveries are automatically retried (3 attempts by default)
+- The service implements exponential backoff for retry logic
+- Custom headers can be added for authentication or additional metadata
+- Thread-safe for concurrent webhook registration/unregistration
+
 ## HttpQueryAnalysisClient
 
 The `HttpQueryAnalysisClient` class is an HTTP client for integrating with remote SQL analyzer instances. It enables distributed analysis, API-first integration, and remote caching scenarios. The client implements retry logic with exponential backoff, connection pooling, and comprehensive error handling for reliable remote communication.
