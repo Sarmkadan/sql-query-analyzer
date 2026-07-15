@@ -507,6 +507,145 @@ catch (Exception innerEx)
 }
 ```
 
+## QueryProfilerExtensions
+
+The `QueryProfilerExtensions` class provides extension methods for registering the query profiler with the dependency injection container and for querying `QueryProfilerReport` instances to extract performance insights, filter critical issues, and generate comparison reports. These methods enable programmatic analysis of profiler results, batch operations on multiple reports, and environment-aware profiler configuration.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with environment-aware settings
+var services = new ServiceCollection();
+
+// Register required analyzer services first
+services.AddSingleton<IQueryAnalyzerService, QueryAnalyzerService>();
+services.AddSingleton<IQueryPlanAnalyzerService, QueryPlanAnalyzerService>();
+services.AddSingleton<IPerformanceIssueDetectorService, PerformanceIssueDetectorService>();
+
+// Add query profiler with environment-specific settings
+services.AddQueryProfilerForEnvironment(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development");
+
+var serviceProvider = services.BuildServiceProvider();
+var profilerService = serviceProvider.GetRequiredService<IQueryProfilerService>();
+
+// Profile a query
+var report = await profilerService.ProfileQueryAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount " +
+    "FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId " +
+    "GROUP BY u.Name HAVING COUNT(o.Id) > 5 " +
+    "ORDER BY OrderCount DESC",
+    "GetTopCustomers"
+);
+
+// Analyze the profiler report
+if (report != null)
+{
+    // Get the bottleneck stage (slowest execution stage)
+    var bottleneck = report.GetBottleneckStage();
+    Console.WriteLine($"Bottleneck: {bottleneck?.StageName} ({bottleneck?.DurationMs}ms)");
+    
+    // Get slow stages (exceeding 100ms threshold)
+    var slowStages = report.GetSlowStages(thresholdMs: 100);
+    Console.WriteLine($"Slow stages: {slowStages.Count}");
+    
+    // Get critical metrics (CPU usage > 50)
+    var criticalMetrics = report.GetCriticalMetrics(threshold: 50);
+    Console.WriteLine($"Critical metrics: {criticalMetrics.Count}");
+    
+    // Get metrics by category
+    var timingMetrics = report.GetMetricsByCategory(MetricCategory.Timing);
+    var resourceMetrics = report.GetMetricsByCategory(MetricCategory.Resource);
+    
+    // Get suggestions by severity (Critical or High)
+    var highSeveritySuggestions = report.GetSuggestionsBySeverity(SuggestionSeverity.High);
+    Console.WriteLine($"High severity suggestions: {highSeveritySuggestions.Count}");
+    
+    // Get top 3 suggestions by estimated impact
+    var topSuggestions = report.GetTopSuggestions(count: 3);
+    foreach (var suggestion in topSuggestions)
+    {
+        Console.WriteLine($"- {suggestion.Description} (Impact: {suggestion.EstimatedImpactPercent}%)");
+    }
+    
+    // Check if optimization is needed (score < 70)
+    if (report.NeedsOptimization(threshold: 70))
+    {
+        Console.WriteLine("Query needs optimization!");
+        
+        // Export report data for telemetry
+        var exportDict = report.ToExportDictionary();
+        Console.WriteLine($"Exported {exportDict.Count} metrics");
+        
+        // Find specific metric
+        var cpuMetric = report.FindMetric("Total CPU Time");
+        if (cpuMetric != null)
+        {
+            Console.WriteLine($"CPU Time: {cpuMetric.Value} {cpuMetric.Unit}");
+        }
+    }
+    
+    // Batch operations on multiple reports
+    var reports = new List<QueryProfilerReport> { report };
+    
+    // Filter reports with critical suggestions
+    var criticalReports = reports.WithCriticalSuggestions();
+    Console.WriteLine($"Critical reports: {criticalReports.Count}");
+    
+    // Filter reports needing optimization
+    var optimizationReports = reports.NeedingOptimization(threshold: 70);
+    Console.WriteLine($"Reports needing optimization: {optimizationReports.Count}");
+    
+    // Order reports by worst performance first
+    var orderedReports = reports.OrderByWorstFirst();
+    Console.WriteLine($"Worst report score: {orderedReports.First().PerformanceScore}");
+    
+    // Get batch summary statistics
+    var batchSummary = reports.GetBatchSummary();
+    Console.WriteLine($"Batch summary: {batchSummary}");
+}
+
+// Profile comparison between two query versions
+var comparison = await profilerService.CompareQueriesAsync(
+    "SELECT * FROM Users WHERE Status = 'active'",
+    "SELECT * FROM Users WHERE Status = 'active' AND CreatedAt > '2024-01-01'"
+);
+
+// Get regressions (metrics that got worse)
+var regressions = comparison.GetRegressions();
+Console.WriteLine($"Regressions found: {regressions.Count}");
+
+// Get improvements (metrics that got better)
+var improvements = comparison.GetImprovements();
+Console.WriteLine($"Improvements found: {improvements.Count}");
+
+// Generate markdown comparison table
+var markdownTable = comparison.ToMarkdownTable();
+Console.WriteLine(markdownTable);
+```
+
+### Public Members
+
+- `AddQueryProfiler(IServiceCollection services, ProfilerSettings? settings)` - Registers query profiler services with DI container
+- `AddQueryProfilerForEnvironment(IServiceCollection services, string environmentName)` - Registers query profiler with environment-specific settings
+- `GetBottleneckStage(this QueryProfilerReport report)` - Returns the slowest execution stage
+- `GetSlowStages(this QueryProfilerReport report, double thresholdMs)` - Returns stages exceeding duration threshold
+- `GetCriticalMetrics(this QueryProfilerReport report, double threshold)` - Returns metrics exceeding numeric threshold
+- `GetMetricsByCategory(this QueryProfilerReport report, MetricCategory category)` - Returns metrics by category
+- `GetSuggestionsByCategory(this QueryProfilerReport report, SuggestionCategory category)` - Returns suggestions by category
+- `GetSuggestionsBySeverity(this QueryProfilerReport report, SuggestionSeverity minimumSeverity)` - Returns suggestions by severity
+- `GetTopSuggestions(this QueryProfilerReport report, int count)` - Returns top suggestions by estimated impact
+- `NeedsOptimization(this QueryProfilerReport report, double threshold)` - Checks if optimization is needed
+- `ToExportDictionary(this QueryProfilerReport report)` - Exports report data as dictionary
+- `FindMetric(this QueryProfilerReport report, string metricName)` - Finds metric by name
+- `WithCriticalSuggestions(this IEnumerable<QueryProfilerReport> reports)` - Filters reports with critical suggestions
+- `NeedingOptimization(this IEnumerable<QueryProfilerReport> reports, double threshold)` - Filters reports needing optimization
+- `OrderByWorstFirst(this IEnumerable<QueryProfilerReport> reports)` - Orders reports by performance score
+- `SuccessfulOnly(this IEnumerable<QueryProfilerReport> reports)` - Filters successful reports
+- `GetBatchSummary(this IEnumerable<QueryProfilerReport> reports)` - Gets batch summary statistics
+- `GetRegressions(this ProfileComparison comparison)` - Gets metric regressions from comparison
+- `GetImprovements(this ProfileComparison comparison)` - Gets metric improvements from comparison
+- `ToMarkdownTable(this ProfileComparison comparison)` - Generates markdown comparison table
+
 ## WebhookNotificationService
 
 The `WebhookNotificationService` class sends webhook notifications for important SQL query analysis events to external systems like Slack, Microsoft Teams, Discord, or custom APIs. It implements the `IAnalysisEventSubscriber` interface to receive analysis events and sends notifications based on webhook configuration settings. The service includes retry logic for failed webhook deliveries and supports filtering notifications by event type (completion, failures, critical issues).
