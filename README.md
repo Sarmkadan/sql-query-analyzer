@@ -10,35 +10,35 @@ var controller = new AnalysisController(analyzerService, logger);
 
 var request = new AnalysisRequest
 {
-    Query = "SELECT * FROM Users WHERE Id = 1",
-    Options = new Dictionary<string, string>
-    {
-        {"timeout", "30"},
-        {"includeExecutionPlan", "true"}
-    }
+  Query = "SELECT * FROM Users WHERE Id = 1",
+  Options = new Dictionary<string, string>
+  {
+    {"timeout", "30"},
+    {"includeExecutionPlan", "true"}
+  }
 };
 
 var response = await controller.AnalyzeAsync(request);
 
 if (response.Success)
 {
-    Console.WriteLine($"Analysis completed: {response.Data}");
+  Console.WriteLine($"Analysis completed: {response.Data}");
 }
 else
 {
-    Console.WriteLine($"Error: {response.Message}");
+  Console.WriteLine($"Error: {response.Message}");
 }
 
 // Example: Batch analysis
 var batchRequest = new BatchAnalysisRequest
 {
-    Queries = new[]
-    {
-        "SELECT * FROM Orders WHERE CustomerId = 1",
-        "SELECT * FROM Products WHERE CategoryId = 5",
-        "SELECT COUNT(*) FROM Users"
-    },
-    MaxDegreeOfParallelism = 4
+  Queries = new[]
+  {
+    "SELECT * FROM Orders WHERE CustomerId = 1",
+    "SELECT * FROM Products WHERE CategoryId = 5",
+    "SELECT COUNT(*) FROM Users"
+  },
+  MaxDegreeOfParallelism = 4
 };
 
 var batchResponse = await controller.AnalyzeBatchAsync(batchRequest);
@@ -47,7 +47,7 @@ var batchResponse = await controller.AnalyzeBatchAsync(batchRequest);
 var healthResponse = await controller.GetHealthAsync();
 if (healthResponse.Data?.IsHealthy == true)
 {
-    Console.WriteLine($"Service version: {healthResponse.Data.Version}");
+  Console.WriteLine($"Service version: {healthResponse.Data.Version}");
 }
 ```
 
@@ -147,74 +147,74 @@ services.AddSingleton<IAnalysisEventSubscriber, NotificationEventSubscriber>();
 // In your service class
 public class QueryAnalyzerService
 {
-    private readonly IAnalysisEventPublisher _eventPublisher;
-    
-    public QueryAnalyzerService(IAnalysisEventPublisher eventPublisher)
+  private readonly IAnalysisEventPublisher _eventPublisher;
+
+  public QueryAnalyzerService(IAnalysisEventPublisher eventPublisher)
+  {
+    _eventPublisher = eventPublisher;
+  }
+
+  public async Task AnalyzeQueryAsync(string queryId, string query)
+  {
+    // Publish analysis started event
+    var startedEvent = new AnalysisStartedEvent
     {
-        _eventPublisher = eventPublisher;
-    }
-    
-    public async Task AnalyzeQueryAsync(string queryId, string query)
+      QueryId = queryId,
+      Query = query,
+      Metadata = new Dictionary<string, object>
+      {
+        {"user", "admin"},
+        {"environment", "production"}
+      }
+    };
+    await _eventPublisher.PublishAsync(startedEvent);
+
+    try
     {
-        // Publish analysis started event
-        var startedEvent = new AnalysisStartedEvent
-        {
-            QueryId = queryId,
-            Query = query,
-            Metadata = new Dictionary<string, object>
-            {
-                {"user", "admin"},
-                {"environment", "production"}
-            }
-        };
-        await _eventPublisher.PublishAsync(startedEvent);
-        
-        try
-        {
-            // Perform analysis...
-            var completedEvent = new AnalysisCompletedEvent
-            {
-                QueryId = queryId,
-                PerformanceScore = 95.5,
-                IssuesFound = 2,
-                AnalysisDuration = TimeSpan.FromMilliseconds(150),
-                Metadata = new Dictionary<string, object> { {"engine", "sql-server"} }
-            };
-            await _eventPublisher.PublishAsync(completedEvent);
-        }
-        catch (Exception ex)
-        {
-            var failedEvent = new AnalysisFailedEvent
-            {
-                QueryId = queryId,
-                ErrorMessage = ex.Message,
-                ExceptionType = ex.GetType().Name,
-                Metadata = new Dictionary<string, object> { {"errorType", "timeout"} }
-            };
-            await _eventPublisher.PublishAsync(failedEvent);
-        }
+      // Perform analysis...
+      var completedEvent = new AnalysisCompletedEvent
+      {
+        QueryId = queryId,
+        PerformanceScore = 95.5,
+        IssuesFound = 2,
+        AnalysisDuration = TimeSpan.FromMilliseconds(150),
+        Metadata = new Dictionary<string, object> { {"engine", "sql-server"} }
+      };
+      await _eventPublisher.PublishAsync(completedEvent);
     }
+    catch (Exception ex)
+    {
+      var failedEvent = new AnalysisFailedEvent
+      {
+        QueryId = queryId,
+        ErrorMessage = ex.Message,
+        ExceptionType = ex.GetType().Name,
+        Metadata = new Dictionary<string, object> { {"errorType", "timeout"} }
+      };
+      await _eventPublisher.PublishAsync(failedEvent);
+    }
+  }
 }
 
 // Custom subscriber example
 public class CustomEventSubscriber : IAnalysisEventSubscriber
 {
-    private readonly ILogger<CustomEventSubscriber> _logger;
-    
-    public CustomEventSubscriber(ILogger<CustomEventSubscriber> logger)
+  private readonly ILogger<CustomEventSubscriber> _logger;
+
+  public CustomEventSubscriber(ILogger<CustomEventSubscriber> logger)
+  {
+    _logger = logger;
+  }
+
+  public Task OnEventAsync(AnalysisEvent @event)
+  {
+    if (@event is CriticalIssueDetectedEvent critical)
     {
-        _logger = logger;
+      _logger.LogCritical($"Critical issue in query {critical.QueryId}: {critical.Description}");
+      // Send to monitoring system, etc.
     }
-    
-    public Task OnEventAsync(AnalysisEvent @event)
-    {
-        if (@event is CriticalIssueDetectedEvent critical)
-        {
-            _logger.LogCritical($"Critical issue in query {critical.QueryId}: {critical.Description}");
-            // Send to monitoring system, etc.
-        }
-        return Task.CompletedTask;
-    }
+    return Task.CompletedTask;
+  }
 }
 ```
 
@@ -248,9 +248,7 @@ public class CustomEventSubscriber : IAnalysisEventSubscriber
 
 The `QueryNormalizerBenchmarks` class provides performance benchmarks for the `QueryNormalizer` utility, measuring the efficiency of SQL query normalization, table name extraction, and column name extraction operations. It uses BenchmarkDotNet to compare different normalization scenarios including simple queries, complex multi-join queries, and queries with embedded string literals.
 
-
 ### Usage Example
-
 
 ```csharp
 // Create benchmark instance
@@ -396,22 +394,69 @@ The `SqlQueryAnalyzerException` is the base exception class for all exceptions t
 ```csharp
 try
 {
-    // Simulate an analysis error
-    throw new SqlQueryAnalyzerException("Failed to analyze SQL query due to syntax error");
+  // Simulate an analysis error
+  throw new SqlQueryAnalyzerException("Failed to analyze SQL query due to syntax error");
 }
 catch (SqlQueryAnalyzerException ex)
 {
-    Console.WriteLine($"SQL Query Analyzer Error: {ex.Message}");
-    // Handle the exception appropriately
+  Console.WriteLine($"SQL Query Analyzer Error: {ex.Message}");
+  // Handle the exception appropriately
 }
 
 // Example with inner exception
 try
 {
-    // Some operation that might fail
+  // Some operation that might fail
 }
 catch (Exception innerEx)
 {
-    throw new SqlQueryAnalyzerException("Analysis failed during query processing", innerEx);
+  throw new SqlQueryAnalyzerException("Analysis failed during query processing", innerEx);
 }
 ```
+
+## QueryPlanAnalyzerTests
+
+The `QueryPlanAnalyzerTests` class provides unit tests for the `QueryPlanAnalyzerService` class, which is responsible for parsing and analyzing SQL Server execution plans. It tests various scenarios including valid XML plans, invalid XML input, table scan detection, and missing index recommendations. The test suite uses xUnit and FluentAssertions for clear, expressive test assertions.
+
+### Usage Example
+
+```csharp
+// Create the test service
+var service = new QueryPlanAnalyzerService(NullLogger<QueryPlanAnalyzerService>.Instance);
+
+// Test parsing a valid execution plan
+var validXmlPlan = @"<?xml version="1.0"?>
+<ShowPlanXML>
+  <Batch>
+    <Statements>
+      <StmtSimple StatementText="SELECT * FROM Users" />
+    </Statements>
+  </Batch>
+</ShowPlanXML>";
+
+// Parse the execution plan
+var queryPlan = await service.ParseExecutionPlanAsync(validXmlPlan);
+
+if (queryPlan != null)
+{
+    queryPlan.Initialize();
+    
+    // Get table scans from the plan
+    var tableScans = queryPlan.GetTableScans();
+    
+    // Get missing index recommendations
+    var missingIndexes = await service.GetMissingIndexesAsync(queryPlan);
+}
+
+// Test error handling with invalid input
+Func<Task> act = async () => await service.ParseExecutionPlanAsync(null!);
+act.Should().ThrowAsync<ArgumentException>();
+```
+
+### Test Cases
+
+- `AnalyzeQueryPlan_InvalidQueryPlan_ThrowsException` - Validates that invalid query plans throw appropriate exceptions
+- `ParseExecutionPlanAsync_ValidXmlPlan_ReturnsQueryPlan` - Tests successful parsing of valid XML execution plans
+- `ParseExecutionPlanAsync_InvalidXml_ThrowsQueryPlanException` - Ensures invalid XML throws the correct exception type
+- `GetTableScans_WithTableScans_ReturnsTableScans` - Verifies table scan detection functionality
+- `GetMissingIndexes_WithTableScans_ReturnsRecommendations` - Tests missing index recommendation generation
