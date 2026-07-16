@@ -932,6 +932,84 @@ catch (Exception innerEx)
 }
 ```
 
+## ProfilerOptions
+
+The `ProfilerOptions` class provides runtime configuration for query profiling sessions. It controls what data is collected (execution plans, timings, resource usage), sets timeouts and iteration counts, and enables plan visualizations. Use these options when calling `IQueryProfilerService.ProfileQueryAsync` to override default profiling behavior on a per-query basis.
+
+### Usage Example
+
+```csharp
+// Configure profiler options for a specific query analysis
+var profilerOptions = new ProfilerOptions
+{
+    // Capture execution plan for detailed analysis
+    CaptureExecutionPlan = true,
+    
+    // Measure timing for each pipeline stage
+    CaptureTimings = true,
+    
+    // Collect CPU and memory usage snapshot
+    CaptureResourceUsage = true,
+    
+    // Set maximum duration before aborting (30 seconds by default)
+    MaxDurationMs = 15_000,
+    
+    // Run 2 warm-up iterations before collecting metrics
+    WarmUpIterations = 2,
+    
+    // Average results across 3 measurement iterations
+    MeasurementIterations = 3,
+    
+    // Include ASCII visualization of execution plan in report
+    IncludePlanVisualization = true
+};
+
+// Use with profiler service
+var profilerService = serviceProvider.GetRequiredService<IQueryProfilerService>();
+
+// Profile a query with custom options
+var report = await profilerService.ProfileQueryAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount " +
+    "FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId " +
+    "GROUP BY u.Name HAVING COUNT(o.Id) > 5 " +
+    "ORDER BY OrderCount DESC",
+    "GetTopCustomers",
+    profilerOptions
+);
+
+// Access the collected data from the report
+if (report != null)
+{
+    Console.WriteLine($"Performance Score: {report.PerformanceScore:F1}/100");
+    Console.WriteLine($"Profiling Duration: {report.TotalProfilingDurationMs:F0}ms");
+    
+    if (report.ExecutionPlan != null)
+    {
+        Console.WriteLine($"Execution Plan Cost: {report.ExecutionPlan.TotalEstimatedCost}");
+    }
+    
+    if (report.PlanVisualization != null)
+    {
+        Console.WriteLine("Plan Visualization:");
+        Console.WriteLine(report.PlanVisualization.Text);
+    }
+    
+    Console.WriteLine($"Suggestions: {report.Suggestions.Count}");
+}
+```
+
+### Public Members
+
+- `CaptureExecutionPlan` - Capture and embed the execution plan in the profiler report (default: `true`)
+- `CaptureTimings` - Measure wall-clock time for each pipeline stage (default: `true`)
+- `CaptureResourceUsage` - Collect a CPU and memory snapshot during profiling (default: `true`)
+- `MaxDurationMs` - Maximum wall-clock budget before aborting, in milliseconds (default: `30_000`)
+- `WarmUpIterations` - Number of warm-up iterations executed before metrics collection (default: `0`)
+- `MeasurementIterations` - Number of measurement iterations whose results are averaged (default: `1`)
+- `IncludePlanVisualization` - Include ASCII tree visualization of execution plan in report (default: `true`)
+
+
+
 ## QueryProfilerExtensions
 
 The `QueryProfilerExtensions` class provides extension methods for registering the query profiler with the dependency injection container and for querying `QueryProfilerReport` instances to extract performance insights, filter critical issues, and generate comparison reports. These methods enable programmatic analysis of profiler results, batch operations on multiple reports, and environment-aware profiler configuration.
