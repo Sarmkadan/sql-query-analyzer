@@ -20,6 +20,78 @@ breakdown, data flow, design rationale, and known limitations, see
 
 ---
 
+## CliApplicationHost
+
+The `CliApplicationHost` class orchestrates the CLI application lifecycle, handling command-line argument parsing, service initialization, and execution flow. It serves as the main entry point for the command-line interface, coordinating between argument parsing, pipeline execution, and result formatting while separating CLI concerns from core analyzer logic.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Create the CLI application host
+var host = new CliApplicationHost(serviceProvider);
+
+// Configure command-line arguments
+var args = new CommandLineArguments
+{
+    Query = "SELECT * FROM Users WHERE Status = 'active'",
+    OutputFormat = "json",
+    Verbose = true,
+    FilterBySeverity = "Warning"
+};
+
+// Run the analysis
+int exitCode = await host.RunAsync(args);
+
+// Check exit code
+if (exitCode == 0)
+{
+    Console.WriteLine("Analysis completed successfully!");
+    Console.WriteLine($"Query: {host.Query}");
+    Console.WriteLine($"Performance Score: {host.Result?.PerformanceScore:F1}/100");
+    Console.WriteLine($"Issues Found: {host.Result?.Issues.Count}");
+}
+else if (exitCode == 1)
+{
+    Console.WriteLine("Analysis failed!");
+}
+else if (exitCode == 2)
+{
+    Console.WriteLine("Invalid arguments provided!");
+}
+
+// Access metadata
+if (host.Metadata.Count > 0)
+{
+    Console.WriteLine("Metadata:");
+    foreach (var kvp in host.Metadata)
+    {
+        Console.WriteLine($"- {kvp.Key}: {kvp.Value}");
+    }
+}
+
+// Check if analysis should continue
+if (!host.ShouldContinue)
+{
+    Console.WriteLine("Analysis pipeline requested to stop");
+}
+```
+
+### Public Members
+
+- `RunAsync(CommandLineArguments args)` - Main execution entry point for CLI. Validates arguments, initializes pipeline, and coordinates analysis
+- `Query` - Gets or sets the SQL query being analyzed (string)
+- `Arguments` - Gets or sets the command-line arguments (CommandLineArguments)
+- `Result` - Gets or sets the analysis result (QueryAnalysisResult?)
+- `ShouldContinue` - Gets or sets a value indicating whether analysis should continue (bool)
+- `Metadata` - Gets or sets metadata dictionary (Dictionary<string, object>)
+
 ## AnalysisController
 
 The `AnalysisController` class provides REST API endpoints for SQL query analysis. It exposes three main operations: single query analysis, batch query analysis, and health checks. The controller is designed to work with ASP.NET Core or similar web frameworks and returns standardized API responses with success status, data payloads, and appropriate HTTP status codes.
