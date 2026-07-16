@@ -473,6 +473,106 @@ The application uses the `IOptions` pattern for configuration, supporting JSON f
 | `LogMaxFileSizeBytes` | Maximum log file size in bytes |
 | `LogMaxBackupFiles` | Maximum log backup files |
 
+## SqlQueryAnalyzerOptions
+
+The `SqlQueryAnalyzerOptions` class is the root configuration container for the SQL Query Analyzer application. It defines the main configuration structure including database connection settings, analysis behavior, caching mechanisms, performance tuning parameters, and logging configuration. This type serves as the primary configuration mechanism for both CLI and library usage scenarios, enabling consistent behavior across different execution contexts.
+
+### Usage Example
+
+```csharp
+// Create default SqlQueryAnalyzerOptions with sensible defaults
+var options = new SqlQueryAnalyzerOptions
+{
+    Database = new DatabaseOptions
+    {
+        Provider = "SqlServer",
+        ConnectionString = "Server=localhost;Database=ECommerceDB;User Id=sa;Password=YourPassword123;",
+        ConnectionPoolSize = 20,
+        ConnectionTimeoutSeconds = 10,
+        EnableConnectionLogging = true
+    },
+    
+    Analysis = new AnalysisOptions
+    {
+        MaxThreads = Environment.ProcessorCount * 2,
+        DetectNPlusOne = true,
+        DetectMissingIndexes = true,
+        DetectJoinIssues = true,
+        AnalyzeExecutionPlans = true,
+        CriticalIssueSensitivity = 0.9,
+        EnableDetailedLogging = false,
+        IndexSeverity = new IndexSeverityThresholdsOptions
+        {
+            InfoMaxRows = 10000,
+            WarningMaxRows = 1000000,
+            InfoMaxCost = 10.0,
+            WarningMaxCost = 100.0
+        },
+        IgnorePatterns = new List<string> { @"@TempVar\d+" }
+    },
+    
+    Cache = new CacheOptions
+    {
+        Enabled = true,
+        Provider = "InMemory",
+        MaxEntries = 50000,
+        MaxSizeBytes = 1024 * 1024 * 500, // 500 MB
+        ExpirationSeconds = 7200, // 2 hours
+        RedisConnectionString = "localhost:6379"
+    },
+    
+    Performance = new PerformanceOptions
+    {
+        TimeoutSeconds = 60,
+        MaxQueryLength = 1024 * 1024 * 5, // 5 MB
+        RateLimitQueriesPerSecond = 200,
+        MaxConcurrentAnalysis = 20,
+        EnableBatching = true,
+        BatchSize = 100
+    },
+    
+    Logging = new LoggingOptions
+    {
+        MinimumLevel = "Information",
+        ConsoleLogging = true,
+        FileLogging = true,
+        LogFilePath = "./logs/sql-analyzer.log",
+        LogMaxFileSizeBytes = 1024 * 1024 * 50, // 50 MB
+        LogMaxBackupFiles = 10
+    }
+};
+
+// Validate configuration before use
+var validationErrors = options.Validate();
+if (validationErrors.Any())
+{
+    Console.WriteLine("Configuration errors:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("Configuration is valid!");
+}
+
+// Save configuration to file for later use
+options.SaveToFile("analyzer-config.json");
+
+// Load configuration from file
+var loadedOptions = SqlQueryAnalyzerOptions.LoadFromFile("analyzer-config.json");
+```
+
+### Public Members
+
+- `Database` - Database connection settings including provider, connection string, pool size, timeout, and logging options
+- `Analysis` - Analysis behavior settings including thread count, detection switches, sensitivity, and ignore patterns
+- `Cache` - Caching configuration including provider selection, size limits, and expiration settings
+- `Performance` - Performance tuning parameters including timeouts, rate limits, and batch processing configuration
+- `Logging` - Logging configuration including log level, output destinations, and file rotation settings
+- `SectionName` - Constant string "SqlQueryAnalyzer" used as configuration section name in appsettings.json
+
 ## IAnalysisEventPublisher
 
 The `IAnalysisEventPublisher` interface implements the observer pattern for publishing domain events from the SQL query analysis pipeline. It decouples the analysis logic from side effects such as logging, caching, notifications, and other event-driven operations. Publishers maintain a list of subscribers and asynchronously dispatch events to all registered subscribers.
