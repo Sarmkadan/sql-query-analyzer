@@ -1852,6 +1852,144 @@ if (errors.Any())
 }
 ```
 
+## IQueryRepository
+
+The `IQueryRepository` interface defines the contract for data access operations related to SQL queries, query analysis results, and performance issues. It provides methods for CRUD operations on `DatabaseQuery` entities, retrieval of query analysis data, and management of performance issue tracking across different applications and tables.
+
+This repository interface serves as the primary data access layer for the SQL Query Analyzer, enabling persistence and retrieval of analyzed queries, their performance metrics, and associated optimization recommendations.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+var queryRepository = serviceProvider.GetRequiredService<IQueryRepository>();
+
+// Add a new query to the repository
+var newQuery = new DatabaseQuery
+{
+    QueryText = "SELECT * FROM Users WHERE Status = 'active' AND CreatedAt > '2024-01-01'",
+    ReferencedTables = new List<string> { "Users" },
+    QueryType = QueryType.Select,
+    Application = "UserManagementService",
+    Table = "Users",
+    CreatedAt = DateTime.UtcNow
+};
+
+var addedQuery = await queryRepository.AddQueryAsync(newQuery);
+Console.WriteLine($"Added query with ID: {addedQuery.Id}");
+
+// Retrieve a query by ID
+var retrievedQuery = await queryRepository.GetQueryByIdAsync(addedQuery.Id);
+Console.WriteLine($"Retrieved query: {retrievedQuery?.QueryText?.Substring(0, Math.Min(50, retrievedQuery.QueryText.Length))}...");
+
+// Get all queries for a specific table
+var usersQueries = await queryRepository.GetQueriesByTableAsync("Users");
+Console.WriteLine($"Found {usersQueries.Count} queries referencing Users table");
+
+// Get queries by application
+var appQueries = await queryRepository.GetQueriesByApplicationAsync("UserManagementService");
+Console.WriteLine($"Found {appQueries.Count} queries for UserManagementService");
+
+// Get queries by type
+var selectQueries = await queryRepository.GetQueriesByTypeAsync(QueryType.Select);
+Console.WriteLine($"Found {selectQueries.Count} SELECT queries");
+
+// Search queries with a keyword
+var searchResults = await queryRepository.SearchQueriesAsync("Status = 'active'");
+Console.WriteLine($"Found {searchResults.Count} queries containing search term");
+
+// Add a query analysis result
+var analysisResult = new QueryAnalysisResult
+{
+    QueryId = addedQuery.Id,
+    PerformanceScore = 85.5,
+    Issues = new List<PerformanceIssue>
+    {
+        new PerformanceIssue
+        {
+            IssueType = IssueType.SelectStar,
+            Severity = IssueSeverity.Warning,
+            Description = "Query uses SELECT * which can impact performance",
+            EstimatedPerformanceImpact = 15.0
+        }
+    },
+    AnalysisDate = DateTime.UtcNow,
+    IndexSuggestions = new List<IndexRecommendation>
+    {
+        new IndexRecommendation
+        {
+            TableName = "Users",
+            KeyColumns = new List<string> { "Status", "CreatedAt" },
+            ImpactScore = 85.0,
+            Source = "WhereClause",
+            Rationale = "Index on Status and CreatedAt would improve this query"
+        }
+    }
+};
+
+var savedAnalysis = await queryRepository.SaveAnalysisAsync(analysisResult);
+Console.WriteLine($"Saved analysis with ID: {savedAnalysis.AnalysisId}");
+
+// Retrieve analysis for a specific query
+var queryAnalyses = await queryRepository.GetAnalysesForQueryAsync(addedQuery.Id);
+Console.WriteLine($"Found {queryAnalyses.Count} analyses for query {addedQuery.Id}");
+
+// Get performance issues by type
+var criticalIssues = await queryRepository.GetCriticalIssuesAsync();
+Console.WriteLine($"Found {criticalIssues.Count} critical performance issues");
+
+// Get total issue count
+var totalIssues = await queryRepository.GetTotalIssueCountAsync();
+Console.WriteLine($"Total issues in repository: {totalIssues}");
+
+// Update a query
+if (retrievedQuery != null)
+{
+    retrievedQuery.QueryText = "SELECT Id, Name FROM Users WHERE Status = 'active'";
+    await queryRepository.UpdateQueryAsync(retrievedQuery);
+    Console.WriteLine("Query updated successfully");
+}
+
+// Delete a query (and its analyses)
+await queryRepository.DeleteQueryAsync(addedQuery.Id);
+Console.WriteLine("Query and related analyses deleted");
+
+// Get all queries
+var allQueries = await queryRepository.GetAllQueriesAsync();
+Console.WriteLine($"Total queries in repository: {allQueries.Count}");
+
+// Get query count
+var queryCount = await queryRepository.GetQueryCountAsync();
+Console.WriteLine($"Total query count: {queryCount}");
+```
+
+### Public Members
+
+- `GetQueryByIdAsync(Guid queryId)` - Retrieves a specific query by its unique identifier
+- `GetAllQueriesAsync()` - Retrieves all queries from the repository
+- `GetQueriesByTableAsync(string tableName)` - Retrieves all queries that reference a specific table
+- `GetQueriesByTypeAsync(QueryType queryType)` - Retrieves all queries of a specific type (SELECT, INSERT, UPDATE, DELETE)
+- `AddQueryAsync(DatabaseQuery query)` - Adds a new query to the repository
+- `UpdateQueryAsync(DatabaseQuery query)` - Updates an existing query
+- `DeleteQueryAsync(Guid queryId)` - Deletes a query and its related analysis data
+- `SearchQueriesAsync(string searchTerm)` - Searches queries by text content using keyword matching
+- `GetQueriesByApplicationAsync(string applicationName)` - Retrieves all queries belonging to a specific application
+- `GetQueryCountAsync()` - Gets the total count of queries in the repository
+- `GetAnalysisAsync(Guid analysisId)` - Retrieves a specific query analysis result
+- `GetAllAnalysesAsync()` - Retrieves all query analysis results
+- `GetAnalysesByDateRangeAsync(DateTime startDate, DateTime endDate)` - Retrieves analyses performed within a date range
+- `SaveAnalysisAsync(QueryAnalysisResult analysis)` - Saves a query analysis result
+- `DeleteAnalysisAsync(Guid analysisId)` - Deletes a specific analysis result
+- `GetIssuesByTypeAsync(IssueType issueType)` - Retrieves performance issues of a specific type
+- `GetCriticalIssuesAsync()` - Retrieves all critical performance issues
+- `GetTotalIssueCountAsync()` - Gets the total count of performance issues across all queries
+- `GetAnalysesForQueryAsync(Guid queryId)` - Retrieieves all analyses for a specific query
+
 ## QueryAnalysisResult
 
 The `QueryAnalysisResult` class represents the complete analysis result of a SQL query, including performance metrics, detected issues, optimization suggestions, and execution statistics. This type is the primary return value from query analysis operations and provides comprehensive information for performance monitoring, optimization recommendations, and reporting.
