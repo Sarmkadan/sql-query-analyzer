@@ -1134,6 +1134,79 @@ Console.WriteLine($"Extracted parameters: {(extractedParams == null ? "null (par
 - `IsCacheKeyExpired(this QueryCacheKeyGenerator generator, string key, int maxAgeHours)` - Checks if a cache key is expired based on key age
 - `FormatCacheKey(this QueryCacheKeyGenerator generator, string key)` - Gets a display-friendly representation of a cache key for logging and debugging
 
+## PerformanceIssue
+
+The `PerformanceIssue` class represents a detected performance problem in a SQL query, including detailed information about the issue type, severity, location, estimated impact, and recommended fixes. This type is used throughout the SQL Query Analyzer to track and report performance anti-patterns such as SELECT *, missing WHERE/LIMIT clauses, implicit joins, non-sargable predicates, and N+1 access patterns.
+
+### Usage Example
+
+```csharp
+// Create a performance issue for a SELECT * query
+var issue = new PerformanceIssue
+{
+    IssueType = IssueType.SelectStar,
+    Severity = IssueSeverity.Critical,
+    Description = "Query uses SELECT * which retrieves all columns and prevents proper indexing",
+    AffectedClause = "SELECT",
+    LineNumber = 5,
+    ColumnNumber = 10,
+    EstimatedPerformanceImpact = 85.5,
+    AffectedRowCount = 1000000,
+    EstimatedTimeIncrease = TimeSpan.FromMilliseconds(450),
+    RecommendedFix = "Replace SELECT * with explicit column names",
+    ExampleFix = "SELECT UserId, Name, Email FROM Users WHERE Id = 1",
+    Priority = 1,
+    Metadata = new Dictionary<string, string>
+    {
+        {"TableName", "Users"},
+        {"ColumnCount", "15"},
+        {"IndexedColumns", "UserId, Email"}
+    }
+};
+
+// Display the issue
+Console.WriteLine(issue.GetFormattedMessage());
+Console.WriteLine($"Impact: {issue.EstimatedPerformanceImpact}%");
+Console.WriteLine($"Priority: {issue.Priority}");
+Console.WriteLine($"Critical: {issue.IsCritical}");
+
+// Compare priorities with another issue
+var otherIssue = new PerformanceIssue
+{
+    IssueType = IssueType.ImplicitJoin,
+    Severity = IssueSeverity.Warning,
+    EstimatedPerformanceImpact = 60.0,
+    Priority = 2
+};
+
+int comparison = issue.ComparePriority(otherIssue);
+Console.WriteLine("Comparison result: {comparison} (negative means this issue has higher priority)");
+```
+
+### Public Members
+
+- `IssueId` - Unique identifier for the issue (auto-generated GUID)
+- `IssueType` - Type of performance issue detected (e.g., SelectStar, ImplicitJoin, MissingWhereClause)
+- `Severity` - Severity level (Critical, Warning, Info)
+- `Description` - Detailed description of the performance issue
+- `AffectedClause` - SQL clause affected by the issue (e.g., "SELECT", "WHERE", "JOIN")
+- `LineNumber` - Line number where issue was detected (1-based)
+- `ColumnNumber` - Column number where issue was detected
+- `EstimatedPerformanceImpact` - Estimated performance impact (0-100 scale)
+- `ImpactScore` - Alias for EstimatedPerformanceImpact
+- `AffectedRowCount` - Estimated number of rows affected
+- `EstimatedTimeIncrease` - Estimated time increase caused by the issue
+- `RecommendedFix` - Recommended solution for the issue
+- `ExampleFix` - Example of how to fix the issue
+- `Priority` - Priority level (1 = highest, 5 = lowest)
+- `Metadata` - Additional context/data about the issue
+- `DetectedAt` - Timestamp when issue was detected (UTC)
+- `IsValid()` - Validates the issue data
+- `GetSeverityLabel()` - Returns human-readable severity label with emoji
+- `GetFormattedMessage()` - Formats issue for display with severity, type, and location
+- `IsCritical` - Gets whether issue is critical severity
+- `ComparePriority(PerformanceIssue other)` - Compares issues by severity then impact
+
 ## QueryStatistics
 
 The `QueryStatistics` class captures comprehensive execution statistics for SQL queries, including performance metrics, I/O operations, memory usage, and compilation information. This type is essential for query performance monitoring, identifying optimization opportunities, and generating actionable recommendations based on historical execution data.
