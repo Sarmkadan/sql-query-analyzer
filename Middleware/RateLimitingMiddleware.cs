@@ -19,6 +19,7 @@ public class RateLimitingMiddleware
     private readonly int _maxQueriesPerSecond;
     private readonly int _maxConcurrentAnalysis;
     private readonly Dictionary<string, QueryRateLimit> _perQueryLimits = new();
+    private readonly object _sync = new();
     private int _activeAnalysis = 0;
     private DateTime _windowStart = DateTime.UtcNow;
     private int _requestsInWindow = 0;
@@ -46,31 +47,32 @@ public class RateLimitingMiddleware
 
         while (DateTime.UtcNow < deadline)
         {
-            // Check global concurrency limit
-            if (_activeAnalysis >= _maxConcurrentAnalysis)
+            // The check-then-increment must be atomic: this class exists to guard
+            // concurrent callers, so unsynchronized ++ on shared counters would let
+            // two racing callers both pass the limit check and oversubscribe slots.
+            lock (_sync)
             {
-                _logger.LogWarning($"Rate limit: {_activeAnalysis}/{_maxConcurrentAnalysis} concurrent analysis slots in use");
-                await Task.Delay(100);
-                continue;
+                if (_activeAnalysis < _maxConcurrentAnalysis && IsWithinRateLimit())
+                {
+                    // Acquire slot
+                    _activeAnalysis++;
+                    _requestsInWindow++;
+
+                    var limit = GetOrCreateQueryLimit(queryHash);
+                    limit.RequestCount++;
+                    limit.LastRequestTime = DateTime.UtcNow;
+
+                    _logger.LogDebug($"Rate limit slot acquired. Active: {_activeAnalysis}/{_maxConcurrentAnalysis}");
+                    return;
+                }
+
+                if (_activeAnalysis >= _maxConcurrentAnalysis)
+                    _logger.LogWarning($"Rate limit: {_activeAnalysis}/{_maxConcurrentAnalysis} concurrent analysis slots in use");
+                else
+                    _logger.LogWarning($"Rate limit: {_requestsInWindow}/{_maxQueriesPerSecond} requests in window");
             }
 
-            // Check rate limit window
-            if (!IsWithinRateLimit())
-            {
-                _logger.LogWarning($"Rate limit: {_requestsInWindow}/{_maxQueriesPerSecond} requests in window");
-                await Task.Delay(100);
-                continue;
-            }
-
-            // Acquire slot
-            _activeAnalysis++;
-            _requestsInWindow++;
-
-            var limit = GetOrCreateQueryLimit(queryHash);
-            limit.RequestCount++;
-
-            _logger.LogDebug($"Rate limit slot acquired. Active: {_activeAnalysis}/{_maxConcurrentAnalysis}");
-            return;
+            await Task.Delay(100);
         }
 
         throw new TimeoutException(
@@ -83,10 +85,13 @@ public class RateLimitingMiddleware
     /// </summary>
     public void ReleaseSlot()
     {
-        if (_activeAnalysis > 0)
+        lock (_sync)
         {
-            _activeAnalysis--;
-            _logger.LogDebug($"Rate limit slot released. Active: {_activeAnalysis}/{_maxConcurrentAnalysis}");
+            if (_activeAnalysis > 0)
+            {
+                _activeAnalysis--;
+                _logger.LogDebug($"Rate limit slot released. Active: {_activeAnalysis}/{_maxConcurrentAnalysis}");
+            }
         }
     }
 
@@ -101,7 +106,11 @@ public class RateLimitingMiddleware
     /// </summary>
     public QueryRateLimitStats GetQueryStats(string queryHash)
     {
-        var limit = GetOrCreateQueryLimit(queryHash);
+        QueryRateLimit limit;
+        lock (_sync)
+        {
+            limit = GetOrCreateQueryLimit(queryHash);
+        }
         return new QueryRateLimitStats
         {
             QueryHash = queryHash,
