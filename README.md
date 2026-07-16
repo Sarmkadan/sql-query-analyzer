@@ -2727,6 +2727,58 @@ act.Should().ThrowAsync<ArgumentException>();
 - `GetTableScans_WithTableScans_ReturnsTableScans` - Verifies table scan detection functionality
 - `GetMissingIndexes_WithTableScans_ReturnsRecommendations` - Tests missing index recommendation generation
 
+## DtoMapper
+
+The `DtoMapper` class provides static methods for mapping between domain models and Data Transfer Objects (DTOs) in the SQL Query Analyzer. It converts analysis results, performance issues, index suggestions, and query details into structured DTOs that can be serialized for API responses, logging, or export to external systems. This mapper ensures consistent transformation of internal domain objects to their corresponding DTO representations.
+
+### Usage Example
+
+```csharp
+// Analyze a SQL query using the analyzer service
+var analyzer = new QueryAnalyzerService();
+var result = await analyzer.AnalyzeAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount " +
+    "FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId " +
+    "GROUP BY u.Name HAVING COUNT(o.Id) > 5 " +
+    "ORDER BY OrderCount DESC");
+
+// Map analysis result to DTO
+var responseDto = DtoMapper.ToResponseDto(result);
+Console.WriteLine($"Performance score: {responseDto.PerformanceScore}");
+Console.WriteLine($"Query ID: {responseDto.QueryId}");
+Console.WriteLine($"Issues found: {responseDto.Issues.Count}");
+
+// Map performance issues to DTOs
+foreach (var issue in result.Issues)
+{
+    var issueDto = DtoMapper.ToIssueDto(issue);
+    Console.WriteLine($"Issue: {issueDto.Description} (Severity: {issueDto.Severity})");
+}
+
+// Map index suggestions to DTOs
+foreach (var suggestion in result.IndexSuggestions)
+{
+    var suggestionDto = DtoMapper.ToSuggestionDto(suggestion);
+    Console.WriteLine($"Index suggestion: {suggestionDto.TableName}.{suggestionDto.ColumnName}");
+}
+
+// Map query details to DTO
+var queryDetailDto = DtoMapper.ToQueryDetailDto(result);
+Console.WriteLine($"Query text: {queryDetailDto.QueryText}");
+Console.WriteLine($"Tables referenced: {string.Join(", ", queryDetailDto.Tables)}");
+Console.WriteLine($"Join count: {queryDetailDto.JoinCount}");
+```
+
+### Public Members
+
+- `ToResponseDto(QueryAnalysisResult result)` - Maps a query analysis result to an `AnalysisResponseDto`
+- `ToIssueDto(PerformanceIssue issue)` - Maps a performance issue to a `PerformanceIssueDto`
+- `ToSuggestionDto(IndexRecommendation suggestion)` - Maps an index recommendation to an `IndexSuggestionDto`
+- `ToIndexDetailDto(Index index)` - Maps an index to an `IndexDetailDto`
+- `ToIndexAnalysisResponseDto(QueryAnalysisResult result)` - Maps a query analysis result to an `IndexAnalysisResponseDto`
+- `ToQueryDetailDto(QueryAnalysisResult result)` - Maps a query analysis result to a `QueryDetailDto`
+- `ToBatchResponseDto(IEnumerable<QueryAnalysisResult> results)` - Maps a collection of query analysis results to a `BatchAnalysisResponseDto`
+
 ## SampleQueryProvider
 
 The `SampleQueryProvider` static class provides a comprehensive collection of sample SQL queries designed for testing, benchmarking, and educational purposes. It includes queries with various performance characteristics, anti-patterns, and complexity levels to help developers understand common SQL performance issues and optimization opportunities.
