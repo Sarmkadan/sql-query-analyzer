@@ -8,6 +8,16 @@ New here? Start with the focused **[Quickstart & Rule Catalog](docs/QUICKSTART.m
 for install, CLI/library usage, the full rule list, and example output. The
 sections below are the complete API reference.
 
+## Architecture
+
+The tool is a single .NET 10 console application: `Program.cs` wires up a
+singleton service graph, `DatabaseQuery.Parse()` does regex-based extraction
+(no SQL grammar parser), `PerformanceIssueDetectorService` runs the detectors,
+and `QueryAnalyzerService` orchestrates scoring and index suggestions. All
+storage (repositories, cache, queue) is in-memory. For the full module
+breakdown, data flow, design rationale, and known limitations, see
+**[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
+
 ---
 
 ## AnalysisController
