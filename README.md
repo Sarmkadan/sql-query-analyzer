@@ -1603,6 +1603,66 @@ if (redundancies.Any())
 - `GroupBy` - Index recommended based on GROUP BY clauses
 - `Composite` - Composite index combining multiple predicates and sort keys
 
+## IConnectionConfiguration
+
+The `IConnectionConfiguration` interface defines the contract for database connection configuration across different database providers (SQL Server, PostgreSQL, MySQL, etc.). It provides standardized properties for connection details and asynchronous methods for testing connectivity and initializing database schemas.
+
+This interface enables consistent database connection management throughout the SQL Query Analyzer application, supporting multiple database providers through concrete implementations like `SqlServerConfiguration` and `PostgresConfiguration`.
+
+### Usage Example
+
+```csharp
+// Create SQL Server connection configuration using environment variables
+var sqlServerConfig = new SqlServerConfiguration();
+
+// Test database connectivity
+bool isConnected = await sqlServerConfig.TestConnectionAsync();
+Console.WriteLine($"SQL Server connection: {(isConnected ? "✓ Connected" : "✗ Failed")}");
+Console.WriteLine($"Server: {sqlServerConfig.ServerName}");
+Console.WriteLine($"Database: {sqlServerConfig.DatabaseName}");
+Console.WriteLine($"Connection String: {sqlServerConfig.ConnectionString}");
+Console.WriteLine($"Timeout: {sqlServerConfig.CommandTimeout} seconds");
+
+// Initialize database schema if needed
+bool isInitialized = await sqlServerConfig.InitializeDatabaseAsync();
+Console.WriteLine($"Database initialized: {isInitialized}");
+
+// Create PostgreSQL connection configuration with explicit parameters
+var postgresConfig = new PostgresConfiguration(
+    server: "localhost",
+    database: "query_analyzer",
+    userId: "analyzer_user",
+    password: "SecurePassword123!"
+);
+
+// Use configuration with analyzer services
+var analyzerSettings = new AnalyzerSettings
+{
+    Database = new DatabaseSettings
+    {
+        Provider = postgresConfig.DatabaseType,
+        ConnectionString = postgresConfig.ConnectionString,
+        ConnectionTimeoutSeconds = postgresConfig.CommandTimeout
+    }
+};
+
+// Validate configuration before use
+if (await postgresConfig.TestConnectionAsync())
+{
+    Console.WriteLine("PostgreSQL configuration is valid and ready for analysis");
+}
+```
+
+### Public Members
+
+- `ConnectionString` - Complete database connection string for establishing connections
+- `DatabaseName` - Name of the database to connect to
+- `ServerName` - Name or address of the database server
+- `DatabaseType` - Database provider type (e.g., "SQL Server", "PostgreSQL")
+- `CommandTimeout` - Command execution timeout in seconds
+- `TestConnectionAsync()` - Tests database connectivity and returns true if successful
+- `InitializeDatabaseAsync()` - Creates required database tables and schema if they don't exist
+
 ## QueryRewriteExtensions
 
 The `QueryRewriteExtensions` class provides extension methods for `IQueryRewriteService` and `IEnumerable<QueryRewriteSuggestion>` that enable dependency injection registration and LINQ-style convenience operations for SQL query rewrite suggestions. These methods help filter, sort, and analyze query rewrite suggestions to identify optimal optimization opportunities.
