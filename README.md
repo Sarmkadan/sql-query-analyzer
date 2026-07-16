@@ -1134,6 +1134,96 @@ Console.WriteLine($"Extracted parameters: {(extractedParams == null ? "null (par
 - `IsCacheKeyExpired(this QueryCacheKeyGenerator generator, string key, int maxAgeHours)` - Checks if a cache key is expired based on key age
 - `FormatCacheKey(this QueryCacheKeyGenerator generator, string key)` - Gets a display-friendly representation of a cache key for logging and debugging
 
+## QueryStatistics
+
+The `QueryStatistics` class captures comprehensive execution statistics for SQL queries, including performance metrics, I/O operations, memory usage, and compilation information. This type is essential for query performance monitoring, identifying optimization opportunities, and generating actionable recommendations based on historical execution data.
+
+### Usage Example
+
+```csharp
+// Collect statistics from query execution monitoring
+var stats = new QueryStatistics
+{
+    ExecutionCount = 1567,
+    TotalExecutionTime = TimeSpan.FromMilliseconds(4500),
+    MinimumExecutionTime = TimeSpan.FromMilliseconds(120),
+    MaximumExecutionTime = TimeSpan.FromMilliseconds(2500),
+    TotalLogicalReads = 1256789,
+    TotalPhysicalReads = 1245,
+    TotalLogicalWrites = 567,
+    RowsAffected = 1234,
+    AverageRowsReturned = 890,
+    MaxRowsReturned = 2345,
+    TotalCpuTime = TimeSpan.FromMilliseconds(1850),
+    TotalWaitTime = TimeSpan.FromMilliseconds(670),
+    MostCommonWaitType = "PAGEIOLATCH_SH",
+    PeakMemoryUsageMB = 256,
+    AverageMemoryUsageMB = 189,
+    LastCompilationTime = DateTime.UtcNow.AddDays(-1),
+    IsCached = true,
+    CacheKey = "SELECT_Users_Where_Status_Active",
+    PlanHandle = 123456789,
+    FirstExecution = DateTime.UtcNow.AddDays(-30),
+    LastExecution = DateTime.UtcNow
+};
+
+// Check if query is inefficient
+if (stats.IsInefficient)
+{
+    Console.WriteLine("⚠️ Query is inefficient!");
+    Console.WriteLine(stats.GetPerformanceSummary());
+}
+
+// Get efficiency rating (0-100 scale)
+double efficiency = stats.GetEfficiencyRating();
+Console.WriteLine($"Efficiency rating: {efficiency:F1}%");
+
+// Generate optimization recommendations
+var recommendations = stats.GetOptimizationRecommendations();
+foreach (var recommendation in recommendations)
+{
+    Console.WriteLine($"- {recommendation}");
+}
+
+// Display key metrics
+Console.WriteLine($"Average execution time: {stats.AverageExecutionTime.TotalMilliseconds:F1}ms");
+Console.WriteLine($"Average logical reads: {stats.AverageLogicalReads:N0}");
+Console.WriteLine($"Average CPU time: {stats.AverageCpuTime.TotalMilliseconds:F1}ms");
+Console.WriteLine($"Peak memory usage: {stats.PeakMemoryUsageMB}MB");
+```
+
+### Public Members
+
+- `ExecutionCount` - Total number of times the query has been executed
+- `TotalExecutionTime` - Sum of all execution times
+- `AverageExecutionTime` - Average execution time per execution
+- `MinimumExecutionTime` - Fastest execution time recorded
+- `MaximumExecutionTime` - Slowest execution time recorded
+- `TotalLogicalReads` - Total logical reads performed
+- `TotalPhysicalReads` - Total physical reads performed
+- `TotalLogicalWrites` - Total logical writes performed
+- `AverageLogicalReads` - Average logical reads per execution
+- `RowsAffected` - Total rows affected by the query
+- `AverageRowsReturned` - Average rows returned per execution
+- `MaxRowsReturned` - Maximum rows returned in a single execution
+- `TotalCpuTime` - Total CPU time consumed
+- `AverageCpuTime` - Average CPU time per execution
+- `TotalWaitTime` - Total wait time due to resource contention
+- `MostCommonWaitType` - Most frequent wait type observed
+- `PeakMemoryUsageMB` - Peak memory usage in megabytes
+- `AverageMemoryUsageMB` - Average memory usage in megabytes
+- `LastCompilationTime` - When the query was last compiled
+- `IsCached` - Whether the query plan is cached
+- `CacheKey` - Cache key for the query plan
+- `PlanHandle` - Unique identifier for the execution plan
+- `FirstExecution` - When the query was first executed
+- `LastExecution` - When the query was last executed
+- `IsInefficient` - Calculated property indicating if query is inefficient
+- `GetEfficiencyRating()` - Returns a performance rating (0-100)
+- `GetPerformanceSummary()` - Generates a formatted performance summary string
+- `GetOptimizationRecommendations()` - Returns list of optimization suggestions
+
+
 ## SqlInjectionDetectorExtensions
 
 The `SqlInjectionDetectorExtensions` class provides extension methods for `SqlInjectionDetector` that enhance SQL injection vulnerability detection with filtering, grouping, and reporting capabilities. These methods help analyze, categorize, and generate comprehensive reports on detected vulnerabilities, making it easier to identify and prioritize security issues in SQL queries.
