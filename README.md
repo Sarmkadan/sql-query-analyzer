@@ -257,6 +257,151 @@ if (healthResponse.Data?.IsHealthy == true)
 - `ApiResponse<T>` - Generic API response wrapper with properties: Success, Data, Message, StatusCode, Errors, Timestamp
 - `HealthStatus` - Health status response with properties: IsHealthy, Message, Version, Timestamp, Details
 
+## AnalyzerSettings
+
+The `AnalyzerSettings` class is the central configuration container for the SQL Query Analyzer. It provides comprehensive settings for database connections, analysis behavior, caching, performance tuning, and logging. Settings can be loaded from JSON configuration files, environment variables, or created with sensible defaults.
+
+This class serves as the primary configuration mechanism for both CLI and library usage scenarios, enabling consistent behavior across different execution contexts.
+
+### Usage Example
+
+```csharp
+// Create default settings with sensible defaults
+var settings = AnalyzerSettingsFactory.CreateDefault();
+
+// Configure database connection settings
+settings.Database.Provider = "SqlServer";
+settings.Database.ConnectionString = "Server=localhost;Database=ECommerceDB;User Id=sa;Password=YourPassword123;";
+settings.Database.ConnectionPoolSize = 20;
+settings.Database.ConnectionTimeoutSeconds = 10;
+settings.Database.EnableConnectionLogging = true;
+
+// Configure analysis behavior
+settings.Analysis.MaxThreads = Environment.ProcessorCount * 2;
+settings.Analysis.DetectNPlusOne = true;
+settings.Analysis.DetectMissingIndexes = true;
+settings.Analysis.DetectJoinIssues = true;
+settings.Analysis.AnalyzeExecutionPlans = true;
+settings.Analysis.CriticalIssueSensitivity = 0.9;
+settings.Analysis.EnableDetailedLogging = false;
+
+// Configure cache settings
+settings.Cache.Enabled = true;
+settings.Cache.Provider = "InMemory";
+settings.Cache.MaxEntries = 50000;
+settings.Cache.MaxSizeBytes = 1024 * 1024 * 500; // 500 MB
+settings.Cache.ExpirationSeconds = 7200; // 2 hours
+settings.Cache.RedisConnectionString = "localhost:6379";
+
+// Configure performance settings
+settings.Performance.TimeoutSeconds = 60;
+settings.Performance.MaxQueryLength = 1024 * 1024 * 5; // 5 MB
+settings.Performance.RateLimitQueriesPerSecond = 200;
+settings.Performance.MaxConcurrentAnalysis = 20;
+settings.Performance.EnableBatching = true;
+settings.Performance.BatchSize = 100;
+
+// Configure logging settings
+settings.Logging.MinimumLevel = "Information";
+settings.Logging.ConsoleLogging = true;
+settings.Logging.FileLogging = true;
+settings.Logging.LogFilePath = "./logs/sql-analyzer.log";
+settings.Logging.LogMaxFileSizeBytes = 1024 * 1024 * 50; // 50 MB
+settings.Logging.LogMaxBackupFiles = 10;
+
+// Save configuration to file for later use
+settings.SaveToFile("analyzer-config.json");
+
+// Load configuration from file
+var loadedSettings = AnalyzerSettings.LoadFromFile("analyzer-config.json");
+
+// Validate configuration before use
+var validationErrors = loadedSettings.Validate();
+if (validationErrors.Any())
+{
+    Console.WriteLine("Configuration errors:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("Configuration is valid!");
+}
+
+// Override with environment variables (SQA_* pattern)
+// SQA_ANALYSIS_MAX_THREADS=8
+// SQA_DATABASE_CONNECTION_STRING="Server=prod-db;..."
+// Environment variables automatically override JSON values
+```
+
+### Public Members
+
+- `Database` - Database connection settings including provider, connection string, pool size, timeout, and logging options
+- `Analysis` - Analysis behavior settings including thread count, detection switches, sensitivity, and ignore patterns
+- `Cache` - Caching configuration including provider selection, size limits, and expiration settings
+- `Performance` - Performance tuning parameters including timeouts, rate limits, and batch processing configuration
+- `Logging` - Logging configuration including log level, output destinations, and file rotation settings
+- `LoadFromFile(string filePath, ILogger? logger = null)` - Static method to load settings from JSON file with optional logging
+- `SaveToFile(string filePath)` - Instance method to save current settings to JSON file
+- `Validate()` - Validates configuration and returns list of validation errors
+
+### DatabaseSettings Properties
+
+- `Provider` - Database provider (SqlServer, PostgreSQL, MySQL; default: "SqlServer")
+- `ConnectionString` - Database connection string for query execution and plan analysis
+- `ConnectionPoolSize` - Connection pool size (default: 10)
+- `ConnectionTimeoutSeconds` - Connection timeout in seconds (default: 5)
+- `EnableConnectionLogging` - Enable detailed connection logging (default: false)
+
+### AnalysisSettings Properties
+
+- `MaxThreads` - Maximum number of parallel threads for analysis (default: Environment.ProcessorCount)
+- `DetectNPlusOne` - Detect N+1 query patterns (default: true)
+- `DetectMissingIndexes` - Detect missing index opportunities (default: true)
+- `DetectJoinIssues` - Detect join-related issues like Cartesian products (default: true)
+- `AnalyzeExecutionPlans` - Analyze execution plans for performance insights (default: true)
+- `CriticalIssueSensitivity` - Sensitivity threshold for critical issues (0-1 scale; default: 0.8)
+- `EnableDetailedLogging` - Enable detailed analysis logging (default: false)
+- `IndexSeverity` - Index severity threshold configuration for missing-index warnings
+- `IgnorePatterns` - List of regex patterns to ignore (useful for suppressing ORM false positives)
+
+### CacheSettings Properties
+
+- `Enabled` - Enable caching (default: true)
+- `Provider` - Caching provider (InMemory, Redis; default: "InMemory")
+- `MaxEntries` - Maximum number of cache entries (default: 10000)
+- `MaxSizeBytes` - Maximum cache size in bytes (default: 104857600 = 100 MB)
+- `ExpirationSeconds` - Cache expiration in seconds (default: 3600 = 1 hour)
+- `RedisConnectionString` - Redis connection string for distributed caching (optional)
+
+### PerformanceSettings Properties
+
+- `TimeoutSeconds` - Timeout for analysis operations in seconds (default: 30)
+- `MaxQueryLength` - Maximum query length in bytes (default: 1048576 = 1 MB)
+- `RateLimitQueriesPerSecond` - Rate limit for queries per second (default: 100)
+- `MaxConcurrentAnalysis` - Maximum concurrent analysis operations (default: 10)
+- `EnableBatching` - Enable batch processing (default: true)
+- `BatchSize` - Batch size for parallel processing (default: 50)
+
+### LoggingSettings Properties
+
+- `MinimumLevel` - Minimum logging level (Debug, Information, Warning, Error; default: "Information")
+- `ConsoleLogging` - Enable console logging (default: true)
+- `FileLogging` - Enable file logging (default: false)
+- `LogFilePath` - Path to log file (optional)
+- `LogMaxFileSizeBytes` - Maximum log file size in bytes (default: 10485760 = 10 MB)
+- `LogMaxBackupFiles` - Maximum number of backup log files (default: 5)
+
+### IndexSeverityThresholds Properties
+
+- `InfoMaxRows` - Row count threshold for Info severity missing-index warnings (default: 10000)
+- `WarningMaxRows` - Row count threshold for Warning severity missing-index warnings (default: 1000000)
+- `InfoMaxCost` - Estimated cost threshold for Info severity missing-index warnings (default: 10.0)
+- `WarningMaxCost` - Estimated cost threshold for Warning severity missing-index warnings (default: 100.0)
+- `ResolveSeverity(long? rowCount = null, double? estimatedCost = null)` - Method to resolve appropriate severity based on row count or estimated cost
+
 ## Configuration
 
 The application uses the `IOptions` pattern for configuration, supporting JSON files and environment variables. See `appsettings.example.json` for a template.
