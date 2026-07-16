@@ -1837,6 +1837,80 @@ Console.WriteLine(detailedReport);
 - `HasCriticalIssues(this SqlInjectionDetector detector, List<SqlInjectionIssue> issues)` - Checks if any critical or high severity vulnerabilities were detected
 
 
+## AnalysisQueueProcessor
+
+The `AnalysisQueueProcessor` class is a background worker that processes SQL query analysis requests from a queue asynchronously. It enables fire-and-forget analysis workflows, handles task persistence, implements retry logic, and provides progress tracking through a simple API. The processor manages a configurable number of concurrent tasks and tracks both queued and active tasks for monitoring purposes.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection (ASP.NET Core example)
+services.AddSingleton<IQueryAnalyzerService, QueryAnalyzerService>();
+services.AddSingleton<AnalysisQueueProcessor>();
+
+// Create and configure the queue processor
+var analyzerService = new QueryAnalyzerService();
+var processor = new AnalysisQueueProcessor(analyzerService, logger, maxConcurrentTasks: 4);
+
+// Start the processor to begin processing queued tasks
+processor.Start();
+
+// Enqueue analysis tasks (fire-and-forget)
+string taskId1 = processor.EnqueueAnalysis(
+    "SELECT * FROM Users WHERE Status = 'active'",
+    result => Console.WriteLine($"Task completed with score: {result.PerformanceScore}")
+);
+
+string taskId2 = processor.EnqueueAnalysis(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount FROM Users u JOIN Orders o ON u.Id = o.UserId GROUP BY u.Name"
+);
+
+// Monitor task progress
+var stats = processor.GetStatistics();
+Console.WriteLine($"Queue status: {stats.QueuedCount} queued, {stats.ActiveCount}/{stats.MaxConcurrency} active");
+
+// Get task status
+var taskStatus = processor.GetTaskStatus(taskId1);
+if (taskStatus != null)
+{
+    Console.WriteLine($"Task {taskStatus.TaskId} status: {taskStatus.Status}");
+    if (taskStatus.Result != null)
+    {
+        Console.WriteLine($"Performance score: {taskStatus.Result.PerformanceScore}");
+    }
+}
+
+// Gracefully stop the processor when shutting down
+await processor.StopAsync(TimeSpan.FromSeconds(10));
+```
+
+### Public Members
+
+- `AnalysisQueueProcessor(IQueryAnalyzerService analyzerService, ILogger<AnalysisQueueProcessor> logger, int maxConcurrentTasks = 5)` - Constructor that accepts analyzer service, logger, and maximum concurrent tasks
+- `EnqueueAnalysis(string query, Action<QueryAnalysisResult>? onComplete = null)` - Enqueues a query for analysis and returns a task ID for tracking
+- `Start()` - Starts the background processor to process queued tasks
+- `StopAsync(TimeSpan timeout)` - Stops the processor gracefully, waiting for active tasks to complete
+- `GetTaskStatus(string taskId)` - Gets the current status of a queued task
+- `GetStatistics()` - Gets queue statistics including queued count, active count, max concurrency, and processing metrics
+- `AnalysisTask` - Nested class representing a queued analysis task with properties:
+  - `TaskId` - Unique identifier for the task
+  - `Query` - The SQL query being analyzed
+  - `Status` - Current task status (Queued, InProgress, Completed, Failed, Cancelled)
+  - `CreatedAt` - When the task was created
+  - `StartedAt` - When the task started processing
+  - `CompletedAt` - When the task completed
+  - `Result` - Analysis result if completed successfully
+  - `ErrorMessage` - Error message if task failed
+  - `OnComplete` - Optional callback invoked when task completes
+  - `GetElapsedTime()` - Returns the time taken to process the task
+- `QueueStatistics` - Class containing queue statistics with properties:
+  - `QueuedCount` - Number of tasks waiting in queue
+  - `ActiveCount` - Number of currently active tasks
+  - `MaxConcurrency` - Maximum concurrent tasks allowed
+  - `TotalProcessed` - Total number of tasks processed
+  - `AverageProcessingTimeMs` - Average processing time in milliseconds
+- `AnalysisTaskStatus` - Enum representing task status: Queued, InProgress, Completed, Failed, Cancelled
+
 ## ErrorHandlingMiddlewareExtensions
 
 The `ErrorHandlingMiddlewareExtensions` class provides extension methods for `ErrorHandlingMiddleware` that enhance error handling capabilities with retry logic, error reporting, and fallback mechanisms. These methods help create robust error handling strategies for operations that may fail due to transient issues, enabling graceful degradation and recovery when possible.
