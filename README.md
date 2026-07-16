@@ -1500,6 +1500,97 @@ tests.GenerateOptimizationRecommendations_SelectStarQuery_IncludesColumnReplacem
 - `CalculateReadabilityScore_SelectStarWithImplicitJoin_DeductsThirtyPoints()` - Tests readability penalties
 - `GenerateOptimizationRecommendations_SelectStarQuery_IncludesColumnReplacementAdvice()` - Validates optimization advice generation
 
+## PlanVisualization
+
+The `PlanVisualization` class represents a visualization of a query optimization plan, including the hierarchical structure, cost distribution, detected bottlenecks, and statistical metrics. It provides methods to generate compact reports and string representations for debugging, logging, and display purposes.
+
+This type is typically used in query analysis pipelines to present optimization recommendations, performance insights, and actionable suggestions to developers or monitoring systems.
+
+### Usage Example
+
+```csharp
+// Create a visualization for a query optimization plan
+var visualization = new PlanVisualization
+{
+    TextTree = @"
+Root (Cost: 100.0%)
+├── Filter (Cost: 45.0%)
+│   ├── Table Scan [Users] (Cost: 30.0%)
+│   └── Index Seek [IX_Users_Email] (Cost: 15.0%)
+├── Join [INNER] (Cost: 35.0%)
+│   ├── Table Scan [Orders] (Cost: 20.0%)
+│   └── Index Seek [IX_Orders_UserId] (Cost: 15.0%)
+└── Sort (Cost: 20.0%)
+    └── Stream Aggregate (Cost: 10.0%)
+    "",
+    CostDistribution = @"{
+  \"Filter\": 45.0,
+  \"Join\": 35.0,
+  \"Sort\": 20.0
+}"",
+    Bottlenecks = new List<BottleneckAnnotation>
+    {
+        new BottleneckAnnotation
+        {
+            NodeId = "Filter",
+            Description = "High-cost filter operation",
+            Severity = "High",
+            Recommendation = "Add index on filtered column"
+        },
+        new BottleneckAnnotation
+        {
+            NodeId = "Sort",
+            Description = "Expensive sorting operation",
+            Severity = "Medium",
+            Recommendation = "Consider adding ORDER BY columns to index"
+        }
+    },
+    Stats = new Dictionary<string, object>
+    {
+        {"TotalCost", 1250.5},
+        {"ExecutionTimeMs", 245},
+        {"RowsProcessed", 15678},
+        {"CriticalIssues", 2}
+    },
+    RenderedAt = DateTime.UtcNow,
+    NodeId = "Root",
+    NodeType = "Plan",
+    ObjectName = "GetActiveCustomerOrders",
+    EstimatedCost = 1250.5,
+    Depth = 0,
+    Recommendation = "Consider adding composite index on Users.Email and Orders.UserId"
+};
+
+// Generate a compact report
+string compactReport = visualization.ToCompactReport();
+Console.WriteLine(compactReport);
+
+// Get string representation
+string displayText = visualization.ToString();
+Console.WriteLine(displayText);
+
+// Access individual properties
+Console.WriteLine($"Plan rendered at: {visualization.RenderedAt}");
+Console.WriteLine($"Total bottlenecks: {visualization.Bottlenecks.Count}");
+Console.WriteLine($"Cost distribution: {visualization.CostDistribution}");
+```
+
+### Public Members
+
+- `TextTree` - Textual representation of the plan hierarchy/tree structure
+- `CostDistribution` - JSON string representing cost distribution across plan nodes
+- `Bottlenecks` - List of detected performance bottlenecks with recommendations
+- `Stats` - Dictionary of statistical metrics and performance data
+- `RenderedAt` - Timestamp when the visualization was generated
+- `ToCompactReport()` - Generates a compact, human-readable report summary
+- `NodeId` - Unique identifier for the plan node
+- `NodeType` - Type of the node (e.g., "Plan", "Join", "Filter")
+- `ObjectName` - Name of the query or object being analyzed
+- `EstimatedCost` - Estimated cost of this plan node
+- `Depth` - Depth level in the plan hierarchy
+- `Recommendation` - Optimization recommendation for this specific node
+- `ToString()` - Returns a formatted string representation of the visualization
+
 ## QueryValidatorTests
 
 The `QueryValidatorTests` class provides unit tests for the `QueryValidator` utility, which validates SQL queries for correctness, safety, and formatting. It tests various scenarios including well-formed queries, empty strings, queries without recognized SQL keywords, null arguments, query sanitization, key generation consistency, and custom validation rules. The test suite uses xUnit and FluentAssertions for clear, expressive test assertions.
