@@ -1832,6 +1832,76 @@ Console.WriteLine($"Extracted parameters: {(extractedParams == null ? "null (par
 - `IsCacheKeyExpired(this QueryCacheKeyGenerator generator, string key, int maxAgeHours)` - Checks if a cache key is expired based on key age
 - `FormatCacheKey(this QueryCacheKeyGenerator generator, string key)` - Gets a display-friendly representation of a cache key for logging and debugging
 
+## RateLimitingMiddleware
+
+The `RateLimitingMiddleware` class implements rate limiting for SQL query analysis requests to prevent system overload and ensure fair resource allocation. It tracks query execution patterns, monitors system load, and enforces configurable rate limits based on query frequency and resource consumption. The middleware provides slot-based concurrency control, system load monitoring, and detailed statistics for performance analysis and optimization.
+
+### Usage Example
+
+```csharp
+// Configure rate limiting in ASP.NET Core application
+var builder = WebApplication.CreateBuilder(args);
+
+// Add rate limiting services
+builder.Services.AddRateLimitingMiddleware(options =>
+{
+    options.MaxConcurrentRequests = 100;
+    options.MaxRequestsPerSecond = 50;
+    options.MaxBurstSize = 200;
+    options.SystemLoadThreshold = 0.85; // 85% CPU load
+    options.CleanupIntervalSeconds = 30;
+});
+
+var app = builder.Build();
+
+// Use the rate limiting middleware in the pipeline
+app.UseRateLimitingMiddleware();
+
+// Example: Analyze a query with rate limiting
+var rateLimiter = app.Services.GetRequiredService<RateLimitingMiddleware>();
+
+// Acquire a slot for query analysis
+await rateLimiter.AcquireSlotAsync("SELECT * FROM Users WHERE Status = 'active'");
+
+try
+{
+    // Perform query analysis...
+    var analyzer = app.Services.GetRequiredService<IQueryAnalyzerService>();
+    var result = await analyzer.AnalyzeAsync("SELECT * FROM Users WHERE Status = 'active'");
+    
+    // Release the slot when done
+    rateLimiter.ReleaseSlot();
+}
+catch (Exception ex)
+{
+    // Release the slot even if analysis fails
+    rateLimiter.ReleaseSlot();
+    throw;
+}
+
+// Check system load and query statistics
+var systemLoad = rateLimiter.GetSystemLoad();
+var stats = rateLimiter.GetQueryStats("SELECT * FROM Users WHERE Status = 'active'");
+
+Console.WriteLine($"System load: {systemLoad:P1}");
+Console.WriteLine($"Query hash: {stats.QueryHash}");
+Console.WriteLine($"Request count: {stats.RequestCount}");
+Console.WriteLine($"Average interval: {stats.AverageIntervalMs}ms");
+```
+
+### Public Members
+
+- `AcquireSlotAsync(string queryHash)` - Acquires a rate limiting slot for query analysis, blocking if limits are exceeded
+- `ReleaseSlot()` - Releases a previously acquired rate limiting slot
+- `GetSystemLoad()` - Gets the current system load (0.0 to 1.0 scale)
+- `GetQueryStats(string queryHash)` - Gets statistics for a specific query including request count and timing information
+- `QueryHash` - Gets the hash of the currently tracked query
+- `RequestCount` - Gets the number of requests for the current query
+- `FirstRequestTime` - Gets the timestamp of the first request for the current query
+- `LastRequestTime` - Gets the timestamp of the last request for the current query
+- `GetAverageInterval()` - Gets the average time interval between requests for the current query
+- `IsThrottled` - Gets whether the current query is being throttled due to rate limiting
+
 ## ErrorHandlingMiddleware
 
 The `ErrorHandlingMiddleware` class provides centralized exception handling for SQL query analysis operations. It wraps query execution and analysis logic with comprehensive error handling, automatic error reporting, and graceful degradation strategies. This middleware ensures that errors are properly logged, reported, and handled without crashing the application, while providing detailed diagnostic information for troubleshooting performance issues.
