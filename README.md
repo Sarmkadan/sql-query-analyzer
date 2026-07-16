@@ -1724,6 +1724,134 @@ foreach (var suggestion in orderedSuggestions.Take(3))
 - `GetAllIndexSuggestions(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Collects all `IndexSuggestion` items embedded in the rewrite suggestions into a deduplicated, prioritized flat list
 - `GetRewriteSummary(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Gets a human-readable summary of the full rewrite suggestion set
 
+## ProfilerSettings
+
+The `ProfilerSettings` class configures the query profiler subsystem, controlling which performance metrics are captured, execution time limits, comparison thresholds, and execution plan visualization behavior. It can be used standalone when registering the profiler service or nested inside `AnalyzerSettings` as a `Profiler` configuration section in appsettings.json files.
+
+This type provides factory methods (`ForDevelopment()` and `ForProduction()`) for common configurations and includes a `Validate()` method for runtime configuration validation.
+
+### Usage Example
+
+```csharp
+// Create development configuration with full profiling enabled
+var devSettings = ProfilerSettings.ForDevelopment();
+
+// Configure custom settings for a production environment
+var prodSettings = new ProfilerSettings
+{
+    CaptureExecutionPlanByDefault = false,      // Disable plan capture by default in production
+    CaptureTimingsByDefault = true,            // Enable timings for performance monitoring
+    CaptureResourceUsageByDefault = false,       // Disable resource usage in production
+    IncludePlanVisualizationByDefault = false,   // Disable visualization by default
+    DefaultMaxDurationMs = 15_000,             // 15 second timeout
+    MaxQueryLengthChars = 524_288,            // 512 KB max query length
+    MaxBatchSize = 50,                        // Smaller batch size for production
+    RegressionThreshold = 7.5,                  // Require 7.5 point drop to flag regression
+    ImprovementThreshold = 2.5,                 // Require 2.5 point gain to flag improvement
+    SlowStageThresholdMs = 150.0,              // Flag stages slower than 150ms
+    HighMemoryThresholdBytes = 750L * 1024 * 1024, // 750 MB memory threshold
+    Visualization = new VisualizationSettings
+    {
+        MaxDepth = 8,
+        MaxNodes = 100,
+        CostBarWidth = 15,
+        AnnotateBottlenecks = true,
+        BottleneckCostThreshold = 7.5,
+        ShowRowCounts = false,
+        ShowDetailedCosts = false
+    }
+};
+
+// Validate configuration before use
+var validationErrors = prodSettings.Validate();
+if (validationErrors.Any())
+{
+    Console.WriteLine("Configuration errors:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("Profiler configuration is valid!");
+}
+
+// Use with dependency injection in ASP.NET Core
+services.AddQueryProfiler(prodSettings);
+
+// Or nest inside AnalyzerSettings
+var analyzerSettings = new AnalyzerSettings
+{
+    Database = new DatabaseSettings
+    {
+        Provider = "SqlServer",
+        ConnectionString = "Server=localhost;Database=TestDB;..."
+    },
+    Profiler = prodSettings
+};
+
+// Override specific settings at runtime via ProfilerOptions
+var profilerOptions = new ProfilerOptions
+{
+    CaptureExecutionPlan = true,  // Opt-in to plan capture for specific queries
+    MaxDurationMs = 30_000
+};
+```
+
+### Public Members
+
+- `CaptureExecutionPlanByDefault` - Whether to capture and embed execution plans by default (bool, default: true)
+- `CaptureTimingsByDefault` - Whether to record wall-clock timings for each pipeline stage by default (bool, default: true)
+- `CaptureResourceUsageByDefault` - Whether to capture process resource usage after each run by default (bool, default: true)
+- `IncludePlanVisualizationByDefault` - Whether to include ASCII visualization of the plan tree by default (bool, default: true)
+- `DefaultMaxDurationMs` - Maximum profiling budget in milliseconds before run is aborted (int, default: 30_000)
+- `MaxQueryLengthChars` - Maximum SQL text length in characters (int, default: 1_048_576 = 1 MB)
+- `MaxBatchSize` - Maximum number of queries in a single ProfileBatchAsync call (int, default: 100)
+- `RegressionThreshold` - Minimum score decrease required to flag a regression (double, default: 5.0)
+- `ImprovementThreshold` - Minimum score increase required to flag an improvement (double, default: 3.0)
+- `SlowStageThresholdMs` - Stage duration above which to emit slow-stage suggestions in milliseconds (double, default: 100.0)
+- `HighMemoryThresholdBytes` - Process working-set size above which to emit high-memory suggestions in bytes (long, default: 500L * 1024 * 1024 = 500 MB)
+- `Visualization` - Settings forwarded to the ExecutionPlanVisualizer renderer (VisualizationSettings)
+- `ForDevelopment()` - Factory method creating a development configuration with all features enabled
+- `ForProduction()` - Factory method creating a low-overhead production configuration
+- `Validate()` - Validates settings and returns a list of descriptive error messages
+
+### VisualizationSettings Properties
+
+The `Visualization` property contains these nested settings:
+
+- `MaxDepth` - Maximum tree depth to render (int, default: 10)
+- `MaxNodes` - Maximum number of plan nodes to include (int, default: 200)
+- `CostBarWidth` - Character width of the relative-cost bar (int, default: 20)
+- `AnnotateBottlenecks` - Whether to annotate bottleneck nodes (bool, default: true)
+- `BottleneckCostThreshold` - Cost threshold for bottleneck annotation (double, default: 5.0)
+- `ShowRowCounts` - Whether to show estimated row counts (bool, default: true)
+- `ShowDetailedCosts` - Whether to show detailed I/O and CPU cost components (bool, default: false)
+
+### Factory Methods
+
+```csharp
+// Development configuration with detailed visualization
+var devConfig = ProfilerSettings.ForDevelopment();
+// Result: All capture options enabled, detailed visualization, 60s timeout, 50ms slow-stage threshold
+
+// Production configuration with minimal overhead
+var prodConfig = ProfilerSettings.ForProduction();
+// Result: Plan capture and visualization disabled, 10s timeout, 200ms slow-stage threshold
+```
+
+### Validation
+
+```csharp
+var settings = new ProfilerSettings();
+var errors = settings.Validate();
+if (errors.Any())
+{
+    // Handle configuration errors
+}
+```
+
 ## QueryAnalysisResult
 
 The `QueryAnalysisResult` class represents the complete analysis result of a SQL query, including performance metrics, detected issues, optimization suggestions, and execution statistics. This type is the primary return value from query analysis operations and provides comprehensive information for performance monitoring, optimization recommendations, and reporting.
