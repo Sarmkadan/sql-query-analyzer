@@ -5031,3 +5031,72 @@ foreach (var script in maintenanceScripts)
 - `Rationale` - Explanation for why this index is recommended
 - `CreateScript` - Generated CREATE INDEX SQL script
 - `DropScript` - Generated DROP INDEX SQL script
+
+---
+
+## DatabaseConnectionValidator
+
+The `DatabaseConnectionValidator` class validates database connections before SQL query analysis begins. It checks connection string formats for different database providers (SQL Server, PostgreSQL, MySQL), tests actual database connectivity, and provides detailed diagnostic information for connection failures. This validator ensures that queries can be analyzed against valid, reachable database connections.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddSingleton<DatabaseConnectionValidator>();
+
+var serviceProvider = services.BuildServiceProvider();
+var validator = serviceProvider.GetRequiredService<DatabaseConnectionValidator>();
+
+// Validate a SQL Server connection string
+var sqlServerConnectionString = "Server=localhost;Database=TestDB;User Id=sa;Password=YourPassword123;";
+var sqlServerResult = await validator.ValidateAsync(sqlServerConnectionString, "SqlServer");
+
+if (sqlServerResult.IsValid)
+{
+    Console.WriteLine("✓ SQL Server connection validated successfully!");
+    Console.WriteLine($"Database Version: {sqlServerResult.DatabaseVersion}");
+    Console.WriteLine($"Connection Status: {(sqlServerResult.IsConnectionAlive ? "Alive" : "Dead")}");
+}
+else
+{
+    Console.WriteLine("✗ SQL Server connection validation failed:");
+    foreach (var error in sqlServerResult.Errors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+    Console.WriteLine($"Message: {sqlServerResult.Message}");
+}
+
+// Validate a PostgreSQL connection string
+var postgresConnectionString = "Host=localhost;Database=TestDB;Username=postgres;Password=YourPassword123;";
+var postgresResult = await validator.ValidateAsync(postgresConnectionString, "PostgreSQL");
+
+if (postgresResult.Success)
+{
+    Console.WriteLine($"✓ PostgreSQL connection validated! Version: {postgresResult.DatabaseVersion}");
+}
+else
+{
+    Console.WriteLine("PostgreSQL connection validation failed");
+}
+
+// Quick format validation without actual connection
+var quickValidation = await validator.ValidateAsync(sqlServerConnectionString, "SqlServer", testConnection: false);
+Console.WriteLine($"Format valid: {quickValidation.IsValid}, Message: {quickValidation.Message}");
+```
+
+### Public Members
+
+- `ValidateAsync(string connectionString, string databaseType = "SqlServer", bool testConnection = true)` - Validates connection string format and optionally tests database connectivity. Returns a `ConnectionValidationResult` with detailed validation information
+- `ConnectionValidationResult` - Validation result class with properties:
+  - `IsValid` - Whether the connection string format and (if tested) actual connection are valid
+  - `IsConnectionAlive` - Whether the actual database connection is alive (only set if `testConnection=true`)
+  - `Message` - Human-readable message describing validation result
+  - `DatabaseVersion` - Detected database version (empty if not available)
+  - `Errors` - List of validation error messages
+- `ConnectionTestResult` - Connection test result class with properties:
+  - `Success` - Whether the connection test succeeded
+  - `DatabaseVersion` - Detected database version
+  - `Errors` - List of connection error messages
