@@ -1937,6 +1937,119 @@ if (errors.Any())
 }
 ```
 
+## PerformanceMetricsCalculator
+
+The `PerformanceMetricsCalculator` static class provides utility methods for calculating various performance metrics related to SQL queries and database indexes. It includes methods for calculating combined performance scores, estimating optimization potential, determining query complexity, evaluating index usage effectiveness, and predicting execution times based on historical statistics.
+
+This utility class is used throughout the SQL Query Analyzer to quantify performance characteristics and provide actionable insights for query optimization and database maintenance.
+
+### Usage Example
+
+```csharp
+// Analyze a query and calculate various performance metrics
+var analyzer = new QueryAnalyzerService();
+var result = await analyzer.AnalyzeQueryAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount " +
+    "FROM Users u " +
+    "LEFT JOIN Orders o ON u.Id = o.UserId " +
+    "WHERE u.Status = 'active' AND u.CreatedAt > '2024-01-01' " +
+    "GROUP BY u.Name " +
+    "ORDER BY OrderCount DESC");
+
+// Calculate combined performance score with custom weight
+var combinedScore = PerformanceMetricsCalculator.CalculateCombinedScore(result, weight: 1.2);
+Console.WriteLine($"Combined score: {combinedScore:F1}/100");
+
+// Estimate total optimization potential from issues and suggestions
+var optimizationPotential = PerformanceMetricsCalculator.EstimateTotalOptimization(
+    result.Issues, 
+    result.IndexSuggestions);
+Console.WriteLine($"Optimization potential: {optimizationPotential:F1}%");
+
+// Calculate query complexity score
+var query = new DatabaseQuery
+{
+    QueryText = result.Query,
+    LineCount = 5,
+    ReferencedTables = new List<string> { "Users", "Orders" },
+    JoinConditions = new List<string> { "u.Id = o.UserId" },
+    Parameters = new List<string> { "@minDate" }
+};
+query.Parse();
+
+var complexityScore = PerformanceMetricsCalculator.CalculateComplexityScore(query);
+Console.WriteLine($"Complexity score: {complexityScore}/100");
+
+// Evaluate index usage effectiveness
+var index = new Index
+{
+    TableName = "Users",
+    ColumnName = "Status",
+    TotalUsageCount = 1567,
+    FragmentationPercentage = 8.5,
+    TotalRows = 100000,
+    IsUnique = false
+};
+
+var indexScore = PerformanceMetricsCalculator.CalculateIndexUsageScore(index);
+Console.WriteLine($"Index usage score: {indexScore:F1}/100");
+
+// Calculate maintenance effort for multiple indexes
+var indexes = new List<Index> { index };
+var maintenanceEffort = PerformanceMetricsCalculator.CalculateMaintenanceEffort(indexes);
+Console.WriteLine($"Maintenance effort: {maintenanceEffort} points");
+
+// Get performance trend from historical analysis
+var history = new List<QueryAnalysisResult> { result, result, result };
+var trend = PerformanceMetricsCalculator.GetPerformanceTrend(history);
+Console.WriteLine($"Performance trend: {trend}");
+
+// Calculate execution time distribution
+var stats = new QueryStatistics
+{
+    AverageExecutionTime = TimeSpan.FromMilliseconds(45),
+    ExecutionCount = 1567,
+    TotalLogicalReads = 8923,
+    RowsAffected = 1250
+};
+
+var timeDistribution = PerformanceMetricsCalculator.CalculateExecutionTimeDistribution(stats);
+foreach (var kvp in timeDistribution)
+{
+    Console.WriteLine($"- {kvp.Key}: {kvp.Value} executions");
+}
+
+// Calculate ROI for creating a suggested index
+var suggestion = new IndexSuggestion
+{
+    TableName = "Users",
+    ColumnName = "Status",
+    EstimatedPerformanceGain = 75.0,
+    EstimatedIndexSizeKB = 45,
+    EstimatedMaintenanceCost = 3
+};
+
+var tableSizeKB = 15678; // 15.6 MB table
+var roi = PerformanceMetricsCalculator.CalculateIndexROI(suggestion, tableSizeKB);
+Console.WriteLine($"Index ROI: {roi:F1}%");
+
+// Predict execution time for different result sizes
+var predictedTime = PerformanceMetricsCalculator.PredictExecutionTime(stats, estimatedRows: 10000);
+Console.WriteLine($"Predicted execution time: {predictedTime.TotalMilliseconds:F0}ms");
+```
+
+### Public Members
+
+- `CalculateCombinedScore(QueryAnalysisResult analysis, double weight = 1.0)` - Calculates a weighted combined performance score that incorporates the base score, issue impact, and optimization potential
+- `EstimateTotalOptimization(List<PerformanceIssue> issues, List<IndexSuggestion> suggestions)` - Estimates the total potential performance improvement from addressing detected issues and implementing suggested indexes
+- `CalculateComplexityScore(DatabaseQuery query)` - Calculates a complexity score (0-100) based on query characteristics like line count, table count, join complexity, and parameter count
+- `CalculateIndexUsageScore(Index index)` - Calculates an index effectiveness score (0-100) based on usage frequency, fragmentation, and maintenance cost
+- `CalculateMaintenanceEffort(List<Index> indexes)` - Calculates the total maintenance effort required for a collection of indexes based on fragmentation and update status
+- `GetPerformanceTrend(List<QueryAnalysisResult> analysisHistory)` - Analyzes historical performance data to determine if query performance is improving, degrading, or stable
+- `CalculateExecutionTimeDistribution(QueryStatistics stats)` - Categorizes query execution times into time ranges (< 10ms, 10-100ms, etc.) based on average execution time
+- `CalculateIndexROI(IndexSuggestion suggestion, long tableSizeKB)` - Calculates the return on investment percentage for creating a suggested index based on performance gain vs. storage and maintenance costs
+- `PredictExecutionTime(QueryStatistics stats, int estimatedRows)` - Predicts query execution time for a given number of estimated rows based on historical statistics
+
 ## IAnalysisRepository
 
 The `IAnalysisRepository` interface provides data access operations for query analysis results and performance issues detected by the SQL Query Analyzer. It enables persistence and retrieval of analysis data including query performance scores, detected issues, index recommendations, and performance issue tracking across different applications and tables.
