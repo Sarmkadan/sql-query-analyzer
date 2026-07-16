@@ -2565,3 +2565,65 @@ act.Should().ThrowAsync<ArgumentException>();
 - `ParseExecutionPlanAsync_InvalidXml_ThrowsQueryPlanException` - Ensures invalid XML throws the correct exception type
 - `GetTableScans_WithTableScans_ReturnsTableScans` - Verifies table scan detection functionality
 - `GetMissingIndexes_WithTableScans_ReturnsRecommendations` - Tests missing index recommendation generation
+
+## SampleQueryProvider
+
+The `SampleQueryProvider` static class provides a comprehensive collection of sample SQL queries designed for testing, benchmarking, and educational purposes. It includes queries with various performance characteristics, anti-patterns, and complexity levels to help developers understand common SQL performance issues and optimization opportunities.
+
+This provider is particularly useful for:
+- Testing query analysis functionality
+- Demonstrating performance anti-patterns
+- Educational examples for SQL optimization workshops
+- Benchmarking and performance testing
+- Integration testing scenarios
+
+### Usage Example
+
+```csharp
+// Get individual sample queries
+string optimizedQuery = SampleQueryProvider.GetOptimizedQuery();
+string selectStarQuery = SampleQueryProvider.GetSelectStarQuery();
+string nPlusOneQuery = SampleQueryProvider.GetNPlusOneQuery();
+
+// Get all samples as a dictionary
+var allSamples = SampleQueryProvider.GetAllSamples();
+foreach (var kvp in allSamples)
+{
+    Console.WriteLine($"Sample '{kvp.Key}': {kvp.Value.Substring(0, Math.Min(50, kvp.Value.Length))}...");
+}
+
+// Get a random sample for testing
+string randomQuery = SampleQueryProvider.GetRandomSample();
+Console.WriteLine($"Random query: {randomQuery}");
+
+// Get samples grouped by issue type
+var samplesByType = SampleQueryProvider.GetSamplesByIssueType();
+foreach (var kvp in samplesByType)
+{
+    Console.WriteLine($"{kvp.Key} ({kvp.Value.Count} samples):");
+    foreach (var query in kvp.Value.Take(3))
+    {
+        Console.WriteLine($"  - {query.Substring(0, Math.Min(40, query.Length))}...");
+    }
+}
+```
+
+### Public Members
+
+- `GetOptimizedQuery()` - Returns a well-optimized query with high performance characteristics
+- `GetSelectStarQuery()` - Returns a query using SELECT * (inefficient pattern)
+- `GetNPlusOneQuery()` - Returns a query demonstrating N+1 access pattern
+- `GetImplicitConversionQuery()` - Returns a query with implicit type conversion issue
+- `GetNonSargableQuery()` - Returns a query with non-sargable predicate (function on column)
+- `GetComplexJoinQuery()` - Returns a query with multiple JOIN operations
+- `GetLeadingWildcardQuery()` - Returns a query with LIKE and leading wildcard (prevents index usage)
+- `GetOrConditionQuery()` - Returns a query with OR condition (may prevent index usage)
+- `GetSubqueryQuery()` - Returns a query using subqueries
+- `GetDistinctQuery()` - Returns a query using DISTINCT
+- `GetSimpleQuery()` - Returns a simple, well-structured query with no issues
+- `GetAggregationQuery()` - Returns a query with aggregation functions
+- `GetCteQuery()` - Returns a query using Common Table Expression (CTE)
+- `GetVeryComplexQuery()` - Returns a very complex query with multiple CTEs and ranking
+- `GetAllSamples()` - Returns all sample queries as a dictionary (key: sample name, value: query text)
+- `GetRandomSample()` - Returns a randomly selected sample query
+- `GetSamplesByIssueType()` - Returns sample queries grouped by issue type/categories
