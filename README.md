@@ -562,6 +562,63 @@ Console.WriteLine($"Found {usersTableNodes.Count} nodes accessing Users table");
 - `IsEfficient(int maxTableScans = 2, double maxCost = 1000.0)` - Determines if the plan is considered efficient
 - `GetNodesForTable(string tableName)` - Gets all nodes that access a specific table
 
+## SlowQueryEntry
+
+The `SlowQueryEntry` class represents a structured slow-query log entry with comprehensive performance metrics and contextual information. It captures query execution details including duration, lock time, rows examined/sent, timestamp, user information, and database context, enabling performance analysis and optimization recommendations.
+
+### Usage Example
+
+```csharp
+// Create a slow query entry from application monitoring
+var slowQuery = new SlowQueryEntry
+{
+    QueryText = "SELECT * FROM Orders WHERE CustomerId = 123 AND Status = 'active'",
+    Duration = TimeSpan.FromMilliseconds(450),
+    LockTime = TimeSpan.FromMilliseconds(120),
+    RowsExamined = 15678,
+    RowsSent = 123,
+    Timestamp = DateTime.UtcNow,
+    UserHost = "app-server-01@10.0.1.45",
+    Database = "ECommerceDB",
+    LogSource = "MySql"
+};
+
+// Add custom metadata for additional context
+slowQuery.Metadata.Add("application", "OrderProcessingService");
+slowQuery.Metadata.Add("environment", "production");
+slowQuery.Metadata.Add("query_hash", "a1b2c3d4e5f6");
+
+// Check if this represents a full table scan
+if (slowQuery.IsFullScan)
+{
+    Console.WriteLine("⚠️ Potential full table scan detected!");
+}
+
+// Calculate efficiency ratio
+Console.WriteLine($"Efficiency: {slowQuery.EfficiencyRatio:P1} ({slowQuery.RowsSent}/{slowQuery.RowsExamined} rows)");
+
+// Generate a summary for logging
+string summary = slowQuery.GetSummary();
+Console.WriteLine(summary);
+```
+
+### Public Members
+
+- `EntryId` - Unique identifier for the parsed entry (auto-generated GUID)
+- `QueryText` - SQL text extracted from the log
+- `Duration` - Total query duration
+- `LockTime` - Time spent waiting on locks
+- `RowsExamined` - Rows examined by the query
+- `RowsSent` - Rows returned to the caller
+- `Timestamp` - Timestamp of the logged execution
+- `UserHost` - User and host information from the log entry
+- `Database` - Database name associated with the query
+- `LogSource` - Source engine for the entry (MySql, PostgreSql, SqlServer, etc.)
+- `Metadata` - Additional engine-specific attributes as key-value pairs
+- `EfficiencyRatio` - Ratio of rows returned to rows examined (calculated property)
+- `IsFullScan` - Indicates whether the entry likely represents a full scan (calculated property)
+- `GetSummary()` - Builds a short textual summary of the slow query entry
+
 ## QueryNormalizerBenchmarks
 
 The `QueryNormalizerBenchmarks` class provides performance benchmarks for the `QueryNormalizer` utility, measuring the efficiency of SQL query normalization, table name extraction, and column name extraction operations. It uses BenchmarkDotNet to compare different normalization scenarios including simple queries, complex multi-join queries, and queries with embedded string literals.
