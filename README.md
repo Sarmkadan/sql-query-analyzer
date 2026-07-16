@@ -1852,13 +1852,188 @@ if (errors.Any())
 }
 ```
 
-## IQueryRepository
+## IAnalysisRepository
 
-The `IQueryRepository` interface defines the contract for data access operations related to SQL queries, query analysis results, and performance issues. It provides methods for CRUD operations on `DatabaseQuery` entities, retrieval of query analysis data, and management of performance issue tracking across different applications and tables.
+The `IAnalysisRepository` interface provides data access operations for query analysis results and performance issues detected by the SQL Query Analyzer. It enables persistence and retrieval of analysis data including query performance scores, detected issues, index recommendations, and performance issue tracking across different applications and tables.
 
-This repository interface serves as the primary data access layer for the SQL Query Analyzer, enabling persistence and retrieval of analyzed queries, their performance metrics, and associated optimization recommendations.
+This repository interface serves as the primary storage mechanism for analysis results, enabling historical tracking, trend analysis, and performance monitoring across SQL queries and database tables.
 
 ### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+var analysisRepository = serviceProvider.GetRequiredService<IAnalysisRepository>();
+
+// Use InMemoryAnalysisRepository for in-memory storage
+var inMemoryRepo = new InMemoryAnalysisRepository();
+
+// Save a query analysis result
+var analysisResult = new QueryAnalysisResult
+{
+    Query = "SELECT * FROM Users WHERE Status = 'active' AND CreatedAt > '2024-01-01'",
+    PerformanceScore = 75.5,
+    Issues = new List<PerformanceIssue>
+    {
+        new PerformanceIssue
+        {
+            IssueType = IssueType.SelectStar,
+            Severity = IssueSeverity.Warning,
+            Description = "Query uses SELECT * which can impact performance",
+            EstimatedPerformanceImpact = 15.0,
+            TableName = "Users",
+            ColumnName = "*"
+        },
+        new PerformanceIssue
+        {
+            IssueType = IssueType.MissingWhereClause,
+            Severity = IssueSeverity.Info,
+            Description = "Consider adding WHERE clause for better performance",
+            EstimatedPerformanceImpact = 5.0,
+            TableName = "Users"
+        }
+    },
+    IndexSuggestions = new List<IndexRecommendation>
+    {
+        new IndexRecommendation
+        {
+            TableName = "Users",
+            KeyColumns = new List<string> { "Status", "CreatedAt" },
+            ImpactScore = 85.0,
+            Source = "WhereClause",
+            Rationale = "Composite index on Status and CreatedAt would significantly improve this query"
+        }
+    },
+    AnalysisDate = DateTime.UtcNow,
+    QueryComplexity = QueryComplexity.Medium
+};
+
+var savedResult = await inMemoryRepo.SaveAnalysisAsync(analysisResult);
+Console.WriteLine($"Saved analysis with ID: {savedResult.AnalysisId}, Score: {savedResult.PerformanceScore}");
+
+// Retrieve analysis by ID
+var retrievedAnalysis = await inMemoryRepo.GetAnalysisAsync(savedResult.AnalysisId);
+Console.WriteLine($"Retrieved analysis: {retrievedAnalysis?.Query?.Substring(0, Math.Min(50, retrievedAnalysis.Query.Length))}...");
+
+// Get all analyses
+var allAnalyses = await inMemoryRepo.GetAllAnalysesAsync();
+Console.WriteLine($"Total analyses in repository: {allAnalyses.Count}");
+
+// Get analyses by date range
+var recentAnalyses = await inMemoryRepo.GetAnalysesByDateRangeAsync(
+    DateTime.UtcNow.AddDays(-7),
+    DateTime.UtcNow
+);
+Console.WriteLine($"Analyses from last 7 days: {recentAnalyses.Count}");
+
+// Get analyses for a specific query
+var queryAnalyses = await inMemoryRepo.GetAnalysesForQueryAsync(
+    "SELECT * FROM Users WHERE Status = 'active' AND CreatedAt > '2024-01-01'"
+);
+Console.WriteLine($"Analyses for this query: {queryAnalyses.Count}");
+
+// Get recent analyses (last 10)
+var recentResults = await inMemoryRepo.GetRecentAnalysesAsync(10);
+Console.WriteLine($"Most recent analyses:");
+foreach (var result in recentResults)
+{
+    Console.WriteLine($"- {result.Query.Substring(0, Math.Min(40, result.Query.Length))}... (Score: {result.PerformanceScore:F1})");
+}
+
+// Get performance issues by type
+var selectStarIssues = await inMemoryRepo.GetIssuesByTypeAsync(IssueType.SelectStar);
+Console.WriteLine($"SELECT * issues found: {selectStarIssues.Count}");
+
+// Get critical issues
+var criticalIssues = await inMemoryRepo.GetCriticalIssuesAsync();
+Console.WriteLine($"Critical issues found: {criticalIssues.Count}");
+
+// Get total issue count
+var totalIssues = await inMemoryRepo.GetTotalIssueCountAsync();
+Console.WriteLine($"Total issues across all analyses: {totalIssues}");
+
+// Use InMemoryIndexRepository for index management
+var indexRepo = new InMemoryIndexRepository();
+
+// Add a new index
+var newIndex = new ModelIndex
+{
+    Name = "IX_Users_Status_CreatedAt",
+    TableName = "Users",
+    Columns = new List<string> { "Status", "CreatedAt" },
+    IndexType = "NonClustered",
+    FragmentationPercent = 5.2,
+    LastUpdated = DateTime.UtcNow,
+    SizeMB = 2.5,
+    UsedCount = 15678,
+    Pages = 125
+};
+
+var addedIndex = await indexRepo.AddIndexAsync(newIndex);
+Console.WriteLine($"Added index: {addedIndex.Name}");
+
+// Get index by name
+var retrievedIndex = await indexRepo.GetIndexByNameAsync("IX_Users_Status_CreatedAt");
+Console.WriteLine($"Retrieved index: {retrievedIndex?.Name} on {retrievedIndex?.TableName}");
+
+// Get indexes by table
+var usersIndexes = await indexRepo.GetIndexesByTableAsync("Users");
+Console.WriteLine($"Indexes on Users table: {usersIndexes.Count}");
+
+// Get all indexes
+var allIndexes = await indexRepo.GetAllIndexesAsync();
+Console.WriteLine($"Total indexes in repository: {allIndexes.Count}");
+
+// Get unused indexes
+var unusedIndexes = await indexRepo.GetUnusedIndexesAsync();
+Console.WriteLine($"Unused indexes: {unusedIndexes.Count}");
+
+// Get fragmented indexes (>10% fragmentation)
+var fragmentedIndexes = await indexRepo.GetFragmentedIndexesAsync();
+Console.WriteLine($"Fragmented indexes: {fragmentedIndexes.Count}");
+
+// Get indexes for a specific table
+var tableIndexes = await indexRepo.GetIndexesForTableAsync("Users");
+Console.WriteLine($"Indexes specifically for Users table: {tableIndexes.Count}");
+
+// Save index changes
+await indexRepo.SaveIndexAsync(addedIndex);
+Console.WriteLine("Index saved successfully");
+```
+
+### Public Members
+
+#### IAnalysisRepository (Analysis Storage)
+
+- `InMemoryAnalysisRepository` - In-memory implementation of `IAnalysisRepository` for testing and development
+- `SaveAnalysisAsync(QueryAnalysisResult analysis)` - Saves a query analysis result to the repository
+- `GetAnalysisAsync(Guid analysisId)` - Retrieves a specific analysis by its unique identifier
+- `GetAllAnalysesAsync()` - Gets all analysis results stored in the repository
+- `GetAnalysesByDateRangeAsync(DateTime startDate, DateTime endDate)` - Retrieves analyses within a specific date range
+- `GetAnalysesForQueryAsync(string query)` - Gets all analyses for a specific query text
+- `DeleteAnalysisAsync(Guid analysisId)` - Removes an analysis from the repository
+- `GetRecentAnalysesAsync(int count = 10)` - Gets the most recent analyses
+- `GetIssuesByTypeAsync(IssueType issueType)` - Retrieves all issues of a specific type across all analyses
+- `GetCriticalIssuesAsync()` - Gets all critical severity issues
+- `GetTotalIssueCountAsync()` - Returns the total count of all issues across all analyses
+
+#### ModelIndex and Index Management
+
+- `InMemoryIndexRepository` - In-memory implementation for index metadata storage
+- `GetIndexByNameAsync(string indexName)` - Retrieves an index by its name
+- `GetIndexesByTableAsync(string tableName)` - Gets all indexes for a specific table
+- `GetAllIndexesAsync()` - Retrieves all indexes in the repository
+- `GetUnusedIndexesAsync()` - Identifies indexes that haven't been used recently
+- `GetFragmentedIndexesAsync()` - Finds indexes with high fragmentation levels
+- `AddIndexAsync(ModelIndex index)` - Adds a new index to the repository
+- `SaveIndexAsync(ModelIndex index)` - Updates an existing index
+- `GetIndexesForTableAsync(string tableName)` - Gets indexes specifically for a table
+
+## IQueryRepository
 
 ```csharp
 // Setup dependency injection with required services
