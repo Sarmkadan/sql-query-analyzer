@@ -319,6 +319,62 @@ if (healthCheck.Errors.Any())
 - `List<string> Errors` - List of error messages encountered during health check
 - `override string ToString()` - Returns a formatted string representation of the health check
 
+## IResultFormatter
+
+The `IResultFormatter` interface defines the contract for formatting SQL query analysis results into various output formats. It provides a standardized way to serialize analysis results for different consumption scenarios including console output, API responses, data export, and web dashboard integration. Implementations handle format-specific serialization logic while maintaining a consistent API surface.
+
+### Usage Example
+
+```csharp
+// Create formatters for different output formats
+var jsonFormatter = new JsonResultFormatter(prettyPrint: true);
+var csvFormatter = new CsvResultFormatter();
+var xmlFormatter = new XmlResultFormatter();
+var textFormatter = new TextResultFormatter();
+var htmlFormatter = new HtmlResultFormatter();
+
+// Analyze a SQL query using the analyzer service
+var analyzer = new QueryAnalyzerService();
+var result = await analyzer.AnalyzeQueryAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId WHERE u.Status = 'active' GROUP BY u.Name HAVING COUNT(o.Id) > 5 ORDER BY OrderCount DESC");
+
+// Format the result using different formatters
+var jsonOutput = jsonFormatter.Format(result);
+Console.WriteLine(jsonOutput);
+
+var csvOutput = csvFormatter.Format(result);
+File.WriteAllText("analysis_results.csv", csvOutput);
+
+var xmlOutput = xmlFormatter.Format(result);
+Console.WriteLine(xmlOutput);
+
+var textOutput = textFormatter.Format(result);
+Console.WriteLine(textOutput);
+
+var htmlOutput = htmlFormatter.Format(result);
+File.WriteAllText("report.html", htmlOutput);
+
+// Get format type identifiers
+Console.WriteLine($"JSON format type: {jsonFormatter.GetFormatType()}");
+Console.WriteLine($"CSV format type: {csvFormatter.GetFormatType()}");
+Console.WriteLine($"XML format type: {xmlFormatter.GetFormatType()}");
+Console.WriteLine($"Text format type: {textFormatter.GetFormatType()}");
+Console.WriteLine($"HTML format type: {htmlFormatter.GetFormatType()}");
+
+// Format multiple results as a batch
+var batchResults = new List<QueryAnalysisResult> { result, /* additional results */ };
+var jsonBatchOutput = jsonFormatter.FormatBatch(batchResults);
+var csvBatchOutput = csvFormatter.FormatBatch(batchResults);
+```
+
+### Public Members
+
+- `string Format(QueryAnalysisResult result)` - Formats a single query analysis result into string representation for the specific output format
+- `string FormatBatch(IEnumerable<QueryAnalysisResult> results)` - Formats multiple query analysis results into string representation, useful for batch analysis output
+- `string GetFormatType()` - Returns the format type identifier (e.g., "json", "csv", "xml", "text", "html")
+
+---
+
 ## ComponentHealth
 
 The `ComponentHealth` type represents the health status of a specific component with a status and message.
