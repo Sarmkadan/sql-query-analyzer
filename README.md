@@ -1503,6 +1503,57 @@ Console.WriteLine($"\n{query.GetSummary()}");
 - `GetSummary()` - Generates a summary string
 - `GenerateHash()` - Generates SHA-256 hash for deduplication
 
+## ExplainPlanParserService
+
+The `ExplainPlanParserService` class parses execution plans and EXPLAIN output from SQL Server, PostgreSQL, and MySQL database systems. It converts raw execution plan XML/JSON/text into structured `QueryPlan` objects that can be analyzed for performance bottlenecks, index recommendations, and optimization opportunities. This service is essential for execution plan-based analysis and provides metrics extraction capabilities to quantify query performance characteristics.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+var planParser = serviceProvider.GetRequiredService<IExplainPlanParserService>();
+
+// Parse SQL Server execution plan from XML
+var sqlServerXmlPlan = "<ShowPlanXML>...</ShowPlanXML>";
+var sqlServerPlan = await planParser.ParseSqlServerPlanAsync(sqlServerXmlPlan);
+
+Console.WriteLine($"SQL Server Plan - Cost: {sqlServerPlan.TotalEstimatedCost}");
+Console.WriteLine($"Database: {sqlServerPlan.DatabaseName}, Format: {sqlServerPlan.Format}");
+
+// Parse PostgreSQL EXPLAIN (FORMAT JSON) output
+var postgreSqlJsonPlan = "{\"query_block\": {\"cost_info\": {\"query_cost\": \"125.5\"}, \"Plan\": {\"Total Cost\": 125.5, \"Actual Total Time\": 245.0}}";
+var postgreSqlPlan = await planParser.ParsePostgreSqlPlanAsync(postgreSqlJsonPlan);
+
+Console.WriteLine($"\nPostgreSQL Plan - Cost: {postgreSqlPlan.TotalEstimatedCost}");
+Console.WriteLine($"Estimated rows: {postgreSqlPlan.TotalEstimatedRows}");
+
+// Parse MySQL EXPLAIN output (can be JSON or tabular format)
+var mySqlPlan = await planParser.ParseMySqlPlanAsync(
+    "EXPLAIN FORMAT=JSON SELECT * FROM Users WHERE Status = 'active'"
+);
+
+Console.WriteLine($"\nMySQL Plan - Format: {mySqlPlan.Format}");
+
+// Extract comprehensive metrics from any parsed plan
+var metrics = await planParser.ExtractPlanMetricsAsync(postgreSqlPlan);
+foreach (var kvp in metrics)
+{
+    Console.WriteLine($"- {kvp.Key}: {kvp.Value}");
+}
+```
+
+### Public Members
+
+- `ParseSqlServerPlanAsync(string xmlPlan)` - Parses SQL Server execution plan XML and returns a structured `QueryPlan` object
+- `ParsePostgreSqlPlanAsync(string jsonPlan)` - Parses PostgreSQL EXPLAIN (FORMAT JSON) output and returns a `QueryPlan` object
+- `ParseMySqlPlanAsync(string jsonPlan)` - Parses MySQL EXPLAIN output (both JSON and tabular formats) and returns a `QueryPlan` object
+- `ExtractPlanMetricsAsync(QueryPlan plan)` - Extracts comprehensive performance metrics from a parsed `QueryPlan` as a dictionary for analysis and reporting
+
 ## QueryPlanExtensions
 
 The `QueryPlanExtensions` class provides extension methods for `QueryPlan` that offer advanced analysis capabilities and utility functions for query performance optimization. These methods help identify expensive operations, detect performance issues, and calculate various cost metrics to assist in query optimization efforts.
