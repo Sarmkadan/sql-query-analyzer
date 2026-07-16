@@ -1741,6 +1741,132 @@ catch (Exception innerEx)
 }
 ```
 
+## QueryProfilerService
+
+The `QueryProfilerService` class profiles SQL queries by orchestrating execution plan analysis, pipeline-stage timing, resource-usage measurement, and targeted suggestion generation. It integrates with `IQueryAnalyzerService`, `IQueryPlanAnalyzerService`, `IPerformanceIssueDetectorService`, and `IExecutionPlanVisualizer` to produce comprehensive `QueryProfilerReport` instances with performance scores, execution timings, resource usage metrics, and actionable optimization recommendations.
+
+This service provides detailed profiling capabilities for SQL queries, enabling developers to identify performance bottlenecks, analyze execution plans, detect optimization opportunities, and compare query performance across different versions or implementations.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+services.AddQueryProfilerServices(); // Register profiler services
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Get the profiler service
+var profilerService = serviceProvider.GetRequiredService<IQueryProfilerService>();
+
+// Profile a single query with default options
+var report = await profilerService.ProfileQueryAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount " +
+    "FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId " +
+    "GROUP BY u.Name HAVING COUNT(o.Id) > 5 " +
+    "ORDER BY OrderCount DESC",
+    "GetTopCustomers"
+);
+
+// Access profiling results
+if (report != null && !report.HasError)
+{
+    Console.WriteLine($"Query: {report.QueryText}");
+    Console.WriteLine($"Performance Score: {report.PerformanceScore:F1}/100");
+    Console.WriteLine($"Profiling Duration: {report.TotalProfilingDurationMs:F0}ms");
+    Console.WriteLine($"Suggestions: {report.Suggestions.Count}");
+    
+    // Access execution plan if available
+    if (report.ExecutionPlan != null)
+    {
+        Console.WriteLine($"Execution Plan Cost: {report.ExecutionPlan.TotalEstimatedCost}");
+        Console.WriteLine($"Table Scans: {report.ExecutionPlan.GetTableScans().Count}");
+        
+        // Access plan visualization if enabled
+        if (report.PlanVisualization != null)
+        {
+            Console.WriteLine("Plan Visualization:");
+            Console.WriteLine(report.PlanVisualization.Text);
+        }
+    }
+    
+    // Access resource usage metrics
+    if (report.ResourceUsage != null)
+    {
+        Console.WriteLine($"Memory Usage: {report.ResourceUsage.WorkingSetMb:F1} MB");
+        Console.WriteLine($"CPU Time: {report.ResourceUsage.TotalProcessorTimeMs:F0}ms");
+    }
+    
+    // Access execution stages timing
+    foreach (var stage in report.ExecutionStages.OrderByDescending(s => s.DurationMs))
+    {
+        Console.WriteLine($"- {stage.Name}: {stage.DurationMs:F1}ms");
+    }
+    
+    // Access suggestions for optimization
+    foreach (var suggestion in report.Suggestions.OrderBy(s => s.Priority))
+    {
+        Console.WriteLine($"[{suggestion.Severity}] {suggestion.Title} (+{suggestion.EstimatedImpactPercent}%)");
+        Console.WriteLine($"  {suggestion.Description}");
+    }
+}
+
+// Profile with custom options
+var customOptions = new ProfilerOptions
+{
+    CaptureExecutionPlan = true,
+    CaptureTimings = true,
+    CaptureResourceUsage = true,
+    MaxDurationMs = 15_000,
+    WarmUpIterations = 2,
+    MeasurementIterations = 3,
+    IncludePlanVisualization = true
+};
+
+var customReport = await profilerService.ProfileQueryAsync(
+    "SELECT * FROM LargeTable WHERE Date > '2024-01-01'",
+    "GetRecentOrders",
+    customOptions
+);
+
+// Profile a batch of queries
+var queries = new List<DatabaseQuery>
+{
+    new DatabaseQuery { QueryText = "SELECT * FROM Users WHERE Status = 'active'" },
+    new DatabaseQuery { QueryText = "SELECT * FROM Orders WHERE OrderDate > '2024-01-01'" },
+    new DatabaseQuery { QueryText = "SELECT COUNT(*) FROM Products WHERE CategoryId = 5" }
+};
+
+var batchReports = await profilerService.ProfileBatchAsync(queries);
+
+// Compare two query profiles to identify improvements or regressions
+var baselineReport = await profilerService.ProfileQueryAsync(
+    "SELECT * FROM Users WHERE Status = 'active'",
+    "GetActiveUsers_Old"
+);
+
+var improvedReport = await profilerService.ProfileQueryAsync(
+    "SELECT Id, Name FROM Users WHERE Status = 'active'",
+    "GetActiveUsers_New"
+);
+
+var comparison = await profilerService.CompareProfilesAsync(baselineReport, improvedReport);
+
+Console.WriteLine($"Comparison: {comparison.Summary}");
+Console.WriteLine($"Score delta: {comparison.ScoreDelta:+0.0;-0.0}");
+Console.WriteLine($"Timing delta: {comparison.TimingDeltaPercent:+0.0;-0.0}%");
+```
+
+### Public Members
+
+- `ProfileQueryAsync(string queryText, ProfilerOptions? options = null)` - Profiles a SQL query string and returns a comprehensive `QueryProfilerReport` with performance analysis
+- `ProfileQueryAsync(DatabaseQuery query, ProfilerOptions? options = null)` - Profiles a parsed `DatabaseQuery` object and returns a `QueryProfilerReport`
+- `ProfileBatchAsync(IEnumerable<DatabaseQuery> queries, ProfilerOptions? options = null)` - Profiles multiple queries in batch and returns a list of `QueryProfilerReport` instances
+- `GenerateSuggestionsAsync(QueryProfilerReport report)` - Generates optimization suggestions based on profiling results
+- `CompareProfilesAsync(QueryProfilerReport baseline, QueryProfilerReport candidate)` - Compares two profiling reports to identify performance improvements or regressions
+
 ## ProfilerOptions
 
 The `ProfilerOptions` class provides runtime configuration for query profiling sessions. It controls what data is collected (execution plans, timings, resource usage), sets timeouts and iteration counts, and enables plan visualizations. Use these options when calling `IQueryProfilerService.ProfileQueryAsync` to override default profiling behavior on a per-query basis.
