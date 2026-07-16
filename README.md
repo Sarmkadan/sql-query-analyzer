@@ -811,6 +811,83 @@ The pipeline architecture enables easy extension:
 - Middleware can halt pipeline execution by setting `ShouldContinue = false`
 - Each middleware has access to the complete analysis context for full flexibility
 
+## PerformanceIssueDetectorService
+
+The `PerformanceIssueDetectorService` class detects common SQL performance anti-patterns including SELECT *, missing WHERE/LIMIT clauses, implicit joins, non-sargable predicates, and N+1 access patterns. It analyzes SQL queries for performance issues and provides optimization recommendations with severity assessments.
+
+This service implements `IPerformanceIssueDetectorService` and provides both synchronous and asynchronous detection methods for different types of performance issues, supporting batch analysis and individual query analysis.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+var detector = serviceProvider.GetRequiredService<IPerformanceIssueDetectorService>();
+
+// Analyze a single query for performance issues
+var query = new DatabaseQuery
+{
+    QueryText = "SELECT * FROM Users WHERE Status = 'active' AND CreatedAt > '2024-01-01'",
+    ReferencedTables = new List<string> { "Users" },
+    WhereConditions = new List<string> { "Status = 'active'", "CreatedAt > '2024-01-01'" }
+};
+query.Parse();
+
+// Detect all performance issues
+var issues = await detector.DetectIssuesAsync(query);
+
+Console.WriteLine($"Found {issues.Count} performance issues:");
+foreach (var issue in issues.OrderByDescending(i => i.Severity))
+{
+    Console.WriteLine($"- [{issue.Severity}] {issue.IssueType}: {issue.Description}");
+}
+
+// Detect N+1 patterns in a batch of queries
+var queries = new List<DatabaseQuery>
+{
+    new DatabaseQuery { QueryText = "SELECT * FROM Users WHERE Id = 1", ReferencedTables = new List<string> { "Users" } },
+    new DatabaseQuery { QueryText = "SELECT * FROM Users WHERE Id = 2", ReferencedTables = new List<string> { "Users" } },
+    new DatabaseQuery { QueryText = "SELECT * FROM Users WHERE Id = 3", ReferencedTables = new List<string> { "Users" } }
+};
+
+var nPlusOneIssues = await detector.DetectNPlusOneAsync(queries);
+if (nPlusOneIssues.Any())
+{
+    Console.WriteLine($"⚠️ N+1 pattern detected in {nPlusOneIssues.Count} queries!");
+}
+
+// Detect join-related issues
+var joinIssues = await detector.DetectJoinIssuesAsync(query);
+if (joinIssues.Any())
+{
+    Console.WriteLine($"Join issues found: {joinIssues.Count}");
+}
+
+// Detect index opportunities
+var indexIssues = await detector.DetectIndexOpportunitiesAsync(query);
+if (indexIssues.Any())
+{
+    Console.WriteLine($"Index opportunities: {indexIssues.Count}");
+    foreach (var issue in indexIssues)
+    {
+        Console.WriteLine($"- {issue.Description} (Impact: {issue.EstimatedPerformanceImpact}%)");
+    }
+}
+```
+
+### Public Members
+
+- `PerformanceIssueDetectorService(ILogger<PerformanceIssueDetectorService> logger)` - Initializes the service with default settings
+- `PerformanceIssueDetectorService(ILogger<PerformanceIssueDetectorService> logger, AnalyzerSettings? settings)` - Initializes the service with custom settings
+- `DetectIssuesAsync(DatabaseQuery query)` - Detects all performance issues in a single query and returns a list of `PerformanceIssue` objects
+- `DetectNPlusOneAsync(List<DatabaseQuery> queries)` - Detects N+1 query patterns across a batch of queries
+- `DetectJoinIssuesAsync(DatabaseQuery query)` - Detects join-related performance issues like Cartesian products and type mismatches
+- `DetectIndexOpportunitiesAsync(DatabaseQuery query)` - Identifies opportunities for index creation based on query patterns
+
 ## QueryRewriteSuggestion
 
 The `QueryRewriteSuggestion` class represents a recommended SQL query transformation that improves performance by addressing common anti-patterns such as SELECT *, implicit joins, non-sargable predicates, and inefficient subqueries. Each suggestion includes the original and rewritten query text, the type of transformation, estimated improvement percentage, risk assessment, and related index recommendations to make the optimization effective.
