@@ -3737,3 +3737,95 @@ foreach (var kvp in samplesByType)
 - `GetAllSamples()` - Returns all sample queries as a dictionary (key: sample name, value: query text)
 - `GetRandomSample()` - Returns a randomly selected sample query
 - `GetSamplesByIssueType()` - Returns sample queries grouped by issue type/categories
+
+## IndexAnalyzerService
+
+The `IndexAnalyzerService` class provides comprehensive index analysis functionality for SQL Server databases. It analyzes existing indexes, identifies fragmentation issues, detects unused indexes, assesses overall index health, and generates maintenance scripts for index optimization. This service is essential for database performance tuning and helps maintain optimal query performance by ensuring indexes are properly maintained and configured.
+
+The service works with the `IIndexRepository` to retrieve index information and persists analysis results including index suggestions for future reference.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+serviceCollection.AddLogging();
+serviceCollection.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+var indexAnalyzer = serviceProvider.GetRequiredService<IIndexAnalyzerService>();
+
+// Analyze indexes for a specific table
+var suggestions = await indexAnalyzer.AnalyzeIndexesAsync("Users");
+
+Console.WriteLine($"Found {suggestions.Count} index suggestions for Users table:");
+foreach (var suggestion in suggestions.OrderByDescending(s => s.EstimatedPerformanceGain))
+{
+    Console.WriteLine($"- Create {suggestion.IndexType} index: {suggestion.IndexName}");
+    Console.WriteLine($"  Columns: {string.Join(", ", suggestion.IndexColumns)}");
+    Console.WriteLine($"  Estimated gain: {suggestion.EstimatedPerformanceGain}%");
+    Console.WriteLine($"  Rationale: {suggestion.Rationale}");
+}
+
+// Get fragmented indexes (fragmentation > 30%)
+var fragmentedIndexes = await indexAnalyzer.GetFragmentedIndexesAsync();
+if (fragmentedIndexes.Any())
+{
+    Console.WriteLine($"\nFound {fragmentedIndexes.Count} fragmented indexes:");
+    foreach (var index in fragmentedIndexes.OrderByDescending(i => i.FragmentationPercentage))
+    {
+        Console.WriteLine($"- {index.TableName}.{index.IndexName} ({index.FragmentationPercentage}% fragmented)");
+    }
+}
+
+// Get unused indexes (no recent usage)
+var unusedIndexes = await indexAnalyzer.GetUnusedIndexesAsync();
+if (unusedIndexes.Any())
+{
+    Console.WriteLine($"\nFound {unusedIndexes.Count} unused indexes:");
+    foreach (var index in unusedIndexes)
+    {
+        Console.WriteLine($"- {index.TableName}.{index.IndexName} (Last used: {index.LastUsedDate?.ToString("yyyy-MM-dd") ?? "Never"})");
+    }
+}
+
+// Assess health of a specific index
+var health = await indexAnalyzer.AssessIndexHealthAsync(fragmentedIndexes.FirstOrDefault());
+Console.WriteLine($"\nIndex health assessment: {health}");
+
+// Generate maintenance scripts for index optimization
+var maintenanceScripts = await indexAnalyzer.GenerateMaintenanceScriptsAsync();
+Console.WriteLine($"\nGenerated {maintenanceScripts.Count} maintenance scripts:");
+foreach (var script in maintenanceScripts)
+{
+    Console.WriteLine($"- {script}");
+}
+```
+
+### Public Members
+
+- `AnalyzeIndexesAsync(string tableName)` - Analyzes indexes for a specific table and returns optimization suggestions
+- `GetFragmentedIndexesAsync()` - Retrieves all indexes with fragmentation > 30%
+- `GetUnusedIndexesAsync()` - Retrieves indexes that haven't been used recently
+- `AssessIndexHealthAsync(ModelIndex index)` - Assesses the health of a specific index based on fragmentation, usage, and status
+- `GenerateMaintenanceScriptsAsync()` - Generates SQL scripts for index maintenance (rebuild/reorganize) and statistics updates
+
+### Index Health States
+
+- `Healthy` - Index is properly maintained and performing well
+- `NeedsReorganization` - Index fragmentation is > 10% but <= 30%
+- `NeedsRebuild` - Index fragmentation is > 30%
+- `Corrupted` - Index is disabled or otherwise corrupted
+
+### Index Suggestion Properties
+
+- `TableName` - Name of the table to create an index on
+- `IndexColumns` - List of columns to include in the index
+- `IncludeColumns` - List of columns to include in the index (INCLUDE clause)
+- `IndexType` - Type of index (CLUSTERED or NONCLUSTERED)
+- `IndexName` - Generated name for the index
+- `EstimatedPerformanceGain` - Estimated performance improvement percentage (0-100)
+- `EstimatedExecutionTimeReduction` - Estimated reduction in execution time
+- `Rationale` - Explanation for why this index is recommended
+- `CreateScript` - Generated CREATE INDEX SQL script
+- `DropScript` - Generated DROP INDEX SQL script
