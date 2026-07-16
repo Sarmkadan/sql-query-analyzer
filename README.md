@@ -1408,6 +1408,120 @@ if (indexIssues.Any())
 - `DetectJoinIssuesAsync(DatabaseQuery query)` - Detects join-related performance issues like Cartesian products and type mismatches
 - `DetectIndexOpportunitiesAsync(DatabaseQuery query)` - Identifies opportunities for index creation based on query patterns
 
+## PerformanceMetricCollector
+
+The `PerformanceMetricCollector` class collects and aggregates performance metrics across SQL query analysis operations. It tracks analysis times, cache performance, error rates, throughput, and provides comprehensive performance reports for monitoring and optimization purposes.
+
+This collector is useful for performance monitoring, identifying bottlenecks, and measuring the effectiveness of optimizations in the SQL Query Analyzer pipeline.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddSingleton<PerformanceMetricCollector>(); // Register as singleton
+
+var serviceProvider = services.BuildServiceProvider();
+var metricCollector = serviceProvider.GetRequiredService<PerformanceMetricCollector>();
+
+// Simulate analyzing multiple queries and collecting metrics
+var analyzer = new QueryAnalyzerService(metricCollector);
+
+// Analyze first query
+var query1 = "SELECT * FROM Users WHERE Status = 'active'";
+var result1 = await analyzer.AnalyzeQueryAsync(query1);
+metricCollector.RecordAnalysisMetric(
+    queryId: "query-001",
+    executionTimeMs: 45.2,
+    issueCount: 2,
+    cacheHit: false,
+    successful: true
+);
+
+// Analyze second query (cached)
+var query2 = "SELECT * FROM Products WHERE CategoryId = 5";
+var result2 = await analyzer.AnalyzeQueryAsync(query2);
+metricCollector.RecordAnalysisMetric(
+    queryId: "query-002",
+    executionTimeMs: 8.7,
+    issueCount: 0,
+    cacheHit: true,
+    successful: true
+);
+
+// Analyze third query that fails
+try
+{
+    var query3 = "INVALID SQL QUERY";
+    var result3 = await analyzer.AnalyzeQueryAsync(query3);
+    metricCollector.RecordAnalysisMetric(
+        queryId: "query-003",
+        executionTimeMs: 15.3,
+        issueCount: 0,
+        cacheHit: false,
+        successful: true
+    );
+}
+catch
+{
+    metricCollector.RecordAnalysisMetric(
+        queryId: "query-003",
+        executionTimeMs: 5.1,
+        issueCount: 0,
+        cacheHit: false,
+        successful: false
+    );
+}
+
+// Get performance statistics
+Console.WriteLine($"Total metrics collected: {metricCollector.Count}");
+Console.WriteLine($"Average execution time: {metricCollector.GetAverageExecutionTimeMs():F2}ms");
+Console.WriteLine($"Cache hit ratio: {metricCollector.GetCacheHitRatio():F1}%");
+Console.WriteLine($"Success rate: {metricCollector.GetSuccessRate():F1}%");
+Console.WriteLine($"Throughput: {metricCollector.GetThroughput():F2} queries/sec");
+Console.WriteLine($"P95 execution time: {metricCollector.GetPercentileExecutionTime(95):F2}ms");
+
+// Get comprehensive performance report
+var report = metricCollector.GetReport();
+Console.WriteLine($"\n{report}");
+
+// Reset metrics for a new monitoring session
+metricCollector.Reset();
+Console.WriteLine($"\nMetrics reset. New count: {metricCollector.Count}");
+```
+
+### Public Members
+
+- `RecordAnalysisMetric(string queryId, double executionTimeMs, int issueCount, bool cacheHit, bool successful)` - Records a single analysis metric with query details
+- `GetAverageExecutionTimeMs()` - Gets average execution time across all recorded metrics (milliseconds)
+- `GetCacheHitRatio()` - Gets cache hit ratio percentage (0-100)
+- `GetSuccessRate()` - Gets analysis success rate percentage (0-100)
+- `GetThroughput()` - Gets queries analyzed per second
+- `GetPercentileExecutionTime(double percentile)` - Gets execution time at specified percentile (e.g., 95 for 95th percentile)
+- `GetReport()` - Gets comprehensive performance report with all metrics
+- `Reset()` - Resets all collected metrics
+- `Count` - Gets the number of collected metrics (int)
+
+### PerformanceReport Properties
+
+- `TotalAnalyses` - Total number of analyses recorded
+- `SuccessfulAnalyses` - Number of successful analyses
+- `FailedAnalyses` - Number of failed analyses
+- `CacheHits` - Number of cache hits
+- `CacheMisses` - Number of cache misses
+- `AverageExecutionTimeMs` - Average execution time in milliseconds
+- `P50ExecutionTimeMs` - 50th percentile (median) execution time
+- `P95ExecutionTimeMs` - 95th percentile execution time
+- `P99ExecutionTimeMs` - 99th percentile execution time
+- `CacheHitRatio` - Cache hit ratio percentage
+- `SuccessRate` - Success rate percentage
+- `Throughput` - Queries per second
+- `TotalIssuesDetected` - Total issues detected across all analyses
+- `CollectionDuration` - Duration of metrics collection
+
+---
+
 ## QueryRewriteSuggestion
 
 The `QueryRewriteSuggestion` class represents a recommended SQL query transformation that improves performance by addressing common anti-patterns such as SELECT *, implicit joins, non-sargable predicates, and inefficient subqueries. Each suggestion includes the original and rewritten query text, the type of transformation, estimated improvement percentage, risk assessment, and related index recommendations to make the optimization effective.
