@@ -149,8 +149,14 @@ public sealed class DatabaseQuery
 
         foreach (System.Text.RegularExpressions.Match match in matches)
         {
-            var table = match.Groups[1].Value ?? match.Groups[2].Value ??
-                       match.Groups[3].Value ?? match.Groups[4].Value;
+            // Group.Value is never null (it is "" for a non-participating group),
+            // so a ?? chain would always stop at Groups[1] and silently drop
+            // tables captured by the JOIN/INTO/UPDATE alternatives. Pick the
+            // group that actually matched instead.
+            var table = match.Groups[1].Success ? match.Groups[1].Value
+                      : match.Groups[2].Success ? match.Groups[2].Value
+                      : match.Groups[3].Success ? match.Groups[3].Value
+                      : match.Groups[4].Value;
             if (!string.IsNullOrWhiteSpace(table) && !cteNames.Contains(table) && seenTables.Add(table))
                 ReferencedTables.Add(table);
         }
