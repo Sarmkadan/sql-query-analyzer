@@ -20,6 +20,110 @@ breakdown, data flow, design rationale, and known limitations, see
 
 ---
 
+## CommandLineArguments
+
+The `CommandLineArguments` class represents the parsed command-line arguments for the SQL Query Analyzer. It supports various analysis modes including single query analysis, batch processing, configuration overrides, and output formatting. This type serves as the primary configuration container for CLI operations and can be used programmatically for integration scenarios.
+
+### Usage Example
+
+```csharp
+// Create command-line arguments for single query analysis
+var args = new CommandLineArguments
+{
+    Query = "SELECT * FROM Users WHERE Status = 'active'",
+    OutputFormat = "json",
+    Verbose = true,
+    FilterBySeverity = "Warning",
+    DatabaseConnection = "Server=localhost;Database=TestDB;User Id=sa;Password=your_password;"
+};
+
+// Validate arguments before use
+try
+{
+    args.Validate();
+    
+    // Use with CLI application host
+    var services = new ServiceCollection();
+    services.AddLogging();
+    services.AddQueryAnalyzerServices();
+    
+    var serviceProvider = services.BuildServiceProvider();
+    var host = new CliApplicationHost(serviceProvider);
+    
+    int exitCode = await host.RunAsync(args);
+    
+    if (exitCode == 0)
+    {
+        Console.WriteLine("Analysis completed successfully!");
+    }
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Invalid arguments: {ex.Message}");
+}
+
+// Batch mode example with multiple queries
+var batchArgs = new CommandLineArguments
+{
+    BatchMode = true,
+    ThreadCount = 4,
+    OutputFormat = "csv",
+    OutputPath = "analysis_results.csv",
+    GenerateReport = true,
+    EnableCache = true,
+    CachePath = "./cache"
+};
+
+// Dry-run example (no actual analysis performed)
+var dryRunArgs = new CommandLineArguments
+{
+    Query = "SELECT * FROM LargeTable WHERE Date > '2024-01-01'",
+    DryRun = true,
+    Verbose = true,
+    ShowExecutionPlan = true
+};
+```
+
+### Public Members
+
+- `Query` - The SQL query text to analyze (string, optional)
+- `QueryFile` - Path to a file containing SQL queries to analyze (string, optional)
+- `OutputFormat` - Output format for results (json, csv, xml, html, text; default: "json")
+- `OutputPath` - File path to save analysis results (string, optional)
+- `DatabaseConnection` - Database connection string for execution plan analysis (string, optional)
+- `Verbose` - Enable verbose logging output (bool, default: false)
+- `GenerateReport` - Generate a comprehensive HTML report (bool, default: false)
+- `BatchMode` - Process multiple queries in parallel (bool, default: false)
+- `ConfigFile` - Path to configuration file for overriding default settings (string, optional)
+- `ThreadCount` - Maximum number of parallel threads for batch processing (int, default: Environment.ProcessorCount)
+- `ShowExecutionPlan` - Include execution plan in analysis output (bool, default: false)
+- `SqlServerVersion` - SQL Server version for compatibility checks (string, default: "2019")
+- `DryRun` - Validate arguments without executing analysis (bool, default: false)
+- `ExportSuggestions` - Export optimization suggestions to separate file (bool, default: false)
+- `FilterBySeverity` - Filter results by issue severity (Critical, Warning, Info; optional)
+- `MaxResults` - Maximum number of results to return (int?, optional)
+- `EnableCache` - Enable caching of analysis results (bool, default: true)
+- `CachePath` - Directory path for cache storage (string, optional)
+- `SlowLogFile` - Path to slow query log file for parsing (string, optional)
+- `SlowLogFormat` - Format of slow query log (mysql, postgresql, sqlserver, oracle; default: "mysql")
+- `ParseSlowLog` - Parse and analyze slow query log entries (bool, default: false)
+- `ShowHelp` - Display help information and exit (bool, default: false)
+- `ShowVersion` - Display version information and exit (bool, default: false)
+
+### Validation
+
+The `Validate()` method ensures required arguments are present and values are within valid ranges:
+
+```csharp
+var args = new CommandLineArguments();
+args.Validate(); // Throws ArgumentException if validation fails
+```
+
+### Properties
+
+- `ShouldRunSync` - Determines if analysis should run synchronously (true for dry-run or single query)
+- `GetEffectiveThreadCount()` - Gets the effective number of parallel tasks based on mode and available resources
+
 ## CliApplicationHost
 
 The `CliApplicationHost` class orchestrates the CLI application lifecycle, handling command-line argument parsing, service initialization, and execution flow. It serves as the main entry point for the command-line interface, coordinating between argument parsing, pipeline execution, and result formatting while separating CLI concerns from core analyzer logic.
