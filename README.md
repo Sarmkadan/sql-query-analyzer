@@ -20,6 +20,61 @@ breakdown, data flow, design rationale, and known limitations, see
 
 ---
 
+## StringExtensions
+
+The `StringExtensions` class provides utility methods for string manipulation commonly used when processing SQL queries. It includes methods for normalizing whitespace, removing comments, truncating strings, checking for SQL keywords, converting between naming conventions, detecting suspicious patterns, extracting query types, splitting statements, and calculating text positions.
+
+### Usage Example
+
+```csharp
+// Normalize SQL query whitespace
+var query = "SELECT   *\nFROM   Users\r\nWHERE   Status = 'active'";
+var normalized = query.NormalizeSqlWhitespace();
+Console.WriteLine(normalized);
+// Output: "SELECT * FROM Users WHERE Status = 'active'"
+
+// Remove SQL comments
+var commentedQuery = "SELECT * FROM Users -- Get all users\nWHERE Status = 'active' /* active users only */";
+var cleanQuery = commentedQuery.RemoveSqlComments();
+Console.WriteLine(cleanQuery);
+// Output: "SELECT * FROM Users\nWHERE Status = 'active' "
+
+// Check for SQL keywords
+var isKeyword = "SELECT".IsSqlKeyword();
+Console.WriteLine(isKeyword); // Output: true
+
+// Convert to snake_case
+var pascalCase = "UserProfileSettings".ToSnakeCase();
+Console.WriteLine(pascalCase); // Output: "user_profile_settings"
+
+// Extract query type
+var queryType = "SELECT * FROM Users".ExtractQueryType();
+Console.WriteLine(queryType); // Output: "SELECT"
+
+// Split query into statements
+var multiQuery = "SELECT * FROM Users; INSERT INTO Logs VALUES (1); UPDATE Settings SET Value = 'test'";
+var statements = multiQuery.SplitStatements();
+foreach (var statement in statements) {
+    Console.WriteLine($"Statement: {statement}");
+}
+```
+
+### Public Members
+
+- `NormalizeSqlWhitespace` - Normalizes whitespace in SQL queries by replacing multiple whitespace characters with single spaces, normalizing line breaks, and trimming the result
+- `RemoveSqlComments` - Removes both line comments (-- to end of line) and block comments (/* ... */) from SQL queries
+- `Truncate` - Truncates a string to the specified maximum length, adding an ellipsis (...) if the string is longer
+- `IsSqlKeyword` - Determines whether the specified word is a common SQL keyword
+- `CapitalizeFirst` - Capitalizes the first character of the string
+- `ToSnakeCase` - Converts a PascalCase or camelCase string to snake_case
+- `CountOccurrences` - Counts the number of occurrences of a substring within a string
+- `ContainsSuspiciousPatterns` - Checks if the query contains common SQL injection patterns
+- `ExtractQueryType` - Extracts the query type (SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, UNKNOWN) from a SQL query
+- `SplitStatements` - Splits a SQL query into individual statements using semicolon as a delimiter
+- `GetPosition` - Gets the line and column position for a given character index in the string
+
+---
+
 ## CommandLineArguments
 
 The `CommandLineArguments` class represents the parsed command-line arguments for the SQL Query Analyzer. It supports various analysis modes including single query analysis, batch processing, configuration overrides, and output formatting. This type serves as the primary configuration container for CLI operations and can be used programmatically for integration scenarios.
