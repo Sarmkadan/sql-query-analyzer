@@ -1937,6 +1937,121 @@ if (errors.Any())
 }
 ```
 
+## QueryValidator
+
+The `QueryValidator` class provides static validation methods for SQL queries and related objects including database queries, analysis results, indexes, and connection strings. It also includes security validation for detecting SQL injection patterns and utility methods for sanitizing queries for display.
+
+This validator ensures data integrity throughout the SQL Query Analyzer pipeline by validating inputs before processing and providing clear error messages for invalid data.
+
+### Usage Example
+
+```csharp
+// Validate a SQL query before analysis
+string query = "SELECT * FROM Users WHERE Status = 'active'";
+
+if (QueryValidator.IsValidQuery(query))
+{
+    Console.WriteLine("✓ Query is valid SQL");
+}
+else
+{
+    Console.WriteLine("✗ Invalid query format");
+}
+
+// Validate a database query object
+var databaseQuery = new DatabaseQuery
+{
+    QueryText = "SELECT Id, Name FROM Products WHERE CategoryId = 5",
+    ReferencedTables = new List<string> { "Products" },
+    LineCount = 1
+};
+
+try
+{
+    QueryValidator.ValidateDatabaseQuery(databaseQuery);
+    Console.WriteLine("✓ Database query is valid");
+}
+catch (Exception ex) when (ex is ValidationException or ArgumentException)
+{
+    Console.WriteLine($"✗ Validation failed: {ex.Message}");
+}
+
+// Detect SQL injection risks
+var injectionRisks = QueryValidator.DetectSQLInjectionRisks(
+    "SELECT * FROM Users WHERE Id = 1 OR '1' = '1' -- '");
+
+if (injectionRisks.Any())
+{
+    Console.WriteLine($"⚠️ Potential SQL injection detected: {string.Join(", ", injectionRisks)}");
+}
+
+// Validate an analysis result before processing
+var analysisResult = new QueryAnalysisResult
+{
+    Query = "SELECT * FROM Orders WHERE CustomerId = 5",
+    PerformanceScore = 85.5,
+    Issues = new List<PerformanceIssue>(),
+    IndexSuggestions = new List<IndexSuggestion>()
+};
+
+try
+{
+    QueryValidator.ValidateAnalysisResult(analysisResult);
+    Console.WriteLine("✓ Analysis result is valid");
+}
+catch (ValidationException ex)
+{
+    Console.WriteLine($"✗ Analysis validation failed: {ex.Message}");
+}
+
+// Sanitize query for safe display
+string sensitiveQuery = "SELECT PasswordHash FROM Users WHERE UserId = 1";
+string safeDisplay = QueryValidator.SanitizeQueryForDisplay(sensitiveQuery);
+Console.WriteLine($"Safe display: {safeDisplay}");
+
+// Validate an index suggestion
+var indexSuggestion = new IndexSuggestion
+{
+    TableName = "Orders",
+    IndexColumns = new List<string> { "CustomerId", "OrderDate" },
+    EstimatedPerformanceGain = 85.0
+};
+
+try
+{
+    QueryValidator.ValidateIndexSuggestion(indexSuggestion);
+    Console.WriteLine("✓ Index suggestion is valid");
+}
+catch (ValidationException ex)
+{
+    Console.WriteLine($"✗ Index validation failed: {ex.Message}");
+}
+
+// Validate a database connection string
+string connectionString = "Server=localhost;Database=TestDB;User Id=sa;Password=Secure123!";
+try
+{
+    QueryValidator.ValidateConnectionString(connectionString);
+    Console.WriteLine("✓ Connection string is valid");
+}
+catch (ConfigurationException ex)
+{
+    Console.WriteLine($"✗ Connection string validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `IsValidQuery(string queryText)` - Checks if a string appears to be valid SQL by verifying it starts with common SQL keywords (SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, EXEC, CALL)
+- `ValidateDatabaseQuery(DatabaseQuery query)` - Validates a DatabaseQuery object ensuring it's not null and contains valid query text
+- `ValidateAnalysisResult(QueryAnalysisResult result)` - Validates a query analysis result ensuring all required fields are present and values are within valid ranges
+- `ValidateIndex(Index index)` - Validates an Index object ensuring it has required properties like IndexName, TableName, and Columns
+- `ValidateIndexSuggestion(IndexSuggestion suggestion)` - Validates an index suggestion ensuring it has required table name, columns, and performance gain within 0-100 range
+- `DetectSQLInjectionRisks(string queryText)` - Detects common SQL injection patterns in query text and returns a list of detected risks
+- `ValidateConnectionString(string connectionString)` - Validates a database connection string ensuring it contains server and database information
+- `SanitizeQueryForDisplay(string query, int maxLength = 100)` - Sanitizes a SQL query for safe display by removing newlines, tabs, and truncating to maxLength
+
+
 ## PerformanceMetricsCalculator
 
 The `PerformanceMetricsCalculator` static class provides utility methods for calculating various performance metrics related to SQL queries and database indexes. It includes methods for calculating combined performance scores, estimating optimization potential, determining query complexity, evaluating index usage effectiveness, and predicting execution times based on historical statistics.
