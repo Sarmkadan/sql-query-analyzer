@@ -612,6 +612,105 @@ Console.WriteLine($"\nExport contains {exportData.Count} fields");
 - `GetSummary()` - Generates a summary string of the analysis results
 - `ToJsonDictionary()` - Exports the analysis result as a structured dictionary for JSON serialization
 
+## DatabaseQuery
+
+The `DatabaseQuery` class represents a parsed SQL query with comprehensive metadata, lineage information, and analysis context. It captures query structure, referenced database objects, parameters, and execution context to support query analysis, optimization recommendations, and performance monitoring. This type serves as the foundation for SQL query parsing and analysis operations throughout the analyzer.
+
+### Usage Example
+
+```csharp
+// Parse a SQL query with full context
+var query = new DatabaseQuery
+{
+    QueryText = @"SELECT u.UserId, u.Name, u.Email, o.OrderCount, o.TotalAmount " +
+                @"FROM Users u " +
+                @"JOIN (
+                    SELECT UserId, COUNT(*) as OrderCount, SUM(Amount) as TotalAmount " +
+                    @"FROM Orders WHERE OrderDate > '2024-01-01' GROUP BY UserId
+                ) o ON u.UserId = o.UserId " +
+                @"WHERE u.Status = 'active' AND u.CreatedAt > @minDate " +
+                @"ORDER BY o.TotalAmount DESC",
+    
+    DatabaseName = "ECommerceDB",
+    SchemaName = "dbo",
+    ApplicationName = "OrderProcessingService",
+    Environment = "Production",
+    CreatedBy = "data-analyst@company.com",
+    
+    // Parameters
+    Parameters = new Dictionary<string, ParameterInfo>
+    {
+        {"@minDate", new ParameterInfo { ParameterName = "@minDate", DataType = "datetime" }}
+    },
+    
+    // Variable declarations
+    VariableDeclarations = new Dictionary<string, string>
+    {
+        {"@cutoffDate", "'2024-01-01'"}
+    }
+};
+
+// Parse the query to extract metadata
+query.Parse();
+
+// Access parsed information
+Console.WriteLine($"Query ID: {query.QueryId}");
+Console.WriteLine($"Query Type: {query.QueryType}");
+Console.WriteLine($"Database: {query.DatabaseName}");
+Console.WriteLine($"Schema: {query.SchemaName}");
+Console.WriteLine($"Tables: {string.Join(", ", query.ReferencedTables)}");
+Console.WriteLine($"Columns: {string.Join(", ", query.ReferencedColumns)}");
+Console.WriteLine($"Line Count: {query.LineCount}");
+Console.WriteLine($"Statement Count: {query.StatementCount}");
+Console.WriteLine($"Complexity: {query.CyclomaticComplexity:F2}");
+Console.WriteLine($"Parameters: {query.Parameters.Count}");
+Console.WriteLine($"Variables: {query.VariableDeclarations.Count}");
+Console.WriteLine($"Join Conditions: {string.Join("; ", query.JoinConditions)}");
+Console.WriteLine($"Where Conditions: {string.Join("; ", query.WhereConditions)}");
+
+// Generate hash for deduplication
+string hash = query.GenerateHash();
+Console.WriteLine($"Query Hash: {hash}");
+
+// Get summary
+Console.WriteLine($"\n{query.GetSummary()}");
+```
+
+### Public Members
+
+- `QueryId` - Unique identifier for the query (auto-generated GUID)
+- `QueryText` - Raw SQL query text
+- `ProcedureName` - Name of the stored procedure, if applicable
+- `ModuleName` - Module name
+- `ApplicationName` - Application name
+- `DatabaseName` - Database name
+- `QueryType` - Type of query (SELECT, INSERT, UPDATE, DELETE, etc.)
+- `DatabaseType` - Database type (SqlServer, PostgreSQL, MySQL, Oracle, SQLite)
+- `SchemaName` - Schema name (default: "dbo")
+- `CreatedBy` - Creator identifier
+- `CreatedDate` - Creation timestamp (UTC)
+- `ModifiedBy` - Last modifier identifier
+- `ModifiedDate` - Last modification timestamp (UTC)
+- `ReferencedTables` - List of referenced table names
+- `ReferencedColumns` - List of referenced column names
+- `JoinConditions` - List of JOIN condition strings
+- `WhereConditions` - List of WHERE condition strings
+- `Parameters` - Dictionary of query parameters with type information
+- `VariableDeclarations` - Dictionary of variable declarations
+- `LineCount` - Number of lines in the query
+- `StatementCount` - Number of SQL statements
+- `CyclomaticComplexity` - Computed cyclomatic complexity
+- `SourceFile` - Source file path
+- `SourceLineNumber` - Source line number
+- `CallingMethod` - Calling method name
+- `Environment` - Execution environment (Development, Staging, Production)
+- `QueryHash` - SHA-256 hash for deduplication
+- `NormalizedQuery` - Normalized query text for analysis
+- `Parse()` - Parses query text and extracts metadata
+- `IsValid()` - Validates query structure
+- `GetSummary()` - Generates a summary string
+- `GenerateHash()` - Generates SHA-256 hash for deduplication
+
 ## QueryPlanExtensions
 
 The `QueryPlanExtensions` class provides extension methods for `QueryPlan` that offer advanced analysis capabilities and utility functions for query performance optimization. These methods help identify expensive operations, detect performance issues, and calculate various cost metrics to assist in query optimization efforts.
