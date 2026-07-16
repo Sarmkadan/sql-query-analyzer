@@ -406,6 +406,80 @@ The `SelfHealResult` type represents the outcome of a self-healing attempt.
 - `Error` - Error message if the self-healing failed
 
 
+## ValidationRuleEngine
+
+The `ValidationRuleEngine` class provides a centralized mechanism for validating SQL queries against a set of registered validation rules. It maintains a collection of validation rules and provides methods to register new rules, validate queries against all registered rules, and retrieve validation results including errors and warnings. The engine supports both synchronous and asynchronous validation workflows and provides detailed feedback about validation failures.
+
+### Usage Example
+
+```csharp
+// Create a new validation rule engine instance
+var validationEngine = new ValidationRuleEngine();
+
+// Register custom validation rules
+validationEngine.RegisterRule(new SelectStarRule());
+validationEngine.RegisterRule(new MissingWhereClauseRule());
+validationEngine.RegisterRule(new ImplicitJoinRule());
+
+// Validate a SQL query synchronously
+var query = "SELECT * FROM Users u, Orders o WHERE u.Id = o.UserId";
+var validationResult = validationEngine.ValidateQuery(query);
+
+Console.WriteLine($"Validation successful: {validationResult.IsValid}");
+Console.WriteLine($"Total rules registered: {validationEngine.GetRuleCount()}");
+Console.WriteLine($"Errors found: {validationResult.Errors.Count}");
+Console.WriteLine($"Warnings found: {validationResult.Warnings.Count}");
+
+if (!validationResult.IsValid)
+{
+    Console.WriteLine("\nValidation errors:");
+    foreach (var error in validationResult.Errors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+if (validationResult.Warnings.Any())
+{
+    Console.WriteLine("\nValidation warnings:");
+    foreach (var warning in validationResult.Warnings)
+    {
+        Console.WriteLine($"- {warning}");
+    }
+}
+
+// Validate a query asynchronously
+var asyncResult = await validationEngine.ValidateQueryAsync(query);
+
+// Validate using the generic Validate method with rule-specific results
+var ruleResult = validationEngine.Validate<SelectStarRule>(query);
+Console.WriteLine($"Select* rule detected: {ruleResult.IsValid}");
+Console.WriteLine($"Rule-specific errors: {ruleResult.Errors.Count}");
+
+// Check overall engine status
+Console.WriteLine($"\nEngine status: {validationEngine}");
+```
+
+### Public Members
+
+- `ValidationRuleEngine()` - Initializes a new validation rule engine with an empty rule collection
+- `ValidateQuery(string query)` - Validates a SQL query against all registered rules synchronously
+- `ValidateQueryAsync(string query, CancellationToken cancellationToken = default)` - Validates a SQL query against all registered rules asynchronously
+- `RegisterRule(IValidationRule rule)` - Registers a new validation rule with the engine
+- `GetRuleCount()` - Returns the total number of registered validation rules
+- `Validate<T>(string query)` - Validates a query using a specific rule type and returns rule-specific results
+- `RuleValidationResult Validate<T>(string query)` - Rule-specific validation result containing errors and warnings for a specific rule type
+- `RuleValidationResult Validate(string query, IValidationRule rule)` - Validates a query using a specific rule instance
+- `bool IsValid` - Indicates whether the last validation was successful
+- `List<string> Errors` - List of error messages from the last validation
+- `List<string> Warnings` - List of warning messages from the last validation
+- `bool IsValid` (in RuleValidationResult) - Indicates whether validation with this specific rule was successful
+- `List<string> Errors` (in RuleValidationResult) - List of error messages from rule-specific validation
+- `List<string> Warnings` (in RuleValidationResult) - List of warning messages from rule-specific validation
+- `override string ToString()` - Returns a string representation of the engine showing rule count and validation status
+
+---
+
 ## CommandLineArguments
 
 The `CommandLineArguments` class represents the parsed command-line arguments for the SQL Query Analyzer. It supports various analysis modes including single query analysis, batch processing, configuration overrides, and output formatting. This type serves as the primary configuration container for CLI operations and can be used programmatically for integration scenarios.
