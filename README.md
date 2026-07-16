@@ -962,6 +962,91 @@ Console.WriteLine(json);
 - `FormatSummary(this QueryAnalysisResult result)` - Gets a formatted string representation of the query analysis result with key metrics
 - `ToJsonString(this QueryAnalysisResult result, bool indented = false)` - Serializes the query analysis result to a JSON string with optional formatting
 
+## QueryAnalysisCache
+
+The `QueryAnalysisCache` class provides an in-memory cache for storing and retrieving SQL query analysis results. It improves performance by avoiding re-analysis of identical queries and implements an LRU (Least Recently Used) eviction strategy when the cache reaches capacity. The cache automatically expires entries based on a configurable time-to-live (TTL) and provides comprehensive statistics for monitoring cache performance.
+
+This cache is particularly useful in batch processing scenarios where the same queries are analyzed multiple times, reducing redundant analysis work and improving overall throughput.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+var cache = serviceProvider.GetRequiredService<QueryAnalysisCache>();
+
+// Analyze a query and cache the result
+var analyzer = serviceProvider.GetRequiredService<IQueryAnalyzerService>();
+var query = "SELECT * FROM Users WHERE Status = 'active' AND CreatedAt > '2024-01-01'";
+
+var analysisResult = await analyzer.AnalyzeQueryAsync(query);
+cache.Set(query, analysisResult);
+
+Console.WriteLine($"Analysis cached. Cache size: {cache.Count}");
+
+// Retrieve cached result
+if (cache.TryGetResult(query, out var cachedResult))
+{
+    Console.WriteLine("✓ Cache hit! Retrieved cached analysis result");
+    Console.WriteLine($"Performance Score: {cachedResult.PerformanceScore:F1}/100");
+    Console.WriteLine($"Issues Found: {cachedResult.Issues.Count}");
+}
+else
+{
+    Console.WriteLine("✗ Cache miss - query not in cache");
+}
+
+// Analyze the same query again - will use cache
+if (cache.TryGetResult(query, out var secondCachedResult))
+{
+    Console.WriteLine("✓ Second analysis used cache!");
+}
+
+// Get cache statistics for monitoring
+var stats = cache.GetStatistics();
+Console.WriteLine($"\nCache Statistics:");
+Console.WriteLine($"- Entries: {stats.TotalEntries}/{stats.MaxEntries}");
+Console.WriteLine($"- Hit Rate: {stats.HitRate:F1}%");
+Console.WriteLine($"- Average Accesses: {stats.AverageAccessCount:F1}");
+Console.WriteLine($"- Oldest Entry Age: {stats.OldestEntryAge:F0} seconds");
+
+// Invalidate specific cache entry when data changes
+cache.Invalidate(query);
+Console.WriteLine($"Cache size after invalidation: {cache.Count}");
+
+// Clear entire cache when needed
+cache.Clear();
+Console.WriteLine($"Cache cleared. Final size: {cache.Count}");
+
+// Manually remove expired entries (automatic on access)
+cache.RemoveExpiredEntries();
+```
+
+### Public Members
+
+- `TryGetResult(string query, out QueryAnalysisResult? result)` - Attempts to retrieve a cached analysis result. Returns true if found and not expired, false otherwise
+- `Set(string query, QueryAnalysisResult result)` - Stores an analysis result in cache. Automatically evicts LRU entries if cache is at capacity
+- `Invalidate(string query)` - Removes a specific cache entry
+- `Clear()` - Clears the entire cache
+- `RemoveExpiredEntries()` - Removes all expired entries from cache
+- `GetStatistics()` - Returns cache performance statistics including hit rate, entry count, and access metrics
+- `Count` - Gets the current number of entries in the cache
+
+### CacheStatistics Properties
+
+- `TotalEntries` - Current number of entries in cache
+- `MaxEntries` - Maximum cache capacity
+- `Hits` - Total number of cache hits
+- `Misses` - Total number of cache misses
+- `HitRate` - Cache hit rate percentage (0-100)
+- `AverageAccessCount` - Average number of times each entry has been accessed
+- `OldestEntryAge` - Age of the oldest entry in seconds
+- `ToString()` - Returns formatted cache statistics string
+
 ## AnalysisPipeline
 
 The `AnalysisPipeline` class represents the core middleware pipeline that coordinates the SQL query analysis workflow. It manages a chain of middleware components that process queries sequentially, separating concerns across validation, normalization, analysis, and optimization stages. The pipeline provides a flexible architecture for extending analysis capabilities while maintaining clean separation of responsibilities.
