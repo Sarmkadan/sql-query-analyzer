@@ -469,6 +469,79 @@ foreach (var suggestion in orderedSuggestions.Take(3))
 - `GetAllIndexSuggestions(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Collects all `IndexSuggestion` items embedded in the rewrite suggestions into a deduplicated, prioritized flat list
 - `GetRewriteSummary(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Gets a human-readable summary of the full rewrite suggestion set
 
+## QueryAnalysisResult
+
+The `QueryAnalysisResult` class represents the complete analysis result of a SQL query, including performance metrics, detected issues, optimization suggestions, and execution statistics. This type is the primary return value from query analysis operations and provides comprehensive information for performance monitoring, optimization recommendations, and reporting.
+
+### Usage Example
+
+```csharp
+// Analyze a SQL query using the analyzer service
+var analyzer = new QueryAnalyzerService();
+var result = await analyzer.AnalyzeAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount " +
+    "FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId " +
+    "GROUP BY u.Name HAVING COUNT(o.Id) > 5 " +
+    "ORDER BY OrderCount DESC");
+
+// Access basic analysis properties
+Console.WriteLine($"Query ID: {result.QueryId}");
+Console.WriteLine($"Query: {result.Query}");
+Console.WriteLine($"Analyzed at: {result.AnalyzedAt}");
+Console.WriteLine($"Complexity: {result.Complexity}");
+Console.WriteLine($"Performance score: {result.PerformanceScore:F1}/100");
+Console.WriteLine($"Estimated execution time: {result.EstimatedExecutionTime.TotalMilliseconds}ms");
+
+// Access performance issues and suggestions
+Console.WriteLine($"Issues found: {result.Issues.Count}");
+foreach (var issue in result.Issues.OrderByDescending(i => i.EstimatedPerformanceImpact))
+{
+    Console.WriteLine($"- [{issue.Severity}] {issue.IssueType}: {issue.Description}");
+}
+
+Console.WriteLine($"Index suggestions: {result.IndexSuggestions.Count}");
+foreach (var suggestion in result.IndexSuggestions.OrderByDescending(s => s.EstimatedPerformanceGain))
+{
+    Console.WriteLine($"- Create index on {suggestion.TableName}.{suggestion.ColumnName} ({suggestion.EstimatedPerformanceGain}% gain)");
+}
+
+// Access execution plan if available
+if (result.ExecutionPlan != null)
+{
+    Console.WriteLine($"Execution plan cost: {result.ExecutionPlan.TotalEstimatedCost}");
+}
+
+// Access statistics
+Console.WriteLine($"Rows returned: {result.Statistics.AverageRowsReturned}");
+Console.WriteLine($"Total execution time: {result.Statistics.TotalExecutionTime.TotalMilliseconds}ms");
+
+// Generate summary and export to JSON
+Console.WriteLine($"\n{result.GetSummary()}");
+
+var exportData = result.ToJsonDictionary();
+Console.WriteLine($"\nExport contains {exportData.Count} fields");
+```
+
+### Public Members
+
+- `QueryId` - Unique identifier for the analysis result (auto-generated GUID)
+- `Query` - The SQL query string being analyzed
+- `QueryText` - Alias for Query property
+- `AnalyzedAt` - Timestamp when the analysis was performed (UTC)
+- `Complexity` - Complexity level of the query (Low, Medium, High)
+- `PerformanceScore` - Performance score (0-100, where higher is better)
+- `EstimatedExecutionTime` - Estimated execution time for the query
+- `Issues` - List of performance issues detected
+- `IndexSuggestions` - List of index suggestions for optimization
+- `ExecutionPlan` - Execution plan for the query (nullable)
+- `Statistics` - Query execution statistics
+- `Metadata` - Additional metadata associated with the analysis
+- `ComplexityScore` - Computed complexity score (higher values indicate more costly queries)
+- `HasCriticalIssues` - Boolean indicating if any critical issues were found
+- `TotalOptimizationPotential` - Total estimated performance gain from all index suggestions
+- `GetSummary()` - Generates a summary string of the analysis results
+- `ToJsonDictionary()` - Exports the analysis result as a structured dictionary for JSON serialization
+
 ## QueryPlanExtensions
 
 The `QueryPlanExtensions` class provides extension methods for `QueryPlan` that offer advanced analysis capabilities and utility functions for query performance optimization. These methods help identify expensive operations, detect performance issues, and calculate various cost metrics to assist in query optimization efforts.
