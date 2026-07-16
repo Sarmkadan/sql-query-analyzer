@@ -266,6 +266,90 @@ foreach (var issue in issues)
 
 ---
 
+## AnalyzerHealthCheck
+
+The `AnalyzerHealthCheck` type performs health checks and self-healing attempts on components. It provides a `CheckHealthAsync` method to run a health check, an `AttemptSelfHealAsync` method to attempt self-healing, and exposes properties for the check time, status, cache health, rate limiter health, metrics health, database health, errors, and actions performed.
+
+### Usage Example
+
+```csharp
+// Create an AnalyzerHealthCheck instance
+var healthCheck = new AnalyzerHealthCheck("SqlQueryAnalyzer");
+
+// Check health status
+var healthResult = await healthCheck.CheckHealthAsync(CancellationToken.None);
+Console.WriteLine($"Health Status: {healthResult.Status}");
+Console.WriteLine($"Check Time: {healthResult.CheckTime}");
+
+// Attempt self-healing if needed
+if (healthResult.Status != HealthStatus.Healthy)
+{
+    var selfHealResult = await healthCheck.AttemptSelfHealAsync(CancellationToken.None);
+    Console.WriteLine($"Self-heal successful: {selfHealResult.Success}");
+    Console.WriteLine($"Actions performed: {string.Join(", ", selfHealResult.ActionsPerformed)}");
+}
+
+// Access component health details
+Console.WriteLine($"Cache Health: {healthCheck.CacheHealth.Status}");
+Console.WriteLine($"Rate Limiter Health: {healthCheck.RateLimiterHealth.Status}");
+Console.WriteLine($"Metrics Health: {healthCheck.MetricsHealth.Status}");
+Console.WriteLine($"Database Health: {healthCheck.DatabaseHealth.Status}");
+
+if (healthCheck.Errors.Any())
+{
+    Console.WriteLine("Errors detected:");
+    foreach (var error in healthCheck.Errors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+```
+
+### Public Members
+
+- `AnalyzerHealthCheck(string component)` - Initializes a new health check for the specified component
+- `CheckHealthAsync(CancellationToken cancellationToken)` - Runs a health check and returns a HealthCheckResult
+- `AttemptSelfHealAsync(CancellationToken cancellationToken)` - Attempts to self-heal any unhealthy components
+- `DateTime CheckTime` - The timestamp when the health check was performed
+- `HealthStatus Status` - Overall health status (Healthy, Degraded, Unhealthy)
+- `ComponentHealth CacheHealth` - Health status of the cache component
+- `ComponentHealth RateLimiterHealth` - Health status of the rate limiter component
+- `ComponentHealth MetricsHealth` - Health status of the metrics component
+- `ComponentHealth DatabaseHealth` - Health status of the database component
+- `List<string> Errors` - List of error messages encountered during health check
+- `override string ToString()` - Returns a formatted string representation of the health check
+
+## ComponentHealth
+
+The `ComponentHealth` type represents the health status of a specific component with a status and message.
+
+### Public Members
+
+- `Status` - The health status (Healthy, Degraded, Unhealthy)
+- `Message` - A descriptive message about the component's health
+
+## HealthCheckResult
+
+The `HealthCheckResult` type represents the result of a health check operation.
+
+### Public Members
+
+- `Status` - The overall health status
+- `CheckTime` - When the health check was performed
+- `Component` - The component being checked
+- `Errors` - List of error messages
+
+## SelfHealResult
+
+The `SelfHealResult` type represents the outcome of a self-healing attempt.
+
+### Public Members
+
+- `Success` - Whether the self-healing was successful
+- `ActionsPerformed` - List of actions performed during self-healing
+- `Error` - Error message if the self-healing failed
+
+
 ## CommandLineArguments
 
 The `CommandLineArguments` class represents the parsed command-line arguments for the SQL Query Analyzer. It supports various analysis modes including single query analysis, batch processing, configuration overrides, and output formatting. This type serves as the primary configuration container for CLI operations and can be used programmatically for integration scenarios.
