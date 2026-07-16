@@ -266,6 +266,129 @@ public class CustomEventSubscriber : IAnalysisEventSubscriber
 - Errors in individual subscribers are logged but don't prevent other subscribers from receiving the event
 - The publisher is thread-safe for concurrent subscriptions/unsubscriptions
 
+## QueryPlan
+
+The `QueryPlan` class represents a parsed SQL execution plan with comprehensive performance metrics, execution statistics, and structural information about query operations. It captures the execution plan tree, identifies expensive operations, detects table scans and missing indexes, and provides methods for plan analysis and optimization recommendations. This type is essential for understanding query performance characteristics and identifying optimization opportunities.
+
+### Usage Example
+
+```csharp
+// Parse an execution plan from SQL Server XML format
+var queryPlan = new QueryPlan
+{
+    DatabaseName = "SalesDB",
+    Format = PlanFormat.SqlServer,
+    IsEstimated = true,
+    TotalEstimatedCost = 1250.5,
+    TotalEstimatedCpuCost = 850.2,
+    TotalEstimatedIoCost = 400.3,
+    TotalEstimatedRows = 15000,
+    TotalLogicalReads = 15678,
+    TotalPhysicalReads = 45,
+    TotalElapsedTime = TimeSpan.FromMilliseconds(245)
+};
+
+// Build the execution plan tree structure
+queryPlan.RootNode = new PlanNode
+{
+    NodeType = "Index Seek",
+    ObjectName = "IX_Orders_CustomerId",
+    EstimatedCost = 850.2,
+    EstimatedRows = 15000,
+    EstimatedIoCost = 400.3,
+    EstimatedCpuCost = 450.1,
+    Depth = 0,
+    Properties = new Dictionary<string, string>
+    {
+        {"Seek Predicate", "[CustomerId] = [@CustomerId]"},
+        {"Actual Execution", "true"}
+    }
+};
+
+queryPlan.RootNode.Children.Add(new PlanNode
+{
+    NodeType = "Key Lookup",
+    ObjectName = "Orders",
+    EstimatedCost = 400.3,
+    EstimatedRows = 15000,
+    Depth = 1
+});
+
+// Initialize the plan to extract all nodes, table accesses, and joins
+queryPlan.Initialize();
+
+// Access basic plan properties
+Console.WriteLine($"Plan ID: {queryPlan.PlanId}");
+Console.WriteLine($"Database: {queryPlan.DatabaseName}");
+Console.WriteLine($"Captured: {queryPlan.CapturedAt}");
+Console.WriteLine($"Format: {queryPlan.Format}");
+Console.WriteLine($"Total Cost: {queryPlan.TotalEstimatedCost}");
+Console.WriteLine($"Estimated Rows: {queryPlan.TotalEstimatedRows}");
+Console.WriteLine($"Logical Reads: {queryPlan.TotalLogicalReads}");
+
+// Get expensive operations (top 5 by cost)
+var expensiveOps = queryPlan.GetExpensiveOperations();
+Console.WriteLine($"\nTop {expensiveOps.Count} expensive operations:");
+foreach (var op in expensiveOps)
+{
+    Console.WriteLine($"- {op.NodeType} on {op.ObjectName}: {op.EstimatedCost} cost");
+}
+
+// Detect table scans (potential performance issues)
+var tableScans = queryPlan.GetTableScans();
+if (tableScans.Any())
+{
+    Console.WriteLine($"\n⚠️ Found {tableScans.Count} table scans:");
+    foreach (var scan in tableScans)
+    {
+        Console.WriteLine($"- Table: {scan.ObjectName}");
+    }
+}
+
+// Get all index operations
+var indexOps = queryPlan.GetIndexOperations();
+Console.WriteLine($"\nIndex operations: {indexOps.Count}");
+
+// Detect missing indexes
+var missingIndexes = queryPlan.DetectMissingIndexes();
+Console.WriteLine($"\nMissing index recommendations:");
+foreach (var recommendation in missingIndexes)
+{
+    Console.WriteLine($"- {recommendation}");
+}
+
+// Get plan summary
+var summary = queryPlan.ToSummary();
+Console.WriteLine($"\nPlan summary: {summary.Count} metrics");
+```
+
+### Public Members
+
+- `PlanId` - Unique identifier for the execution plan (auto-generated GUID)
+- `DatabaseName` - Name of the database being analyzed
+- `CapturedAt` - Timestamp when the plan was captured (UTC)
+- `IsEstimated` - Whether this is an estimated plan (EXPLAIN) or actual execution plan
+- `Format` - Format of the execution plan (SqlServer, PostgreSQL, MySql, Oracle, Json)
+- `RootNode` - Root node of the execution plan tree
+- `TotalEstimatedCost` - Total estimated cost of the query
+- `TotalEstimatedIoCost` - Total estimated I/O cost
+- `TotalEstimatedCpuCost` - Total estimated CPU cost
+- `TotalEstimatedRows` - Total estimated number of rows
+- `TotalElapsedTime` - Total elapsed time
+- `TotalLogicalReads` - Total logical reads performed
+- `TotalPhysicalReads` - Total physical reads performed
+- `AllNodes` - List of all nodes in the execution plan tree
+- `TableAccesses` - List of table access operations (scans, seeks)
+- `Joins` - List of join operations in the plan
+- `Initialize()` - Initializes the plan structure and extracts all nodes, table accesses, and joins
+- `GetExpensiveOperations(int topN = 5)` - Gets the top N most expensive operations by estimated cost
+- `GetTableScans()` - Gets all table scan operations (potential performance issues)
+- `GetIndexOperations()` - Gets all index operations (seeks and scans)
+- `DetectMissingIndexes()` - Detects potential missing indexes based on table scans
+- `ToSummary()` - Exports plan summary as a dictionary for serialization
+
+
+
 ## QueryAnalysisExtensions
 
 The `QueryAnalysisExtensions` class provides extension methods for `QueryAnalysisResult` and `IEnumerable<QueryAnalysisResult>` that enable convenient analysis, filtering, and aggregation operations on SQL query analysis results. These methods help identify performance issues, calculate improvement potential, and generate actionable recommendations for query optimization.
