@@ -601,6 +601,113 @@ if (topSuggestion != null && topSuggestion.IsAutoApplicable)
 - `ToJsonDictionary()` - Exports suggestion data as a structured dictionary for JSON serialization
 
 
+## IAnalysisPlugin
+
+The `IAnalysisPlugin` interface defines the contract for extending the SQL Query Analyzer with custom analysis logic. Plugins can add new issue detection, post-processing logic, or result enhancements without modifying the core analyzer code. This extensibility mechanism enables third-party developers to contribute custom analysis rules, integrate with external systems, or add domain-specific optimizations.
+
+Plugins are managed by the `PluginManager` class, which handles plugin lifecycle (initialization, processing, shutdown), error recovery, and concurrent execution. The plugin system is designed to be non-intrusive - plugins can add issues, modify analysis results, or simply enhance results with additional metadata.
+
+### Usage Example
+
+```csharp
+// Create and register a custom plugin
+var plugin = new CustomIssueDetectionPlugin
+{
+    IsEnabled = true
+};
+
+var pluginManager = new PluginManager(logger);
+await pluginManager.RegisterPluginAsync(plugin);
+
+// Analyze a query using the plugin-enhanced analyzer
+var analyzer = new QueryAnalyzerService(pluginManager);
+var result = await analyzer.AnalyzeAsync(
+    "DELETE FROM Users WHERE Status = 'inactive' AND LastLogin < '2020-01-01'"
+);
+
+// Process through plugins
+var enhancedResult = await pluginManager.ProcessThroughPluginsAsync(result);
+
+// Check plugin statistics
+Console.WriteLine($"Plugins registered: {pluginManager.GetPluginCount()}");
+foreach (var p in pluginManager.GetPlugins())
+{
+    Console.WriteLine($"- {p.Name} v{p.Version} (Enabled: {p.IsEnabled})");
+}
+
+// Unregister plugin when done
+await pluginManager.UnregisterPluginAsync("custom-issues");
+```
+
+### Public Members
+
+- `PluginManager` - Plugin lifecycle manager that handles registration, processing, and lifecycle events
+- `RegisterPluginAsync(IAnalysisPlugin plugin)` - Registers a plugin with initialization
+- `UnregisterPluginAsync(string pluginId)` - Unregisters a plugin with shutdown
+- `ProcessThroughPluginsAsync(QueryAnalysisResult result)` - Processes analysis result through all enabled plugins
+- `GetPluginCount()` - Gets count of registered plugins
+- `GetPlugins()` - Gets all registered plugins
+- `GetPlugin(string pluginId)` - Gets plugin by ID
+- `IAnalysisPlugin` - Base plugin interface with lifecycle methods
+  - `PluginId` - Unique identifier for the plugin (string)
+  - `Name` - Human-readable plugin name (string)
+  - `Version` - Plugin version (System.Version)
+  - `IsEnabled` - Whether plugin is enabled for processing (bool)
+  - `InitializeAsync()` - Initializes the plugin
+  - `ProcessAsync(QueryAnalysisResult result)` - Processes analysis result
+  - `ShutdownAsync()` - Shuts down the plugin
+- `AnalysisPluginBase` - Convenient base class for creating plugins
+  - Provides common functionality and default implementations
+
+### Creating Custom Plugins
+
+```csharp
+public class CustomIndexRecommendationPlugin : AnalysisPluginBase
+{
+    public override string PluginId => "index-recommender";
+    public override string Name => "Index Recommendation Plugin";
+    public override Version Version => new Version(1, 0, 0);
+
+    public override async Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
+    {
+        // Add custom index recommendations based on query patterns
+        if (result.Query.Contains("WHERE CustomerId = @CustomerId", StringComparison.OrdinalIgnoreCase))
+        {
+            result.IndexSuggestions.Add(new IndexRecommendation
+            {
+                TableName = "Orders",
+                KeyColumns = new List<string> { "CustomerId" },
+                ImpactScore = 85.0,
+                Rationale = "Index on CustomerId would significantly improve this query performance"
+            });
+        }
+
+        return result;
+    }
+}
+```
+
+### Plugin Lifecycle
+
+1. **Registration**: Plugin is registered via `RegisterPluginAsync()` which calls `InitializeAsync()`
+2. **Processing**: Enabled plugins process analysis results via `ProcessAsync()`
+3. **Shutdown**: Plugin is unregistered via `UnregisterPluginAsync()` which calls `ShutdownAsync()`
+
+### Error Handling
+
+The plugin system is resilient to individual plugin failures:
+- Plugin errors are logged but don't stop other plugins from processing
+- Failed plugins can be unregistered and re-registered
+- Each plugin runs in its own try-catch block
+
+### Best Practices
+
+- Keep plugin initialization fast (avoid blocking operations)
+- Handle exceptions gracefully in plugin code
+- Use the `AnalysisPluginBase` class for common functionality
+- Set `IsEnabled = false` for plugins that should be registered but not active
+- Include version information for compatibility tracking
+
 ## QueryRewriteExtensions
 
 The `QueryRewriteExtensions` class provides extension methods for `IQueryRewriteService` and `IEnumerable<QueryRewriteSuggestion>` that enable dependency injection registration and LINQ-style convenience operations for SQL query rewrite suggestions. These methods help filter, sort, and analyze query rewrite suggestions to identify optimal optimization opportunities.
