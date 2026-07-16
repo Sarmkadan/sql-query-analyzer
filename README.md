@@ -541,6 +541,100 @@ Console.WriteLine(json);
 - `FormatSummary(this QueryAnalysisResult result)` - Gets a formatted string representation of the query analysis result with key metrics
 - `ToJsonString(this QueryAnalysisResult result, bool indented = false)` - Serializes the query analysis result to a JSON string with optional formatting
 
+## AnalysisPipeline
+
+The `AnalysisPipeline` class represents the core middleware pipeline that coordinates the SQL query analysis workflow. It manages a chain of middleware components that process queries sequentially, separating concerns across validation, normalization, analysis, and optimization stages. The pipeline provides a flexible architecture for extending analysis capabilities while maintaining clean separation of responsibilities.
+
+The pipeline automatically registers essential middleware components on initialization: `LoggingMiddleware`, `ValidationMiddleware`, `QueryNormalizationMiddleware`, `AnalysisMiddleware`, and `OptimizationMiddleware`. Additional middleware can be registered dynamically using the `RegisterMiddleware` method.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+var logger = serviceProvider.GetRequiredService<ILogger<AnalysisPipeline>>();
+var analyzer = serviceProvider.GetRequiredService<IQueryAnalyzerService>>();
+
+// Create the analysis pipeline
+var pipeline = new AnalysisPipeline(logger, analyzer);
+
+// Optionally register additional middleware
+pipeline.RegisterMiddleware(new CustomMiddleware());
+
+// Create analysis context
+var context = new AnalysisContext
+{
+    Query = "SELECT * FROM Users WHERE Status = 'active'",
+    Arguments = new AnalysisArguments
+    {
+        Verbose = true,
+        OutputFormat = "text",
+        FilterBySeverity = "Critical"
+    }
+};
+
+// Execute the pipeline
+await pipeline.ExecuteAsync(context);
+
+// Access results
+if (context.Result != null)
+{
+    Console.WriteLine($"Analysis Score: {context.Result.PerformanceScore:F1}/100");
+    Console.WriteLine($"Issues Found: {context.Result.Issues.Count}");
+    
+    foreach (var issue in context.Result.Issues.OrderByDescending(i => i.EstimatedPerformanceImpact))
+    {
+        Console.WriteLine($"- [{issue.Severity}] {issue.IssueType}: {issue.Description}");
+    }
+}
+```
+
+### Public Members
+
+- `AnalysisPipeline(ILogger<AnalysisPipeline> logger, IQueryAnalyzerService analyzer)` - Initializes the pipeline with required services and registers default middleware components
+- `RegisterMiddleware(IAnalysisMiddleware middleware)` - Registers an additional middleware component into the pipeline (middlewares execute in registration order)
+- `ExecuteAsync(AnalysisContext context)` - Executes the complete analysis pipeline for the given context, processing through all registered middleware components
+- `Clear()` - Clears all registered middlewares and resets the pipeline to its initial state (useful for testing or dynamic reconfiguration)
+- `MiddlewareCount` - Gets the count of currently registered middleware components for diagnostic purposes
+
+### Middleware Components
+
+The pipeline includes these default middleware components:
+
+- **LoggingMiddleware** - Logs query and context information at each pipeline stage for debugging and performance monitoring
+- **ValidationMiddleware** - Validates query syntax and arguments before analysis to prevent invalid queries from consuming analyzer resources
+- **QueryNormalizationMiddleware** - Normalizes query syntax without changing logic (removes unnecessary whitespace, standardizes capitalization) to improve analysis consistency
+- **AnalysisMiddleware** - Performs the actual analysis using `IQueryAnalyzerService` and populates the context result with analysis findings
+- **OptimizationMiddleware** - Applies post-analysis optimizations including severity filtering and result limiting
+
+### Pipeline Execution Flow
+
+1. **Logging** - Records query and context information
+2. **Validation** - Validates query syntax and arguments
+3. **Normalization** - Standardizes query format for consistent analysis
+4. **Analysis** - Executes the actual query analysis using the analyzer service
+5. **Optimization** - Applies final filtering and optimization to results
+
+### Error Handling
+
+The pipeline includes comprehensive error handling:
+- Each middleware executes within its own try-catch block
+- Errors are logged with detailed diagnostic information
+- Pipeline execution halts if any middleware sets `context.ShouldContinue = false`
+- Exceptions are propagated to allow calling code to handle failures appropriately
+
+### Extensibility
+
+The pipeline architecture enables easy extension:
+- Register custom middleware components via `RegisterMiddleware`
+- Middleware can modify the context or set the result property
+- Middleware can halt pipeline execution by setting `ShouldContinue = false`
+- Each middleware has access to the complete analysis context for full flexibility
+
 ## QueryRewriteSuggestion
 
 The `QueryRewriteSuggestion` class represents a recommended SQL query transformation that improves performance by addressing common anti-patterns such as SELECT *, implicit joins, non-sargable predicates, and inefficient subqueries. Each suggestion includes the original and rewritten query text, the type of transformation, estimated improvement percentage, risk assessment, and related index recommendations to make the optimization effective.
