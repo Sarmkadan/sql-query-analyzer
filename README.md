@@ -1857,6 +1857,103 @@ Console.WriteLine($"Cost distribution: {visualization.CostDistribution}");
 - `Recommendation` - Optimization recommendation for this specific node
 - `ToString()` - Returns a formatted string representation of the visualization
 
+## Index
+
+The `Index` class represents a database index with comprehensive metadata and performance statistics. It captures index properties like type (clustered/nonclustered), uniqueness, column composition, storage metrics, usage statistics, and fragmentation levels. This type is essential for index analysis, health monitoring, and generating maintenance scripts.
+
+### Usage Example
+
+```csharp
+// Create an index for the Users table
+var userIndex = new Index
+{
+    IndexName = "IX_Users_Email",
+    TableName = "Users",
+    SchemaName = "dbo",
+    IndexType = IndexType.Nonclustered,
+    IsUnique = true,
+    IsPrimaryKey = false,
+    IsDisabled = false,
+    IsFiltered = false,
+    Columns = new List<IndexColumn>
+    {
+        new IndexColumn { ColumnName = "Email", KeyOrdinal = 1 },
+        new IndexColumn { ColumnName = "CreatedAt", KeyOrdinal = 2 }
+    },
+    IncludeColumns = new List<string> { "Name", "Status" },
+    SizeInBytes = 1572864, // 1.5MB
+    PageCount = 192,
+    FileGroup = "PRIMARY",
+    FilterPredicate = null,
+    UserSeeks = 12567,
+    UserScans = 89,
+    UserLookups = 45,
+    UserUpdates = 234,
+    LastUserSeekTime = 1234567890
+};
+
+// Generate maintenance scripts
+Console.WriteLine($"Index qualified name: {userIndex.GetQualifiedName()}");
+Console.WriteLine($"Column list: {userIndex.GetColumnList()}");
+Console.WriteLine($"Include list: {userIndex.GetIncludeList()}");
+Console.WriteLine($"Usage summary: {userIndex.GetUsageSummary()}");
+Console.WriteLine($"Fragmentation status: {userIndex.GetFragmentationStatus()}");
+
+// Generate CREATE INDEX script
+string createScript = userIndex.GenerateCreateScript();
+Console.WriteLine($"CREATE script:\n{createScript}");
+
+// Generate REBUILD script for maintenance
+string rebuildScript = userIndex.GenerateRebuildScript();
+Console.WriteLine($"REBUILD script:\n{rebuildScript}");
+
+// Check index health and maintenance needs
+if (userIndex.IsFragmented)
+{
+    Console.WriteLine("⚠️ Index is fragmented and needs maintenance!");
+}
+
+if (userIndex.IsCandidateForRemoval)
+{
+    Console.WriteLine("🗑️ Index is a candidate for removal (unused and not critical)");
+}
+```
+
+### Public Members
+
+- `IndexId` - Unique identifier for the index (auto-generated GUID)
+- `IndexName` - Name of the index
+- `TableName` - Name of the table the index belongs to
+- `SchemaName` - Schema name (defaults to "dbo")
+- `IndexType` - Type of index (Clustered, Nonclustered, Unique, FullText, Spatial, Columnstore)
+- `IsUnique` - Whether the index enforces uniqueness
+- `IsPrimaryKey` - Whether this is a primary key index
+- `IsDisabled` - Whether the index is disabled
+- `IsFiltered` - Whether the index has a filter predicate
+- `Columns` - List of index key columns with ordinal positions
+- `IncludeColumns` - List of included columns for covering indexes
+- `SizeInBytes` - Size of the index in bytes
+- `PageCount` - Number of 8KB pages in the index
+- `FileGroup` - Filegroup where the index is stored
+- `FilterPredicate` - Filter condition for filtered indexes
+- `UserSeeks` - Number of user seeks performed using this index
+- `UserScans` - Number of user scans performed using this index
+- `UserLookups` - Number of user lookups performed using this index
+- `UserUpdates` - Number of updates performed on this index
+- `LastUserSeekTime` - Last timestamp when this index was used for seeks
+- `GetQualifiedName()` - Returns schema.table.index qualified name
+- `GetColumnList()` - Returns formatted column list with sort directions
+- `GetIncludeList()` - Returns INCLUDE clause for covering indexes
+- `GetUsageSummary()` - Returns formatted usage statistics
+- `GetFragmentationStatus()` - Returns human-readable fragmentation assessment
+- `GenerateCreateScript()` - Generates CREATE INDEX statement
+- `GenerateRebuildScript()` - Generates ALTER INDEX REBUILD statement
+- `GenerateReorganizeScript()` - Generates ALTER INDEX REORGANIZE statement
+- `IsUsed` - Whether the index has any usage
+- `IsCandidateForRemoval` - Whether index should be considered for removal
+- `IsFragmented` - Whether fragmentation exceeds 10%
+- `IsValid()` - Validates required properties
+
 ## QueryValidatorTests
 
 The `QueryValidatorTests` class provides unit tests for the `QueryValidator` utility, which validates SQL queries for correctness, safety, and formatting. It tests various scenarios including well-formed queries, empty strings, queries without recognized SQL keywords, null arguments, query sanitization, key generation consistency, and custom validation rules. The test suite uses xUnit and FluentAssertions for clear, expressive test assertions.
