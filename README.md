@@ -1032,6 +1032,85 @@ The plugin system is resilient to individual plugin failures:
 - Set `IsEnabled = false` for plugins that should be registered but not active
 - Include version information for compatibility tracking
 
+## IQueryAnalyzerService
+
+The `IQueryAnalyzerService` interface provides core functionality for analyzing SQL queries to detect performance anti-patterns and generate optimization recommendations. It analyzes queries for issues like SELECT *, missing WHERE/LIMIT clauses, implicit joins, non-sargable predicates, and N+1 access patterns, then calculates a performance score and provides index suggestions to improve query performance.
+
+This service is the primary entry point for programmatic SQL query analysis and integrates with other analyzer components including issue detection, index analysis, and complexity assessment.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+var analyzer = serviceProvider.GetRequiredService<IQueryAnalyzerService>();
+
+// Analyze a simple SQL query
+var result = await analyzer.AnalyzeQueryAsync(
+    "SELECT * FROM Users WHERE Status = 'active' AND CreatedAt > '2024-01-01'"
+);
+
+// Access analysis results
+Console.WriteLine($"Query: {result.Query}");
+Console.WriteLine($"Performance Score: {result.PerformanceScore:F1}/100");
+Console.WriteLine($"Complexity: {result.Complexity}");
+Console.WriteLine($"Issues Found: {result.Issues.Count}");
+Console.WriteLine($"Index Suggestions: {result.IndexSuggestions.Count}");
+
+// Check for critical issues
+if (result.HasCriticalProblems())
+{
+    Console.WriteLine("⚠️ Critical issues detected!");
+    foreach (var issue in result.Issues.Where(i => i.Severity == IssueSeverity.Critical))
+    {
+        Console.WriteLine($"- [{issue.Severity}] {issue.IssueType}: {issue.Description}");
+    }
+}
+
+// Calculate potential improvement
+var improvement = result.GetPotentialImprovement();
+Console.WriteLine($"Potential improvement: {improvement:F1} percentage points");
+
+// Analyze a more complex query with joins
+var complexResult = await analyzer.AnalyzeQueryAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount " +
+    "FROM Users u " +
+    "LEFT JOIN Orders o ON u.Id = o.UserId " +
+    "WHERE u.Status = 'active' " +
+    "GROUP BY u.Name " +
+    "HAVING COUNT(o.Id) > 5 " +
+    "ORDER BY OrderCount DESC"
+);
+
+// Access the complex analysis
+Console.WriteLine($"\nComplex query score: {complexResult.PerformanceScore:F1}/100");
+Console.WriteLine($"Complexity: {complexResult.Complexity}");
+
+// Calculate performance score directly
+var score = await analyzer.CalculatePerformanceScoreAsync(complexResult);
+Console.WriteLine($"Recalculated score: {score:F1}/100");
+
+// Determine query complexity
+var query = new DatabaseQuery
+{
+    QueryText = "SELECT * FROM LargeTable WHERE Date > '2024-01-01'"
+};
+query.Parse();
+var complexity = await analyzer.DetermineComplexityAsync(query);
+Console.WriteLine($"Query complexity: {complexity}");
+```
+
+### Public Members
+
+- `AnalyzeQueryAsync(string queryText)` - Analyzes a raw SQL query string for performance issues and returns a `QueryAnalysisResult`
+- `AnalyzeQueryAsync(DatabaseQuery query)` - Analyzes a `DatabaseQuery` object for performance issues and returns a `QueryAnalysisResult`
+- `CalculatePerformanceScoreAsync(QueryAnalysisResult analysis)` - Calculates the performance score (0-100) for a given analysis result
+- `DetermineComplexityAsync(DatabaseQuery query)` - Determines the complexity level of a given query
+
 ## QueryRewriteExtensions
 
 The `QueryRewriteExtensions` class provides extension methods for `IQueryRewriteService` and `IEnumerable<QueryRewriteSuggestion>` that enable dependency injection registration and LINQ-style convenience operations for SQL query rewrite suggestions. These methods help filter, sort, and analyze query rewrite suggestions to identify optimal optimization opportunities.
