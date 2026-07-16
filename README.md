@@ -118,6 +118,93 @@ Console.WriteLine(`Summary: {summary}`);
 
 ---
 
+## SqlPatternAnalyzer
+
+The `SqlPatternAnalyzer` class provides static utility methods for detecting common SQL performance anti-patterns and analyzing query structure. It uses source-generated regular expressions for optimal performance and frozen collections for fast keyword lookups. The analyzer can identify issues like SELECT *, missing WHERE/LIMIT clauses, implicit joins, non-sargable predicates, N+1 patterns, and provides optimization recommendations with a readability score.
+
+
+
+
+### Usage Example
+
+```csharp
+// Analyze a SQL query for common performance issues
+var query = @"
+SELECT u.*, o.OrderId, COUNT(i.ItemId) as ItemCount
+FROM Users u, Orders o, OrderItems i
+WHERE u.UserId = o.UserId
+    AND o.OrderId = i.OrderId
+    AND u.Status = 'active'
+    AND o.OrderDate > '2024-01-01'
+GROUP BY u.UserId, o.OrderId
+HAVING COUNT(i.ItemId) > 5
+ORDER BY ItemCount DESC
+";
+
+// Detect common anti-patterns
+bool hasSelectStar = SqlPatternAnalyzer.HasSelectStar(query);
+bool hasImplicitJoin = SqlPatternAnalyzer.HasImplicitJoin(query);
+bool hasMissingWhere = SqlPatternAnalyzer.HasMissingWhereClause(query);
+bool hasFunctionOnColumn = SqlPatternAnalyzer.HasFunctionOnColumn(query);
+bool hasLeadingWildcardLike = SqlPatternAnalyzer.HasLeadingWildcardLike(query);
+
+// Extract structural information
+var tables = SqlPatternAnalyzer.ExtractTablesFromQuery(query);
+var cteNames = SqlPatternAnalyzer.ExtractCteNames(query);
+var whereClause = SqlPatternAnalyzer.ExtractWhereClause(query);
+var joinConditions = SqlPatternAnalyzer.ExtractJoinConditions(query);
+
+// Count complexity metrics
+int orConditions = SqlPatternAnalyzer.CountOrConditions(query);
+int unionCount = SqlPatternAnalyzer.CountUnion(query);
+int caseStatements = SqlPatternAnalyzer.CountCaseStatements(query);
+int parentheses = SqlPatternAnalyzer.CountParentheses(query);
+bool hasAggregate = SqlPatternAnalyzer.HasAggregateFunction(query);
+bool hasWindow = SqlPatternAnalyzer.HasWindowFunction(query);
+bool hasSubquery = SqlPatternAnalyzer.HasSubquery(query);
+bool hasDistinctWithoutOrder = SqlPatternAnalyzer.HasDistinctWithoutOrder(query);
+
+// Calculate performance score
+double readabilityScore = SqlPatternAnalyzer.CalculateReadabilityScore(query);
+
+// Generate optimization recommendations
+var recommendations = SqlPatternAnalyzer.GenerateOptimizationRecommendations(query);
+
+Console.WriteLine($"Tables found: {string.Join(", ", tables)}");
+Console.WriteLine($"CTE names: {string.Join(", ", cteNames)}");
+Console.WriteLine($"Readability score: {readabilityScore:F1}/100");
+Console.WriteLine($"\nOptimization recommendations:");
+foreach (var recommendation in recommendations)
+{
+    Console.WriteLine($"- {recommendation}");
+}
+```
+
+### Public Members
+
+- `DetectNPlusOnePattern(List<string> queries)` - Detects N+1 query patterns by analyzing multiple queries for repeated table access
+- `ExtractCteNames(string query)` - Extracts CTE alias names declared in WITH clauses
+- `ExtractTablesFromQuery(string query)` - Extracts table names from query (excluding CTE aliases)
+- `HasMissingWhereClause(string query)` - Detects SELECT queries without WHERE clauses
+- `HasSelectStar(string query)` - Detects SELECT * patterns
+- `HasLeadingWildcardLike(string query)` - Detects LIKE patterns with leading wildcards (non-sargable)
+- `HasFunctionOnColumn(string query)` - Detects functions applied to columns in WHERE clauses
+- `HasImplicitJoin(string query)` - Detects implicit (comma-separated) JOINs
+- `HasDistinctWithoutOrder(string query)` - Detects DISTINCT without ORDER BY
+- `CountOrConditions(string query)` - Counts OR conditions in WHERE clauses
+- `HasSubquery(string query)` - Detects subquery patterns
+- `CountUnion(string query)` - Counts UNION operations
+- `ExtractJoinConditions(string query)` - Extracts JOIN condition strings
+- `ExtractWhereClause(string query)` - Extracts the WHERE clause text
+- `CountCaseStatements(string query)` - Counts CASE statement occurrences
+- `HasAggregateFunction(string query)` - Detects aggregate functions (SUM, COUNT, etc.)
+- `HasWindowFunction(string query)` - Detects window functions (OVER clauses)
+- `CalculateReadabilityScore(string query)` - Calculates a readability score (0-100) based on detected patterns
+- `CountParentheses(string query)` - Counts maximum parenthesis nesting depth
+- `GenerateOptimizationRecommendations(string query)` - Generates optimization recommendations based on detected patterns
+
+---
+
 ## SqlInjectionDetector
 
 The `SqlInjectionDetector` class analyzes SQL queries for potential SQL injection vulnerabilities by detecting common injection patterns such as string concatenation, dynamic WHERE clause construction, comment injection, UNION-based attacks, time-based attacks, and boolean-based blind injection. It returns a list of `SqlInjectionIssue` objects with severity assessments and location information for each detected vulnerability.
