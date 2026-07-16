@@ -1,3 +1,15 @@
+# SQL Query Analyzer
+
+Detects common SQL performance anti-patterns - SELECT *, missing WHERE/LIMIT,
+implicit (cartesian) joins, non-sargable predicates, and N+1 access - and emits
+optimization recommendations with a performance score.
+
+New here? Start with the focused **[Quickstart & Rule Catalog](docs/QUICKSTART.md)**
+for install, CLI/library usage, the full rule list, and example output. The
+sections below are the complete API reference.
+
+---
+
 ## AnalysisController
 
 The `AnalysisController` class provides REST API endpoints for SQL query analysis. It exposes three main operations: single query analysis, batch query analysis, and health checks. The controller is designed to work with ASP.NET Core or similar web frameworks and returns standardized API responses with success status, data payloads, and appropriate HTTP status codes.
