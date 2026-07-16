@@ -948,6 +948,94 @@ if (topSuggestion != null && topSuggestion.IsAutoApplicable)
 - `ToJsonDictionary()` - Exports suggestion data as a structured dictionary for JSON serialization
 
 
+
+## AnalysisBuilder
+
+The `AnalysisBuilder` class provides a fluent interface for constructing `AnalysisRequestDto` objects with comprehensive validation and configuration options. It enables programmatic construction of analysis requests while ensuring query validity, size constraints, and proper configuration of analysis features like index suggestions, fragmentation analysis, and execution plan analysis.
+
+This builder pattern simplifies the creation of complex analysis requests and provides immediate feedback through validation errors, making it ideal for integration scenarios where queries need to be constructed dynamically.
+
+### Usage Example
+
+```csharp
+// Create a comprehensive analysis request for a production application query
+var analysisRequest = new AnalysisBuilder()
+    .WithQuery(@"SELECT u.UserId, u.Name, u.Email, o.OrderCount, o.TotalAmount " +
+               @"FROM Users u " +
+               @"JOIN ( " +
+               @"  SELECT UserId, COUNT(*) as OrderCount, SUM(Amount) as TotalAmount " +
+               @"  FROM Orders WHERE OrderDate > '2024-01-01' GROUP BY UserId " +
+               @") ON u.UserId = o.UserId " +
+               @"WHERE u.Status = 'active' AND u.CreatedAt > @minDate " +
+               @"ORDER BY o.TotalAmount DESC")
+    .WithApplication("OrderProcessingService")
+    .WithProcedure("GetTopCustomersByRevenue")
+    .WithModule("CustomerReports")
+    .IncludeIndexSuggestions()
+    .AnalyzeFragmentation()
+    .AnalyzePlan()
+    .Build();
+
+// Access the built request
+Console.WriteLine($"Analyzing query for application: {analysisRequest.ApplicationName}");
+Console.WriteLine($"Performance features enabled: IndexSuggestions={analysisRequest.IncludeIndexSuggestions}, " +
+                $".FragmentationAnalysis={analysisRequest.AnalyzeFragmentation}, " +
+                $".PlanAnalysis={analysisRequest.AnalyzePlan}");
+
+// Quick analysis without expensive features
+var quickAnalysis = new AnalysisBuilder()
+    .WithQuery("SELECT * FROM Users WHERE Status = 'active'")
+    .Quick()
+    .Build();
+
+// Full analysis with all features enabled
+var fullAnalysis = new AnalysisBuilder()
+    .WithQuery("SELECT * FROM LargeTable WHERE Date > '2024-01-01'")
+    .Full()
+    .Build();
+
+// Handle validation errors gracefully
+var builder = new AnalysisBuilder();
+var invalidRequest = builder
+    .WithQuery("")  // Empty query
+    .WithApplication(new string('a', 1000))  // Long application name
+    .Build();  // Throws InvalidOperationException
+
+// Check validity before building
+var safeBuilder = new AnalysisBuilder()
+    .WithQuery("SELECT * FROM Products WHERE CategoryId = 5");
+
+if (safeBuilder.IsValid())
+{
+    var validRequest = safeBuilder.Build();
+    Console.WriteLine("Query is valid and ready for analysis");
+}
+else
+{
+    foreach (var error in safeBuilder.GetErrors())
+    {
+        Console.WriteLine($"Validation error: {error}");
+    }
+}
+```
+
+### Public Members
+
+- `WithQuery(string queryText)` - Sets the SQL query text to analyze (validates for null/empty and size constraints up to 1MB)
+- `WithApplication(string applicationName)` - Sets the application context name
+- `WithProcedure(string procedureName)` - Sets the stored procedure context name
+- `WithModule(string moduleName)` - Sets the module context name
+- `IncludeIndexSuggestions(bool include = true)` - Enables or disables index suggestions in analysis results
+- `AnalyzeFragmentation(bool analyze = true)` - Enables or disables fragmentation analysis
+- `AnalyzePlan(bool analyze = true)` - Enables or disables execution plan analysis
+- `WithExecutionPlan(string planXml)` - Sets execution plan XML for plan-based analysis
+- `Build()` - Validates and returns the constructed `AnalysisRequestDto` (throws on validation errors)
+- `Reset()` - Resets the builder to its initial state
+- `Full()` - Configures all analysis features enabled (index suggestions, fragmentation, execution plan)
+- `Quick()` - Configures minimal analysis features (no expensive operations)
+- `GetErrors()` - Returns list of validation errors encountered during construction
+- `IsValid()` - Checks if the builder is in a valid state without throwing exceptions
+
 ## AnalysisRequestDto
 
 The `AnalysisRequestDto` class represents the request payload for analyzing a SQL query. It contains the query text to analyze along with optional metadata about the application, procedure, and module context. This DTO also controls which analysis features are enabled (index suggestions, fragmentation analysis, execution plan analysis) and can optionally include an execution plan XML for plan-based analysis.
