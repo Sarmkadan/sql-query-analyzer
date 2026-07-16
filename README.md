@@ -601,6 +601,60 @@ if (topSuggestion != null && topSuggestion.IsAutoApplicable)
 - `ToJsonDictionary()` - Exports suggestion data as a structured dictionary for JSON serialization
 
 
+## AnalysisRequestDto
+
+The `AnalysisRequestDto` class represents the request payload for analyzing a SQL query. It contains the query text to analyze along with optional metadata about the application, procedure, and module context. This DTO also controls which analysis features are enabled (index suggestions, fragmentation analysis, execution plan analysis) and can optionally include an execution plan XML for plan-based analysis.
+
+### Usage Example
+
+```csharp
+// Create an analysis request for a query with full context
+var request = new AnalysisRequestDto
+{
+    QueryText = @"SELECT u.UserId, u.Name, u.Email, o.OrderCount, o.TotalAmount " +
+                @"FROM Users u " +
+                @"JOIN ( " +
+                @"  SELECT UserId, COUNT(*) as OrderCount, SUM(Amount) as TotalAmount " +
+                @"  FROM Orders WHERE OrderDate > '2024-01-01' GROUP BY UserId " +
+                @") ON u.UserId = o.UserId " +
+                @"WHERE u.Status = 'active' AND u.CreatedAt > @minDate " +
+                @"ORDER BY o.TotalAmount DESC",
+
+    ApplicationName = "OrderProcessingService",
+    ProcedureName = "GetTopCustomersByRevenue",
+    ModuleName = "CustomerReports",
+    IncludeIndexSuggestions = true,
+    AnalyzeFragmentation = true,
+    AnalyzePlan = true,
+    ExecutionPlanXml = "<ShowPlanXML>...</ShowPlanXML>"
+};
+
+// Analyze the query using the controller
+var controller = new AnalysisController(analyzerService, logger);
+var response = await controller.AnalyzeAsync(request);
+
+if (response.Success)
+{
+    Console.WriteLine($"Analysis completed: Score={response.PerformanceScore:F1}, Issues={response.IssueCount}");
+    Console.WriteLine(response.Summary);
+}
+else
+{
+    Console.WriteLine($"Error: {response.Message}");
+}
+```
+
+### Public Members
+
+- `QueryText` - The SQL query text to analyze (required)
+- `ApplicationName` - Name of the application using the query (optional)
+- `ProcedureName` - Name of the stored procedure, if applicable (optional)
+- `ModuleName` - Module name (optional)
+- `IncludeIndexSuggestions` - Whether to include index suggestions in results (default: `true`)
+- `AnalyzeFragmentation` - Whether to analyze index fragmentation (default: `true`)
+- `AnalyzePlan` - Whether to analyze execution plan (default: `false`)
+- `ExecutionPlanXml` - Execution plan XML for plan-based analysis (optional)
+
 ## IAnalysisPlugin
 
 The `IAnalysisPlugin` interface defines the contract for extending the SQL Query Analyzer with custom analysis logic. Plugins can add new issue detection, post-processing logic, or result enhancements without modifying the core analyzer code. This extensibility mechanism enables third-party developers to contribute custom analysis rules, integrate with external systems, or add domain-specific optimizations.
