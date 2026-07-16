@@ -1522,6 +1522,129 @@ Console.WriteLine($"\nMetrics reset. New count: {metricCollector.Count}");
 
 ---
 
+## StatisticsAggregator
+
+The `StatisticsAggregator` class aggregates statistics from multiple SQL query analysis results, computing trends, patterns, and summary metrics across batches. It's useful for understanding performance patterns over time, identifying common issues, and calculating optimization potential across a collection of queries.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+var analyzer = serviceProvider.GetRequiredService<IQueryAnalyzerService>();
+var aggregator = new StatisticsAggregator();
+
+// Analyze multiple queries and aggregate results
+var queries = new string[]
+{
+    "SELECT * FROM Users WHERE Status = 'active'",
+    "SELECT COUNT(*) FROM Orders WHERE OrderDate > '2024-01-01'",
+    "SELECT u.Name, COUNT(o.Id) as OrderCount FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId WHERE u.Status = 'active' GROUP BY u.Name",
+    "UPDATE Products SET Price = Price * 1.1 WHERE CategoryId = 5",
+    "SELECT * FROM LargeTable WHERE Date > '2024-01-01'"
+};
+
+// Analyze each query and add to aggregator
+foreach (var query in queries)
+{
+    var result = await analyzer.AnalyzeQueryAsync(query);
+    aggregator.AddResult(result);
+}
+
+// Access aggregated statistics
+Console.WriteLine($"Total queries analyzed: {aggregator.Count}");
+Console.WriteLine($"Average performance score: {aggregator.GetAveragePerformanceScore():F1}/100");
+Console.WriteLine($"Min performance score: {aggregator.GetMinPerformanceScore():F1}");
+Console.WriteLine($"Max performance score: {aggregator.GetMaxPerformanceScore():F1}");
+Console.WriteLine($"Performance score standard deviation: {aggregator.GetPerformanceScoreStdDev():F2}");
+Console.WriteLine($"95th percentile score: {aggregator.GetPercentile(95):F1}");
+
+// Get issue statistics by severity
+var issueCounts = aggregator.GetIssueCounts();
+Console.WriteLine($"\nIssue breakdown:");
+Console.WriteLine($"  Critical: {issueCounts[Constants.IssueSeverity.Critical]}");
+Console.WriteLine($"  Warning: {issueCounts[Constants.IssueSeverity.Warning]}");
+Console.WriteLine($"  Info: {issueCounts[Constants.IssueSeverity.Info]}");
+
+// Get issue frequency by type
+var issueTypes = aggregator.GetIssueTypeFrequency();
+Console.WriteLine($"\nTop 5 issue types:");
+foreach (var kvp in issueTypes.Take(5))
+{
+    Console.WriteLine($"  - {kvp.Key}: {kvp.Value} occurrences");
+}
+
+// Get most common optimization opportunities
+var optimizations = aggregator.GetMostCommonOptimizations();
+Console.WriteLine($"\nTop 3 optimization opportunities:");
+foreach (var kvp in optimizations.Take(3))
+{
+    Console.WriteLine($"  - Create index on {kvp.Key}: {kvp.Value} queries");
+}
+
+// Get total optimization potential
+Console.WriteLine($"\nTotal optimization potential: {aggregator.GetTotalOptimizationPotential():F1}%");
+
+// Get complexity distribution
+var complexityDist = aggregator.GetComplexityDistribution();
+Console.WriteLine($"\nComplexity distribution:");
+foreach (var kvp in complexityDist)
+{
+    Console.WriteLine($"  - {kvp.Key}: {kvp.Value} queries");
+}
+
+// Get comprehensive summary
+var summary = aggregator.GetSummary();
+Console.WriteLine($"\n{summary}");
+
+// Clear aggregator for reuse
+aggregator.Clear();
+Console.WriteLine($"\nAggregator cleared. Count: {aggregator.Count}");
+```
+
+### Public Members
+
+- `AddResult(QueryAnalysisResult result)` - Adds a single analysis result to the aggregation set
+- `AddResults(IEnumerable<QueryAnalysisResult> results)` - Adds multiple analysis results at once
+- `GetAveragePerformanceScore()` - Calculates average performance score across all results
+- `GetMinPerformanceScore()` - Calculates minimum performance score found
+- `GetMaxPerformanceScore()` - Calculates maximum performance score found
+- `GetPerformanceScoreStdDev()` - Calculates standard deviation of performance scores
+- `GetPercentile(double percentile)` - Returns percentile of performance scores (e.g., 95 for 95th percentile)
+- `GetIssueCounts()` - Counts issues by severity (Critical, Warning, Info) across all results
+- `GetIssueTypeFrequency()` - Counts issues by type across all results, ordered by frequency
+- `GetMostCommonOptimizations()` - Identifies most common optimization opportunities (index suggestions) ranked by frequency
+- `GetTotalOptimizationPotential()` - Calculates total optimization potential across all queries
+- `GetComplexityDistribution()` - Returns distribution of query complexity levels (Simple, Low, Medium, High, VeryHigh, Extreme)
+- `GetSummary()` - Generates comprehensive summary report of aggregated statistics
+- `Clear()` - Clears all aggregated results
+- `Count` - Gets the count of aggregated results (int)
+
+### AggregationSummary Class
+
+The `AggregationSummary` class provides a structured summary of aggregated statistics with the following properties:
+
+- `TotalQueries` - Total number of queries analyzed
+- `AverageScore` - Average performance score across all queries
+- `MinScore` - Minimum performance score found
+- `MaxScore` - Maximum performance score found
+- `ScoreStdDev` - Standard deviation of performance scores
+- `TotalIssuesFound` - Total number of issues across all queries
+- `CriticalIssues` - Number of critical severity issues
+- `WarningIssues` - Number of warning severity issues
+- `InfoIssues` - Number of info severity issues
+- `TotalOptimizationPotential` - Total optimization potential percentage
+- `QueriesWithIssues` - Number of queries with at least one issue
+- `AverageBugDensity` - Average number of issues per query
+
+The `ToString()` method provides a formatted summary string for easy display.
+
+---
+
 ## QueryRewriteSuggestion
 
 The `QueryRewriteSuggestion` class represents a recommended SQL query transformation that improves performance by addressing common anti-patterns such as SELECT *, implicit joins, non-sargable predicates, and inefficient subqueries. Each suggestion includes the original and rewritten query text, the type of transformation, estimated improvement percentage, risk assessment, and related index recommendations to make the optimization effective.
