@@ -1554,6 +1554,65 @@ foreach (var kvp in metrics)
 - `ParseMySqlPlanAsync(string jsonPlan)` - Parses MySQL EXPLAIN output (both JSON and tabular formats) and returns a `QueryPlan` object
 - `ExtractPlanMetricsAsync(QueryPlan plan)` - Extracts comprehensive performance metrics from a parsed `QueryPlan` as a dictionary for analysis and reporting
 
+## ISlowQueryLogParser
+
+The `ISlowQueryLogParser` interface defines methods for parsing vendor-specific slow-query logs into structured entries. It supports MySQL, PostgreSQL, and SQL Server log formats, enabling performance analysis of slow queries across different database systems. The interface provides asynchronous parsing methods for each database vendor and a utility method to extract the top N slowest queries from parsed entries.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+var logParser = serviceProvider.GetRequiredService<ISlowQueryLogParser>();
+
+// Parse MySQL slow query log
+var mysqlLogContent = "# Time: 2024-01-15T10:30:45.123456Z\n" +
+                     "# User@Host: app_user[10.0.1.45]\n" +
+                     "# Query_time: 0.456  Lock_time: 0.123  Rows_sent: 123  Rows_examined: 15678\n" +
+                     "SELECT * FROM Orders WHERE CustomerId = 123 AND Status = 'active';\n";
+
+var mysqlEntries = await logParser.ParseMySqlLogAsync(mysqlLogContent);
+Console.WriteLine($"Parsed {mysqlEntries.Count} MySQL slow queries");
+
+// Parse PostgreSQL slow query log
+var postgreSqlLogContent = "2024-01-15 10:30:45.123 UTC [12345] app_user@ecommerce LOG:  duration: 456.789 ms  statement: SELECT * FROM Users WHERE Status = 'active';\n";
+
+var postgreSqlEntries = await logParser.ParsePostgreSqlLogAsync(postgreSqlLogContent);
+Console.WriteLine($"Parsed {postgreSqlEntries.Count} PostgreSQL slow queries");
+
+// Parse SQL Server slow query log (tab-separated format)
+var sqlServerLogContent = "StartTime\tEndTime\tSQLText\tDuration\tRows\tExecutionCount\n" +
+                         "2024-01-15 10:30:45\t2024-01-15 10:30:45.456\tSELECT * FROM Products WHERE CategoryId = 5\t456\t150\t10\n";
+
+var sqlServerEntries = await logParser.ParseSqlServerLogAsync(sqlServerLogContent);
+Console.WriteLine($"Parsed {sqlServerEntries.Count} SQL Server slow queries");
+
+// Get the top 5 slowest queries across all databases
+var allEntries = mysqlEntries.Concat(postgreSqlEntries).Concat(sqlServerEntries).ToList();
+var topSlowQueries = logParser.GetTopSlowQueries(allEntries, topN: 5);
+
+Console.WriteLine($"Top {topSlowQueries.Count} slowest queries:");
+foreach (var entry in topSlowQueries)
+{
+    Console.WriteLine($"- {entry.Duration.TotalMilliseconds}ms: {entry.QueryText} (Database: {entry.LogSource})");
+}
+
+// Filter by minimum duration (e.g., only queries slower than 1 second)
+var slowQueries = logParser.GetTopSlowQueries(allEntries, topN: 10, minDuration: TimeSpan.FromSeconds(1));
+Console.WriteLine($"Found {slowQueries.Count} queries slower than 1 second");
+```
+
+### Public Members
+
+- `ParseMySqlLogAsync(string logContent)` - Parses MySQL slow-query log content and returns a list of `SlowQueryEntry` objects
+- `ParsePostgreSqlLogAsync(string logContent)` - Parses PostgreSQL slow-query log content and returns a list of `SlowQueryEntry` objects
+- `ParseSqlServerLogAsync(string logContent)` - Parses SQL Server tab-separated slow-query export and returns a list of `SlowQueryEntry` objects
+- `GetTopSlowQueries(List<SlowQueryEntry> entries, int topN = 10, TimeSpan? minDuration = null)` - Filters and sorts slow query entries, returning the top N slowest queries optionally filtered by minimum duration
+
 ## QueryPlanExtensions
 
 The `QueryPlanExtensions` class provides extension methods for `QueryPlan` that offer advanced analysis capabilities and utility functions for query performance optimization. These methods help identify expensive operations, detect performance issues, and calculate various cost metrics to assist in query optimization efforts.
