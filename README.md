@@ -969,6 +969,98 @@ Console.WriteLine($"Batch: {batchStats.TotalQueries} queries, avg score: {batchS
 - `BatchStatistics.QueriesWithIssues` - Number of queries with at least one issue
 
 
+## BatchAnalysisProcessor
+
+The `BatchAnalysisProcessor` class enables parallel analysis of multiple SQL queries in batch mode. It processes queries concurrently with configurable thread count, provides progress tracking through callbacks, handles errors gracefully by returning failed analysis results, and maintains input order in the output. This utility is ideal for analyzing large sets of queries from arrays, files, or delimited batch files (like SQL Server's GO delimiter).
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+var analyzerService = serviceProvider.GetRequiredService<IQueryAnalyzerService>();
+var logger = serviceProvider.GetRequiredService<ILogger<BatchAnalysisProcessor>>();
+
+// Create batch processor with custom thread count
+var batchProcessor = new BatchAnalysisProcessor(
+    analyzerService, 
+    logger, 
+    maxParallel: Environment.ProcessorCount * 2
+);
+
+// Analyze a batch of queries in parallel
+var queries = new string[]
+{
+    "SELECT * FROM Users WHERE Status = 'active'",
+    "SELECT COUNT(*) FROM Orders WHERE OrderDate > '2024-01-01'",
+    "SELECT u.Name, COUNT(o.Id) as OrderCount FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId WHERE u.Status = 'active' GROUP BY u.Name",
+    "UPDATE Products SET Price = Price * 1.1 WHERE CategoryId = 5"
+};
+
+// Track progress
+int lastPercent = 0;
+var results = await batchProcessor.AnalyzeBatchAsync(
+    queries,
+    onProgress: progress => 
+    {
+        if (progress.PercentComplete >= lastPercent + 10)
+        {
+            Console.WriteLine($"Progress: {progress.PercentComplete:F1}% complete");
+            lastPercent = (int)progress.PercentComplete;
+        }
+    }
+);
+
+// Access results in input order
+Console.WriteLine($"\nBatch analysis complete!");
+Console.WriteLine($"Total queries: {results.Count}");
+Console.WriteLine($"Average performance score: {results.Average(r => r.PerformanceScore):F1}/100");
+
+foreach (var result in results)
+{
+    Console.WriteLine($"\nQuery: {result.Query.Substring(0, Math.Min(50, result.Query.Length))}...");
+    Console.WriteLine($"Score: {result.PerformanceScore:F1}/100");
+    Console.WriteLine($"Issues: {result.Issues.Count}");
+    Console.WriteLine($"Index suggestions: {result.IndexSuggestions.Count}");
+}
+
+// Analyze queries from a file (one query per line)
+var fileResults = await batchProcessor.AnalyzeBatchFromFileAsync(
+    "queries.txt",
+    onProgress: progress => Console.WriteLine(progress.ToString())
+);
+
+// Analyze queries from a delimited file (SQL Server GO batches)
+var delimitedResults = await batchProcessor.AnalyzeBatchFromDelimitedFileAsync(
+    "batch_queries.sql",
+    delimiter: "GO"
+);
+
+// Adjust parallelism dynamically
+batchProcessor.SetMaxParallel(8);
+
+// Check progress properties
+Console.WriteLine($"Processed: {batchProcessor.ProcessedCount}/{batchProcessor.TotalCount} ({batchProcessor.PercentComplete:F1}%)");
+Console.WriteLine($"Current query index: {batchProcessor.CurrentQueryIndex}");
+```
+
+### Public Members
+
+- `BatchAnalysisProcessor(IQueryAnalyzerService analyzerService, ILogger<BatchAnalysisProcessor> logger, int maxParallel = 0)` - Initializes the batch processor with analyzer service, logger, and optional max parallel threads
+- `AnalyzeBatchAsync(string[] queries, Action<BatchProgress>? onProgress = null, CancellationToken cancellationToken = default)` - Analyzes a batch of queries in parallel and returns results in input order
+- `AnalyzeBatchFromFileAsync(string filePath, Action<BatchProgress>? onProgress = null, CancellationToken cancellationToken = default)` - Analyzes queries from a file (one per line)
+- `AnalyzeBatchFromDelimitedFileAsync(string filePath, string delimiter = "GO", Action<BatchProgress>? onProgress = null, CancellationToken cancellationToken = default)` - Analyzes queries from a delimited file (e.g., SQL Server GO batches)
+- `SetMaxParallel(int maxParallel)` - Sets maximum parallelism level for batch operations
+- `ProcessedCount` - Gets the number of queries processed so far (int)
+- `TotalCount` - Gets the total number of queries to process (int)
+- `CurrentQueryIndex` - Gets the current query index being processed (int)
+- `PercentComplete` - Gets the current completion percentage (0-100, double)
+- `ToString()` - Returns a string representation of the processor state
+
 ## QueryAnalysisResultExtensions
 
 The `QueryAnalysisResultExtensions` class provides extension methods for `QueryAnalysisResult` that enhance functionality with convenient operations for analyzing query performance results. These methods help determine query severity levels, check performance thresholds, create deep copies of results, format summaries, and serialize results to JSON for logging or API responses.
