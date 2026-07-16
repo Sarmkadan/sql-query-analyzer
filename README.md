@@ -75,6 +75,49 @@ foreach (var statement in statements) {
 
 ---
 
+## ReportGenerator
+
+The `ReportGenerator` class provides static methods for generating various report formats from SQL query analysis results. It supports text, CSV, JSON, and HTML output formats, making it easy to integrate analysis results into different reporting workflows and tools. Reports include performance metrics, detected issues, and index suggestions with severity assessments and optimization potential.
+
+### Usage Example
+
+```csharp
+// Analyze a SQL query using the analyzer service
+var analyzer = new QueryAnalyzerService();
+var result = await analyzer.AnalyzeQueryAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId WHERE u.Status = 'active' GROUP BY u.Name HAVING COUNT(o.Id) > 5 ORDER BY OrderCount DESC");
+
+// Generate a formatted text report for console output
+var textReport = ReportGenerator.GenerateTextReport(result);
+Console.WriteLine(textReport);
+
+// Generate a CSV report for data export
+var csvReport = ReportGenerator.GenerateCsvReport(new List<QueryAnalysisResult> { result });
+File.WriteAllText("analysis_results.csv", csvReport);
+
+// Generate a JSON report for API responses
+var jsonReport = ReportGenerator.GenerateJsonReport(result);
+Console.WriteLine(jsonReport);
+
+// Generate an HTML report for web dashboard integration
+var htmlReport = ReportGenerator.GenerateHtmlReport(result);
+File.WriteAllText("report.html", htmlReport);
+
+// Generate an executive summary for quick insights
+var summary = ReportGenerator.GenerateSummary(result);
+Console.WriteLine($"Summary: {summary}");
+```
+
+### Public Members
+
+- `GenerateTextReport(QueryAnalysisResult analysis)` - Generates a formatted text report with performance metrics, issues, and index suggestions
+- `GenerateCsvReport(List<QueryAnalysisResult> analyses)` - Generates a CSV report for batch analysis results with columns for key metrics
+- `GenerateJsonReport(QueryAnalysisResult analysis)` - Generates a JSON report suitable for API responses and programmatic consumption
+- `GenerateHtmlReport(QueryAnalysisResult analysis)` - Generates a styled HTML report for web dashboard integration
+- `GenerateSummary(QueryAnalysisResult analysis)` - Generates a concise one-line executive summary with key metrics
+
+---
+
 ## CommandLineArguments
 
 The `CommandLineArguments` class represents the parsed command-line arguments for the SQL Query Analyzer. It supports various analysis modes including single query analysis, batch processing, configuration overrides, and output formatting. This type serves as the primary configuration container for CLI operations and can be used programmatically for integration scenarios.
