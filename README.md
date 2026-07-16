@@ -1188,6 +1188,88 @@ Console.WriteLine($"Query complexity: {complexity}");
 - `CalculatePerformanceScoreAsync(QueryAnalysisResult analysis)` - Calculates the performance score (0-100) for a given analysis result
 - `DetermineComplexityAsync(DatabaseQuery query)` - Determines the complexity level of a given query
 
+## IIndexRecommendationEngine
+
+The `IIndexRecommendationEngine` interface analyzes SQL queries to detect WHERE, JOIN, ORDER BY, and GROUP BY clauses, then generates index recommendations to improve query performance. It identifies columns used in predicates and sorting operations, creates single-column and composite index suggestions with impact scores, ranks recommendations by potential performance gain, and detects redundant or overlapping index candidates.
+
+This engine is used by the query analyzer to provide actionable optimization suggestions for database performance tuning, helping developers identify which indexes would most benefit their SQL queries.
+
+### Usage Example
+
+```csharp
+// Setup dependency injection with required services
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddQueryAnalyzerServices();
+
+var serviceProvider = services.BuildServiceProvider();
+var recommendationEngine = serviceProvider.GetRequiredService<IIndexRecommendationEngine>();
+
+// Analyze a SQL query and get index recommendations
+var queryText = @"SELECT u.Name, COUNT(o.Id) as OrderCount " +
+                "FROM Users u " +
+                "LEFT JOIN Orders o ON u.Id = o.UserId " +
+                "WHERE u.Status = 'active' AND u.CreatedAt > '2024-01-01' " +
+                "GROUP BY u.Name " +
+                "ORDER BY OrderCount DESC";
+
+var recommendations = await recommendationEngine.RecommendAsync(queryText);
+
+// Access the generated recommendations
+Console.WriteLine($"Found {recommendations.Count} index recommendations:");
+foreach (var recommendation in recommendations)
+{
+    Console.WriteLine($"- [{recommendation.Source}] {recommendation.TableName}({string.Join(", ", recommendation.KeyColumns)}) " +
+                     $"Impact: {recommendation.ImpactScore}%");
+    Console.WriteLine($"  Rationale: {recommendation.Rationale}");
+    Console.WriteLine($"  Script: {recommendation.Script}");
+}
+
+// Rank recommendations by impact score
+var rankedRecommendations = recommendationEngine.RankRecommendations(recommendations);
+Console.WriteLine($"\nTop 3 recommendations by impact:");
+foreach (var recommendation in rankedRecommendations.Take(3))
+{
+    Console.WriteLine($"- {recommendation.TableName}.{string.Join(", ", recommendation.KeyColumns)} " +
+                     $"({recommendation.ImpactScore}% impact)");
+}
+
+// Detect redundant index recommendations
+var redundancies = recommendationEngine.DetectRedundancies(recommendations);
+if (redundancies.Any())
+{
+    Console.WriteLine($"\n⚠️ Found {redundancies.Count} redundant index recommendation(s):");
+    foreach (var redundancy in redundancies)
+    {
+        Console.WriteLine($"- {redundancy}");
+    }
+}
+```
+
+### Public Members
+
+- `RecommendAsync(string queryText)` - Analyzes a SQL query and returns a list of `IndexRecommendation` objects with potential indexes to create
+- `RankRecommendations(List<IndexRecommendation> recommendations)` - Scores and ranks recommendations by impact score, prioritizing composite indexes and higher-impact suggestions
+- `DetectRedundancies(List<IndexRecommendation> recommendations)` - Identifies overlapping index candidates that can be consolidated into single composite indexes
+
+### IndexRecommendation Properties
+
+- `TableName` - Name of the table to create an index on
+- `KeyColumns` - List of columns to include in the index
+- `ImpactScore` - Estimated performance improvement percentage (0-100)
+- `Source` - What part of the query triggered this recommendation (WHERE clause, JOIN condition, ORDER BY, GROUP BY, or Composite)
+- `Rationale` - Explanation for why this index is recommended
+- `Script` - Generated CREATE INDEX SQL script
+- `GenerateScript()` - Method to generate the CREATE INDEX script from the recommendation
+
+### RecommendationSource Values
+
+- `WhereClause` - Index recommended based on WHERE clause predicates
+- `JoinCondition` - Index recommended based on JOIN conditions
+- `OrderBy` - Index recommended based on ORDER BY clauses
+- `GroupBy` - Index recommended based on GROUP BY clauses
+- `Composite` - Composite index combining multiple predicates and sort keys
+
 ## QueryRewriteExtensions
 
 The `QueryRewriteExtensions` class provides extension methods for `IQueryRewriteService` and `IEnumerable<QueryRewriteSuggestion>` that enable dependency injection registration and LINQ-style convenience operations for SQL query rewrite suggestions. These methods help filter, sort, and analyze query rewrite suggestions to identify optimal optimization opportunities.
