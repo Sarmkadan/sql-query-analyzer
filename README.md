@@ -1754,6 +1754,79 @@ catch (ArgumentException ex)
 
 ---
 
+## DatabaseConnectionValidatorExtensionsValidation
+
+The `DatabaseConnectionValidatorExtensionsValidation` class provides validation helpers for `DatabaseConnectionValidatorExtensions` extension methods. It validates parameters passed to extension methods to ensure they meet requirements before execution, preventing runtime errors and providing clear validation feedback. The class includes methods for both validation with error collection and exception-throwing validation.
+
+### Usage Example
+
+```csharp
+// Create a database connection validator
+var validator = new DatabaseConnectionValidator(
+    server: "localhost",
+    database: "TestDB",
+    username: "admin",
+    password: "securePassword123",
+    timeoutSeconds: 30);
+
+// Validate connection string and database type before calling extension methods
+var connectionString = "Server=localhost;Database=TestDB;User Id=admin;Password=securePassword123;";
+var validationErrors = validator.Validate(connectionString, databaseType: "SqlServer");
+
+if (validationErrors.Count > 0)
+{
+    Console.WriteLine("Validation errors found:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("Parameters are valid - safe to call extension methods!");
+}
+
+// Check if parameters are valid
+bool isValid = validator.IsValid(connectionString, databaseType: "PostgreSQL");
+Console.WriteLine($"Is valid: {isValid}");
+
+// Validate a connection validation result
+var testResult = await validator.TestConnectionAsync();
+var resultErrors = validator.Validate(testResult);
+
+if (resultErrors.Count > 0)
+{
+    Console.WriteLine("Result validation errors found:");
+    foreach (var error in resultErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+    validator.EnsureValid(connectionString);
+    validator.EnsureValid(testResult);
+    Console.WriteLine("All validations passed - no exceptions thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `Validate(this DatabaseConnectionValidator?, string?, string?)` - Validates parameters for `ValidateConnectionAsync` and `ValidateFormatOnlyAsync` extension methods and returns a list of validation problems; empty if valid
+- `Validate(this DatabaseConnectionValidator?, ConnectionValidationResult?)` - Validates parameters for `GetErrorSummary`, `IsConnectionSuccessful`, `GetFormattedVersion`, and `GenerateDiagnosticReport` extension methods and returns a list of validation problems; empty if valid
+- `IsValid(this DatabaseConnectionValidator?, string?, string?)` - Determines whether parameters for extension methods are valid (returns true if validation list is empty)
+- `IsValid(this DatabaseConnectionValidator?, ConnectionValidationResult?)` - Determines whether validation result parameters are valid (returns true if validation list is empty)
+- `EnsureValid(this DatabaseConnectionValidator?, string?, string?)` - Ensures parameters for extension methods are valid, throwing an exception if validation fails
+- `EnsureValid(this DatabaseConnectionValidator?, ConnectionValidationResult?)` - Ensures validation result parameters are valid, throwing an exception if validation fails
+
+---
+
 ## DatabaseConnectionValidatorJsonExtensions
 
 The `DatabaseConnectionValidatorJsonExtensions` class provides static extension methods for serializing and deserializing `DatabaseConnectionValidator`, `ConnectionValidationResult`, and `ConnectionTestResult` objects to and from JSON. These methods support both compact and indented JSON formatting, with proper null handling and error checking for robust serialization workflows.
