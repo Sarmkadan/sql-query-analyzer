@@ -6,7 +6,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using SqlQueryAnalyzer.Constants;
 using SqlQueryAnalyzer.Models;
@@ -37,7 +36,7 @@ public static class QueryAnalysisResultValidation
         }
         else if (value.QueryId.Length > 100)
         {
-            errors.Add("QueryId exceeds maximum length of 100 characters.");
+            errors.Add($"QueryId '{value.QueryId}' exceeds maximum length of 100 characters.");
         }
 
         // Validate Query
@@ -47,7 +46,7 @@ public static class QueryAnalysisResultValidation
         }
         else if (value.Query.Length > 100000)
         {
-            errors.Add("Query exceeds maximum length of 100,000 characters.");
+            errors.Add($"Query exceeds maximum length of 100,000 characters (actual: {value.Query.Length:N0}).");
         }
 
         // Validate AnalyzedAt
@@ -57,17 +56,17 @@ public static class QueryAnalysisResultValidation
         }
         else if (value.AnalyzedAt > DateTime.UtcNow.AddMinutes(5))
         {
-            errors.Add("AnalyzedAt cannot be in the future.");
+            errors.Add($"AnalyzedAt '{value.AnalyzedAt:O}' cannot be in the future.");
         }
         else if (value.AnalyzedAt < new DateTime(2020, 1, 1))
         {
-            errors.Add("AnalyzedAt cannot be before year 2020.");
+            errors.Add($"AnalyzedAt '{value.AnalyzedAt:O}' cannot be before year 2020.");
         }
 
         // Validate Complexity
         if (!Enum.IsDefined(typeof(QueryComplexity), value.Complexity))
         {
-            errors.Add("Complexity has an invalid enum value.");
+            errors.Add($"Complexity '{value.Complexity}' has an invalid enum value.");
         }
 
         // Validate PerformanceScore
@@ -77,25 +76,25 @@ public static class QueryAnalysisResultValidation
         }
         else if (double.IsInfinity(value.PerformanceScore))
         {
-            errors.Add("PerformanceScore cannot be infinite.");
+            errors.Add($"PerformanceScore '{value.PerformanceScore}' cannot be infinite.");
         }
         else if (value.PerformanceScore < 0 || value.PerformanceScore > 100)
         {
-            errors.Add("PerformanceScore must be between 0 and 100 inclusive.");
+            errors.Add($"PerformanceScore '{value.PerformanceScore:F2}' must be between 0 and 100 inclusive.");
         }
 
         // Validate EstimatedExecutionTime
         if (value.EstimatedExecutionTime < TimeSpan.Zero)
         {
-            errors.Add("EstimatedExecutionTime cannot be negative.");
+            errors.Add($"EstimatedExecutionTime '{value.EstimatedExecutionTime}' cannot be negative.");
         }
         else if (value.EstimatedExecutionTime.TotalMilliseconds > 86400000) // 24 hours
         {
-            errors.Add("EstimatedExecutionTime cannot exceed 24 hours.");
+            errors.Add($"EstimatedExecutionTime '{value.EstimatedExecutionTime}' cannot exceed 24 hours.");
         }
 
         // Validate Issues
-        if (value.Issues == null)
+        if (value.Issues is null)
         {
             errors.Add("Issues collection cannot be null.");
         }
@@ -103,7 +102,7 @@ public static class QueryAnalysisResultValidation
         {
             foreach (var issue in value.Issues)
             {
-                if (issue == null)
+                if (issue is null)
                 {
                     errors.Add("Issues collection contains a null element.");
                     break;
@@ -112,7 +111,7 @@ public static class QueryAnalysisResultValidation
         }
 
         // Validate IndexSuggestions
-        if (value.IndexSuggestions == null)
+        if (value.IndexSuggestions is null)
         {
             errors.Add("IndexSuggestions collection cannot be null.");
         }
@@ -120,7 +119,7 @@ public static class QueryAnalysisResultValidation
         {
             foreach (var suggestion in value.IndexSuggestions)
             {
-                if (suggestion == null)
+                if (suggestion is null)
                 {
                     errors.Add("IndexSuggestions collection contains a null element.");
                     break;
@@ -131,7 +130,7 @@ public static class QueryAnalysisResultValidation
         // ExecutionPlan validation is now handled by QueryPlanValidation class
 
         // Validate Statistics
-        if (value.Statistics == null)
+        if (value.Statistics is null)
         {
             errors.Add("Statistics cannot be null.");
         }
@@ -145,13 +144,13 @@ public static class QueryAnalysisResultValidation
         }
 
         // Validate Metadata
-        if (value.Metadata == null)
+        if (value.Metadata is null)
         {
             errors.Add("Metadata dictionary cannot be null.");
         }
         else if (value.Metadata.Count > 1000)
         {
-            errors.Add("Metadata dictionary exceeds maximum size of 1000 entries.");
+            errors.Add($"Metadata dictionary contains {value.Metadata.Count} entries, exceeding maximum size of 1000.");
         }
         else
         {
@@ -164,7 +163,7 @@ public static class QueryAnalysisResultValidation
                 }
                 else if (key.Length > 255)
                 {
-                    errors.Add("Metadata key exceeds maximum length of 255 characters.");
+                    errors.Add($"Metadata key '{key}' exceeds maximum length of 255 characters (actual: {key.Length}).");
                     break;
                 }
             }
@@ -174,10 +173,36 @@ public static class QueryAnalysisResultValidation
         var computedScore = value.ComplexityScore;
         if (computedScore < 0 || computedScore > 100)
         {
-            errors.Add("Computed ComplexityScore is out of valid range (0-100).");
+            errors.Add($"Computed ComplexityScore '{computedScore}' is out of valid range (0-100).");
         }
 
         return errors.AsReadOnly();
     }
 
+    /// <summary>
+    /// Determines whether a <see cref="QueryAnalysisResult"/> instance is valid.
+    /// </summary>
+    /// <param name="value">The analysis result to check.</param>
+    /// <returns>True if the instance is valid; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    public static bool IsValid(this QueryAnalysisResult value) =>
+        value.Validate().Count == 0;
+
+    /// <summary>
+    /// Ensures that a <see cref="QueryAnalysisResult"/> instance is valid, throwing an <see cref="ArgumentException"/> if it is not.
+    /// </summary>
+    /// <param name="value">The analysis result to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when the instance is invalid, containing a list of problems.</exception>
+    public static void EnsureValid(this QueryAnalysisResult value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        var problems = value.Validate();
+        if (problems.Count > 0)
+        {
+            throw new ArgumentException(
+                $"QueryAnalysisResult validation failed:{Environment.NewLine}{string.Join(Environment.NewLine, problems)}");
+        }
+    }
 }
