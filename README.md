@@ -1632,5 +1632,43 @@ var headers = new Dictionary<string, string>
     ["Authorization"] = "Bearer token123",
     ["X-Custom-Header"] = "custom-value"
 };
+
 int addedHeaders = webhookService.AddCustomHeaders("Slack Alerts", headers);
 ```
+
+---
+
+## AnalysisPipelineExtensions
+
+The `AnalysisPipelineExtensions` class provides a set of fluent extension methods for the `AnalysisPipeline` class. These methods allow developers to easily configure a query analysis pipeline by adding various middleware—such as logging, validation, normalization, analysis, and optimization—and to execute the pipeline on single or batch SQL queries.
+
+### Usage Example
+
+```csharp
+// Assuming you have an IQueryAnalyzerService registered in your DI container
+var pipeline = new AnalysisPipeline();
+
+// Use fluent API to configure standard middleware
+pipeline.UseAllStandardMiddleware(myAnalyzerService);
+
+// Analyze a single query
+var result = await pipeline.AnalyzeQueryAsync("SELECT * FROM Users WHERE Status = 'active'");
+
+// Check middleware count or clear for reconfiguration
+Console.WriteLine($"Pipeline middleware count: {pipeline.GetMiddlewareCount()}");
+pipeline.ClearMiddleware();
+```
+
+### Public Members
+
+- `UseLogging` - Adds logging middleware to the pipeline
+- `UseValidation` - Adds validation middleware to the pipeline
+- `UseNormalization` - Adds query normalization middleware to the pipeline
+- `UseAnalysis` - Adds analysis middleware to the pipeline
+- `UseOptimization` - Adds optimization middleware to the pipeline
+- `AnalyzeQueryAsync` - Executes the pipeline with the given query string and returns the analysis result
+- `AnalyzeQueriesAsync` - Executes the pipeline with the given queries in parallel and returns all results
+- `ClearMiddleware` - Clears all middleware from the pipeline, allowing it to be reconfigured
+- `UseAllStandardMiddleware` - Adds all standard middleware (logging, validation, normalization, analysis, optimization) to the pipeline in the recommended order
+- `GetMiddlewareCount` - Gets the count of middleware registered in the pipeline
+- `ExecuteWithSuccessCheckAsync` - Executes the pipeline with the given context and returns whether execution completed successfully
