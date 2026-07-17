@@ -1482,6 +1482,64 @@ Console.WriteLine($"Export suggestions: {exportSuggestions}");
 ---
 
 
+## AnalysisBuilderValidation
+
+The `AnalysisBuilderValidation` class provides validation extension methods for the `AnalysisBuilder` type used to construct SQL query analysis requests. It offers methods for validating builder instances, checking validity, and ensuring validation with detailed error messages covering query text, application name, procedure name, module name, and execution plan XML requirements.
+
+### Usage Example
+
+```csharp
+// Create an AnalysisBuilder instance
+var builder = new AnalysisBuilder()
+    .WithQueryText("SELECT u.Name, COUNT(o.Id) as OrderCount FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId WHERE u.Status = 'active' GROUP BY u.Name")
+    .WithApplicationName("OrderProcessingSystem")
+    .WithProcedureName("GetCustomerOrders")
+    .WithModuleName("CustomerModule")
+    .WithExecutionPlanXml("<ShowPlanXML>...</ShowPlanXML>");
+
+// Validate the builder instance
+var validationErrors = builder.Validate();
+if (validationErrors.Count > 0)
+{
+    Console.WriteLine("Validation errors found:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("AnalysisBuilder is valid!");
+}
+
+// Check if the builder is valid
+bool isValid = builder.IsValid();
+Console.WriteLine($"Is valid: {isValid}");
+
+// Build the analysis request
+var analysisRequest = builder.Build();
+Console.WriteLine($"Analysis request created for: {analysisRequest.ApplicationName}");
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+    builder.EnsureValid();
+    Console.WriteLine("AnalysisBuilder validation passed - no exception thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `Validate(this AnalysisBuilder value)` - Validates the AnalysisBuilder instance and returns a list of human-readable validation problems; empty if valid
+- `IsValid(this AnalysisBuilder value)` - Determines whether the AnalysisBuilder instance is valid
+- `EnsureValid(this AnalysisBuilder value)` - Validates the AnalysisBuilder instance and throws an ArgumentException if it is not valid, containing all validation errors
+
+---
+
 ## AnalysisControllerValidation
 
 The `AnalysisControllerValidation` class provides validation helpers for API request/response types used by the AnalysisController. It offers extension methods for validating `AnalysisRequest`, `BatchAnalysisRequest`, `ApiResponse<T>`, and `HealthStatus` instances, returning lists of validation errors or boolean validation status. Methods are provided for both validation with error collection and exception-throwing validation.
