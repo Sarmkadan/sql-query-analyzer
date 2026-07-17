@@ -11,9 +11,9 @@ namespace SqlQueryAnalyzer.Models;
 public static class IndexJsonExtensions
 {
     /// <summary>
-    /// Configured JSON serializer options with camelCase naming policy.
+    /// Gets the configured JSON serializer options with camelCase naming policy.
     /// </summary>
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    private static JsonSerializerOptions JsonOptions { get; } = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
@@ -39,9 +39,10 @@ public static class IndexJsonExtensions
     /// Deserializes a JSON string to an <see cref="Index"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized index, or null if input is empty.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null or empty.</exception>
-    /// <exception cref="JsonException">Thrown when JSON is invalid.</exception>
+    /// <returns>The deserialized index, or null if the JSON is invalid or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized to an <see cref="Index"/>.</exception>
     public static Index? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -49,11 +50,13 @@ public static class IndexJsonExtensions
     }
 
     /// <summary>
-    /// Tries to deserialize a JSON string to an <see cref="Index"/> instance.
+    /// Attempts to deserialize a JSON string to an <see cref="Index"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">The deserialized index, or null on failure.</param>
-    /// <returns>True if deserialization succeeded, false otherwise.</returns>
+    /// <param name="value">When this method returns, contains the deserialized index if successful, or null if failed.</param>
+    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
     public static bool TryFromJson(string json, out Index? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
