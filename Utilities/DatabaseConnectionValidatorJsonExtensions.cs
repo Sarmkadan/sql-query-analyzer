@@ -36,8 +36,7 @@ public static class DatabaseConnectionValidatorJsonExtensions
         ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions)
-            { WriteIndented = true }
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
             : _jsonOptions;
 
         return JsonSerializer.Serialize(value, options);
@@ -45,59 +44,30 @@ public static class DatabaseConnectionValidatorJsonExtensions
 
     /// <summary>
     /// Deserializes a JSON string to a <see cref="DatabaseConnectionValidator"/> instance.
-    /// Note: DatabaseConnectionValidator is not designed for deserialization as it requires
-    /// an <see cref="ILogger{DatabaseConnectionValidator}"/> dependency. This method returns null.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>Always null, as DatabaseConnectionValidator cannot be deserialized.</returns>
+    /// <returns>Always null, as <see cref="DatabaseConnectionValidator"/> requires an <see cref="ILogger{DatabaseConnectionValidator}"/> dependency and cannot be deserialized.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is malformed.</exception>
     public static DatabaseConnectionValidator? FromJson(string json)
     {
-        if (string.IsNullOrEmpty(json))
-        {
-            return null;
-        }
-
-        // DatabaseConnectionValidator requires ILogger dependency, so deserialization
-        // is not supported. Return null to indicate this limitation.
-        try
-        {
-            JsonSerializer.Deserialize<DatabaseConnectionValidator>(json, _jsonOptions);
-        }
-        catch (JsonException)
-        {
-            // Ignore and return null
-        }
+        ArgumentNullException.ThrowIfNull(json);
 
         return null;
     }
 
     /// <summary>
     /// Attempts to deserialize a JSON string to a <see cref="DatabaseConnectionValidator"/> instance.
-    /// Note: DatabaseConnectionValidator is not designed for deserialization as it requires
-    /// an <see cref="ILogger{DatabaseConnectionValidator}"/> dependency.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives null, as deserialization is not supported.</param>
-    /// <returns>Always false, as DatabaseConnectionValidator cannot be deserialized.</returns>
+    /// <param name="value">Receives null, as <see cref="DatabaseConnectionValidator"/> cannot be deserialized.</param>
+    /// <returns>Always false, as <see cref="DatabaseConnectionValidator"/> requires an <see cref="ILogger{DatabaseConnectionValidator}"/> dependency.</returns>
     public static bool TryFromJson(string json, out DatabaseConnectionValidator? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         value = null;
-
-        if (string.IsNullOrEmpty(json))
-        {
-            return false;
-        }
-
-        try
-        {
-            value = JsonSerializer.Deserialize<DatabaseConnectionValidator>(json, _jsonOptions);
-            return false; // Always false since we can't actually create a valid instance
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
+        return false;
     }
 
     /// <summary>
@@ -112,8 +82,7 @@ public static class DatabaseConnectionValidatorJsonExtensions
         ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions)
-            { WriteIndented = true }
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
             : _jsonOptions;
 
         return JsonSerializer.Serialize(value, options);
@@ -124,15 +93,15 @@ public static class DatabaseConnectionValidatorJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized <see cref="ConnectionValidationResult"/> instance, or null if the JSON is null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
     public static ConnectionValidationResult? FromJsonToConnectionValidationResult(string json)
     {
-        if (string.IsNullOrEmpty(json))
-        {
-            return null;
-        }
+        ArgumentNullException.ThrowIfNull(json);
 
-        return JsonSerializer.Deserialize<ConnectionValidationResult>(json, _jsonOptions);
+        return string.IsNullOrEmpty(json)
+            ? null
+            : JsonSerializer.Deserialize<ConnectionValidationResult>(json, _jsonOptions);
     }
 
     /// <summary>
@@ -173,8 +142,7 @@ public static class DatabaseConnectionValidatorJsonExtensions
         ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions)
-            { WriteIndented = true }
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
             : _jsonOptions;
 
         return JsonSerializer.Serialize(value, options);
@@ -185,15 +153,15 @@ public static class DatabaseConnectionValidatorJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized <see cref="ConnectionTestResult"/> instance, or null if the JSON is null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
     public static ConnectionTestResult? FromJsonToConnectionTestResult(string json)
     {
-        if (string.IsNullOrEmpty(json))
-        {
-            return null;
-        }
+        ArgumentNullException.ThrowIfNull(json);
 
-        return JsonSerializer.Deserialize<ConnectionTestResult>(json, _jsonOptions);
+        return string.IsNullOrEmpty(json)
+            ? null
+            : JsonSerializer.Deserialize<ConnectionTestResult>(json, _jsonOptions);
     }
 
     /// <summary>
