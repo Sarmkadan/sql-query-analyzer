@@ -5,7 +5,7 @@ using System.Text.Json.Serialization.Metadata;
 namespace SqlQueryAnalyzer.API;
 
 /// <summary>
-/// Provides JSON serialization and deserialization extensions for <see cref="AnalysisControllerExtensions"/>.
+/// Provides JSON serialization and deserialization extensions for analysis controller responses.
 /// </summary>
 public static class AnalysisControllerExtensionsJsonExtensions
 {
@@ -17,13 +17,14 @@ public static class AnalysisControllerExtensionsJsonExtensions
     };
 
     /// <summary>
-    /// Serializes a type marker representing <see cref="AnalysisControllerExtensions"/> to a JSON string.
+    /// Serializes the specified value to a JSON string using camelCase property naming.
     /// </summary>
-    /// <param name="value">This parameter is ignored; only the type context is used.</param>
+    /// <typeparam name="T">The type of the value to serialize.</typeparam>
+    /// <param name="value">The value to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
-    /// <returns>A JSON string representation of the analysis controller extensions type marker.</returns>
+    /// <returns>A JSON string representation of the value.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
-    public static string ToJson(this object value, bool indented = false)
+    public static string ToJson<T>(this T value, bool indented = false) where T : notnull
     {
         ArgumentNullException.ThrowIfNull(value);
 
@@ -31,41 +32,43 @@ public static class AnalysisControllerExtensionsJsonExtensions
             ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
             : _jsonOptions;
 
-        return JsonSerializer.Serialize(new { Type = nameof(AnalysisControllerExtensions) }, options);
+        return JsonSerializer.Serialize(value, options);
     }
 
     /// <summary>
-    /// Deserializes a JSON string into a type marker representing <see cref="AnalysisControllerExtensions"/>.
+    /// Deserializes a JSON string into an instance of the specified type.
     /// </summary>
+    /// <typeparam name="T">The type to deserialize into.</typeparam>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>A type marker object, or <see langword="null"/> if the JSON is empty.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
-    /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
-    public static object? FromJson(string json)
+    /// <returns>An instance of type <typeparamref name="T"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized into type <typeparamref name="T"/>.</exception>
+    public static T FromJson<T>(this string json) where T : notnull
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
 
-        return JsonSerializer.Deserialize<object>(json, _jsonOptions);
+        return JsonSerializer.Deserialize<T>(json, _jsonOptions) ?? throw new JsonException("Deserialization returned null for non-nullable type.");
     }
 
     /// <summary>
-    /// Attempts to deserialize a JSON string into a type marker representing <see cref="AnalysisControllerExtensions"/>.
+    /// Attempts to deserialize a JSON string into an instance of the specified type.
     /// </summary>
+    /// <typeparam name="T">The type to deserialize into.</typeparam>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized type marker if successful.</param>
+    /// <param name="value">Receives the deserialized value if successful.</param>
     /// <returns><see langword="true"/> if deserialization succeeds; otherwise, <see langword="false"/>.</returns>
-    public static bool TryFromJson(string json, out object? value)
+    public static bool TryFromJson<T>(this string json, out T? value) where T : notnull
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
 
         try
         {
-            value = JsonSerializer.Deserialize<object>(json, _jsonOptions);
-            return true;
+            value = JsonSerializer.Deserialize<T>(json, _jsonOptions);
+            return value is not null;
         }
         catch (JsonException)
         {
-            value = null;
+            value = default;
             return false;
         }
     }
