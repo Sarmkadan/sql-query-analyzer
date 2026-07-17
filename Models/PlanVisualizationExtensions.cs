@@ -95,7 +95,7 @@ public static class PlanVisualizationExtensions
     public static int GetMaxBottleneckDepth(this PlanVisualization plan)
     {
         ArgumentNullException.ThrowIfNull(plan);
-        return plan.Bottlenecks.Max(b => b.Depth);
+        return plan.Bottlenecks.Count > 0 ? plan.Bottlenecks.Max(b => b.Depth) : 0;
     }
 
     /// <summary>
@@ -120,11 +120,11 @@ public static class PlanVisualizationExtensions
     /// <param name="nodeType">The node type to filter by (e.g., "Table Scan", "Hash Match").</param>
     /// <returns>An enumerable of matching bottlenecks.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="plan"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="nodeType"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="nodeType"/> is null or empty.</exception>
     public static IEnumerable<BottleneckAnnotation> GetBottlenecksByNodeType(this PlanVisualization plan, string nodeType)
     {
         ArgumentNullException.ThrowIfNull(plan);
-        ArgumentNullException.ThrowIfNull(nodeType);
+        ArgumentException.ThrowIfNullOrEmpty(nodeType);
 
         return plan.Bottlenecks.Where(b => string.Equals(b.NodeType, nodeType, StringComparison.Ordinal));
     }
@@ -179,7 +179,7 @@ public static class PlanVisualizationExtensions
         if (plan.Bottlenecks.Count > 0)
         {
             var highest = plan.GetHighestCostBottleneck();
-            sb.AppendLine($"Highest Cost Bottleneck: [{highest?.NodeType}] {highest?.ObjectName} (Cost: {highest?.EstimatedCost:F4}, Depth: {highest?.Depth})");
+            sb.AppendLine($"Highest Cost Bottleneck: [{highest?.NodeType ?? "N/A"}] {highest?.ObjectName ?? "N/A"} (Cost: {highest?.EstimatedCost:F4}, Depth: {highest?.Depth ?? 0})");
         }
 
         return sb.ToString();
