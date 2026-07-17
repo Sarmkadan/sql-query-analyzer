@@ -2105,3 +2105,92 @@ pipeline.ClearMiddleware();
 - `UseAllStandardMiddleware` - Adds all standard middleware (logging, validation, normalization, analysis, optimization) to the pipeline in the recommended order
 - `GetMiddlewareCount` - Gets the count of middleware registered in the pipeline
 - `ExecuteWithSuccessCheckAsync` - Executes the pipeline with the given context and returns whether execution completed successfully
+
+---
+
+## ErrorHandlingMiddlewareExtensionsValidation
+
+The `ErrorHandlingMiddlewareExtensionsValidation` class provides validation helpers for the `ErrorHandlingMiddlewareExtensions` extension methods. It offers methods to validate parameters for error handling operations including error report creation, retry execution, and cache fallback execution. The validation ensures that error messages and contexts are properly provided, operations are not null, and retry counts are valid, returning validation errors or boolean validation status. The `EnsureValid` methods throw exceptions when validation fails.
+
+### Usage Example
+
+```csharp
+// Validate error report creation parameters
+var errorMessage = "Database connection failed";
+var context = "Query analysis pipeline";
+
+// Validate and check results
+var validationErrors = ErrorHandlingMiddlewareExtensionsValidation.Validate(errorMessage, context);
+if (validationErrors.Count > 0)
+{
+    Console.WriteLine("Validation errors found:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("Error report parameters are valid!");
+}
+
+// Check validity with IsValid extension
+bool isValid = ErrorHandlingMiddlewareExtensionsValidation.IsValid(errorMessage, context);
+Console.WriteLine($"Is valid: {isValid}");
+
+// Validate retry operation parameters
+Func<Task<string>> operation = async () => await DatabaseService.ConnectAsync();
+var retryErrors = ErrorHandlingMiddlewareExtensionsValidation.Validate(
+    operation, 
+    "Database connection", 
+    maxRetries: 3);
+Console.WriteLine($"Retry validation errors: {retryErrors.Count}");
+
+// Validate cache fallback operation parameters
+Func<Task<int>> cacheOperation = async () => await GetCachedResultAsync();
+Func<int> cachedResultProvider = () => GetDefaultResult();
+var cacheErrors = ErrorHandlingMiddlewareExtensionsValidation.Validate(
+    cacheOperation, 
+    cachedResultProvider, 
+    "Cache fallback operation");
+Console.WriteLine($"Cache validation errors: {cacheErrors.Count}");
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+    ErrorHandlingMiddlewareExtensionsValidation.EnsureValid(errorMessage, context);
+    ErrorHandlingMiddlewareExtensionsValidation.EnsureValid(
+        operation, 
+        "Database connection", 
+        maxRetries: 3);
+    ErrorHandlingMiddlewareExtensionsValidation.EnsureValid(
+        cacheOperation, 
+        cachedResultProvider, 
+        "Cache fallback operation");
+    Console.WriteLine("All validations passed - no exceptions thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+
+// Validate exception formatting parameters
+var exception = new SqlQueryAnalyzerException("Query failed", "SELECT * FROM Users");
+var formatErrors = ErrorHandlingMiddlewareExtensionsValidation.Validate(exception, "Query execution");
+Console.WriteLine($"Format validation errors: {formatErrors.Count}");
+```
+
+### Public Members
+
+- `Validate(string? errorMessage, string? context)` - Validates parameters for `ErrorHandlingMiddlewareExtensions.CreateErrorReport()` and returns a list of validation problems; empty if valid
+- `IsValid(string? errorMessage, string? context)` - Checks if the specified error report parameters are valid
+- `EnsureValid(string? errorMessage, string? context)` - Ensures the specified error report parameters are valid, throwing an exception if not
+- `Validate<T>(Func<Task<T>>? operation, string? operationName, int maxRetries)` - Validates parameters for `ErrorHandlingMiddlewareExtensions.ExecuteWithRetryAsync<T>()` and returns a list of validation problems; empty if valid
+- `IsValid<T>(Func<Task<T>>? operation, string? operationName, int maxRetries)` - Checks if the specified retry operation parameters are valid
+- `EnsureValid<T>(Func<Task<T>>? operation, string? operationName, int maxRetries)` - Ensures the specified retry operation parameters are valid, throwing an exception if not
+- `Validate(Exception? ex, string? context)` - Validates parameters for `ErrorHandlingMiddlewareExtensions.FormatErrorMessage()` and returns a list of validation problems; empty if valid
+- `IsValid(Exception? ex, string? context)` - Checks if the specified exception formatting parameters are valid
+- `EnsureValid(Exception? ex, string? context)` - Ensures the specified exception formatting parameters are valid, throwing an exception if not
+- `Validate<T>(Func<Task<T>>? operation, Func<T>? cachedResultProvider, string? operationName)` - Validates parameters for `ErrorHandlingMiddlewareExtensions.ExecuteWithCacheFallbackAsync<T>()` and returns a list of validation problems; empty if valid
+- `IsValid<T>(Func<Task<T>>? operation, Func<T>? cachedResultProvider, string? operationName)` - Checks if the specified cache fallback operation parameters are valid
+- `EnsureValid<T>(Func<Task<T>>? operation, Func<T>? cachedResultProvider, string? operationName)` - Ensures the specified cache fallback operation parameters are valid, throwing an exception if not
