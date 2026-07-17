@@ -6,7 +6,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
 using SqlQueryAnalyzer.Models;
 
 namespace SqlQueryAnalyzer.Extensions;
@@ -22,7 +24,7 @@ public static class QueryAnalysisExtensionsValidation
     /// Checks for null references, empty collections, and out-of-range values.
     /// </summary>
     /// <param name="value">The query analysis result to validate.</param>
-    /// <returns>List of validation problems; empty if valid.</returns>
+    /// <returns>List of validation problems; empty if all validations pass.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate(this QueryAnalysisResult value)
     {
@@ -31,7 +33,7 @@ public static class QueryAnalysisExtensionsValidation
         var problems = new List<string>();
 
         // Validate performance score range (0-100)
-        if (value.PerformanceScore < 0 || value.PerformanceScore > 100)
+        if (value.PerformanceScore is < 0 or > 100)
         {
             problems.Add(
                 string.Format(
@@ -51,17 +53,13 @@ public static class QueryAnalysisExtensionsValidation
         }
 
         // Validate issues collection
-        if (value.Issues == null)
+        if (value.Issues is null)
         {
             problems.Add("Issues collection is null.");
         }
-        else if (value.Issues.Count == 0)
-        {
-            // Empty issues is valid, but worth noting
-        }
 
         // Validate index suggestions collection
-        if (value.IndexSuggestions == null)
+        if (value.IndexSuggestions is null)
         {
             problems.Add("IndexSuggestions collection is null.");
         }
@@ -108,7 +106,7 @@ public static class QueryAnalysisExtensionsValidation
     /// </summary>
     /// <param name="value">The query analysis result to validate.</param>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException"><paramref name="value"/> is invalid with specific problems listed.</exception>
+    /// <exception cref="ArgumentException"><paramref name="value"/> is invalid with specific problems listed in the exception message.</exception>
     public static void EnsureValid(this QueryAnalysisResult value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -168,7 +166,7 @@ public static class QueryAnalysisExtensionsValidation
     /// </summary>
     /// <param name="values">The collection to validate.</param>
     /// <exception cref="ArgumentNullException"><paramref name="values"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException">One or more results are invalid with specific problems listed.</exception>
+    /// <exception cref="ArgumentException">One or more results in the collection are invalid with specific problems listed in the exception message.</exception>
     public static void EnsureValid(this IEnumerable<QueryAnalysisResult> values)
     {
         ArgumentNullException.ThrowIfNull(values);
