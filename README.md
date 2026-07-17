@@ -594,6 +594,69 @@ catch (SqlQueryAnalyzerException ex)
 ---
 
 
+
+---
+
+## QueryAnalysisPipelineBenchmarksExtensions
+
+The `QueryAnalysisPipelineBenchmarksExtensions` class provides extension methods for the `QueryAnalysisPipelineBenchmarks` type that generate realistic SQL queries and perform common analysis operations. These methods are designed for benchmarking various SQL query parsing and analysis scenarios including CTEs, window functions, parameterized queries, join conditions, subqueries, CASE expressions, and date/time functions.
+
+### Usage Example
+
+```csharp
+// Create a benchmarks instance
+var benchmarks = new QueryAnalysisPipelineBenchmarks();
+
+// Parse a query with Common Table Expressions (CTEs)
+var cteQuery = benchmarks.ParseWithCteQuery();
+Console.WriteLine($"CTE query parsed successfully: {cteQuery.Tables.Count} tables found");
+
+// Parse a query with window functions
+var windowQuery = benchmarks.ParseWithWindowFunctionsQuery();
+Console.WriteLine($"Window functions query parsed: {windowQuery.Tables.Count} tables found");
+
+// Hash a parameterized query for caching
+var parameterizedHash = benchmarks.HashParameterizedQuery();
+Console.WriteLine($"Parameterized query hash: {parameterizedHash}");
+
+// Extract all join conditions from a complex query
+var joinConditions = benchmarks.ExtractAllJoinConditions();
+Console.WriteLine($"Found {joinConditions.Count} join conditions:");
+foreach (var condition in joinConditions)
+{
+    Console.WriteLine($"- {condition}");
+}
+
+// Parse a query with subqueries
+var subquery = benchmarks.ParseWithSubqueriesQuery();
+Console.WriteLine($"Subquery parsed: {subquery.Subqueries.Count} subqueries detected");
+
+// Parse a query with CASE expressions
+var caseQuery = benchmarks.ParseWithCaseExpressionsQuery();
+Console.WriteLine($"CASE expressions query parsed: {caseQuery.CaseExpressions.Count} CASE expressions found");
+
+// Hash a query with date/time functions
+var dateHash = benchmarks.HashDateTimeFunctionsQuery();
+Console.WriteLine($"Date/time query hash: {dateHash}");
+
+// Format join conditions for reporting
+var formattedJoins = benchmarks.FormatJoinConditions(
+    "SELECT * FROM Orders o JOIN Customers c ON o.CustomerId = c.CustomerId"
+);
+Console.WriteLine(formattedJoins);
+```
+
+### Public Members
+
+- `ParseWithCteQuery(this QueryAnalysisPipelineBenchmarks benchmarks)` - Parses and returns a query with Common Table Expressions (CTEs) for benchmarking recursive CTE handling
+- `ParseWithWindowFunctionsQuery(this QueryAnalysisPipelineBenchmarks benchmarks)` - Parses and returns a query with window functions (OVER clauses) for benchmarking window function detection
+- `HashParameterizedQuery(this QueryAnalysisPipelineBenchmarks benchmarks)` - Parses a parameterized query and returns its hash for caching scenarios
+- `ExtractAllJoinConditions(this QueryAnalysisPipelineBenchmarks benchmarks)` - Extracts join conditions from a complex query with multiple join types
+- `ParseWithSubqueriesQuery(this QueryAnalysisPipelineBenchmarks benchmarks)` - Parses and returns a query with subqueries in SELECT and WHERE clauses
+- `ParseWithCaseExpressionsQuery(this QueryAnalysisPipelineBenchmarks benchmarks)` - Parses and returns a query with CASE expressions and conditional logic
+- `HashDateTimeFunctionsQuery(this QueryAnalysisPipelineBenchmarks benchmarks)` - Parses a query with date/time functions and returns its hash
+- `FormatJoinConditions(this QueryAnalysisPipelineBenchmarks benchmarks, string queryText)` - Formats extracted join conditions as a readable string for documentation or reports
+
 ---
 
 ## AnalysisControllerValidation
