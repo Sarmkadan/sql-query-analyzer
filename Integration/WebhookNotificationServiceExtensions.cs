@@ -19,6 +19,11 @@ namespace SqlQueryAnalyzer.Integration;
 /// </summary>
 public static class WebhookNotificationServiceExtensions
 {
+    static WebhookNotificationServiceExtensions()
+    {
+        // Static constructor to ensure type is initialized
+    }
+
     /// <summary>
     /// Registers multiple webhook configurations at once.
     /// </summary>
@@ -45,12 +50,7 @@ public static class WebhookNotificationServiceExtensions
     /// <returns>The number of webhooks that were unregistered.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="namePattern"/> is null.</exception>
     public static int UnregisterWebhooksByPattern(this WebhookNotificationService service, string namePattern)
-    {
-        ArgumentNullException.ThrowIfNull(service);
-        ArgumentException.ThrowIfNullOrEmpty(namePattern);
-
-        return service.UnregisterWebhooksByPattern(namePattern, StringComparison.Ordinal);
-    }
+        => service.UnregisterWebhooksByPattern(namePattern, StringComparison.Ordinal);
 
     /// <summary>
     /// Unregisters all webhooks matching the specified name pattern with custom comparison.
@@ -174,12 +174,7 @@ public static class WebhookNotificationServiceExtensions
     /// <returns>True if at least one webhook should notify for this event; otherwise false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="eventType"/> is null.</exception>
     public static bool HasWebhookForEvent(this WebhookNotificationService service, Type eventType)
-    {
-        ArgumentNullException.ThrowIfNull(service);
-        ArgumentNullException.ThrowIfNull(eventType);
-
-        return service.GetWebhooksForEvent(eventType).Count > 0;
-    }
+        => service.GetWebhooksForEvent(eventType).Count > 0;
 
     /// <summary>
     /// Disables all webhooks matching the specified predicate.
@@ -243,12 +238,7 @@ public static class WebhookNotificationServiceExtensions
     /// <returns>The number of matching webhooks.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="eventType"/> is null.</exception>
     public static int GetEnabledWebhookCountForEvent(this WebhookNotificationService service, Type eventType)
-    {
-        ArgumentNullException.ThrowIfNull(service);
-        ArgumentNullException.ThrowIfNull(eventType);
-
-        return service.GetWebhooksForEvent(eventType).Count(config => config.Enabled);
-    }
+        => service.GetWebhooksForEvent(eventType).Count(config => config.Enabled);
 
     /// <summary>
     /// Creates a new webhook configuration with common defaults for the specified URL.
@@ -365,11 +355,7 @@ public static class WebhookNotificationServiceExtensions
     /// <returns>True if at least one webhook is registered; otherwise false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
     public static bool HasWebhooks(this WebhookNotificationService service)
-    {
-        ArgumentNullException.ThrowIfNull(service);
-
-        return service.GetWebhookCount() > 0;
-    }
+        => service.GetWebhookCount() > 0;
 
     /// <summary>
     /// Gets a summary of webhook statistics.
@@ -381,11 +367,12 @@ public static class WebhookNotificationServiceExtensions
     {
         ArgumentNullException.ThrowIfNull(service);
 
+        var enabledWebhooks = service.GetEnabledWebhooks();
         var stats = new Dictionary<string, int>
         {
             ["Total"] = service.GetWebhookCount(),
-            ["Enabled"] = service.GetEnabledWebhooks().Count,
-            ["Disabled"] = service.GetWebhookCount() - service.GetEnabledWebhooks().Count,
+            ["Enabled"] = enabledWebhooks.Count,
+            ["Disabled"] = service.GetWebhookCount() - enabledWebhooks.Count,
             ["Slack"] = service.GetWebhooksByType(WebhookType.Slack).Count,
             ["MicrosoftTeams"] = service.GetWebhooksByType(WebhookType.MicrosoftTeams).Count,
             ["Discord"] = service.GetWebhooksByType(WebhookType.Discord).Count,
@@ -395,7 +382,7 @@ public static class WebhookNotificationServiceExtensions
         return stats;
     }
 
-    #region Private Helpers
+#region Private Helpers
 
     /// <summary>
     /// Internal method to get webhooks (reflection-friendly).
@@ -411,15 +398,13 @@ public static class WebhookNotificationServiceExtensions
     /// Determines if a webhook configuration should notify for a specific event type.
     /// </summary>
     private static bool ShouldNotifyForEvent(this WebhookConfiguration config, Type eventType)
-    {
-        return eventType switch
+        => eventType switch
         {
             Type t when t == typeof(CriticalIssueDetectedEvent) => config.NotifyOnCriticalIssues,
             Type t when t == typeof(AnalysisFailedEvent) => config.NotifyOnFailures,
             Type t when t == typeof(AnalysisCompletedEvent) => config.NotifyOnCompletion,
             _ => false
         };
-    }
 
-    #endregion
+#endregion
 }
