@@ -7,8 +7,6 @@
 // Validation helpers for AnalyzerSettings configuration
 // =====================================================================
 
-using System.Globalization;
-
 namespace SqlQueryAnalyzer.Configuration;
 
 /// <summary>
@@ -30,54 +28,19 @@ public static class AnalyzerSettingsValidation
         var errors = new List<string>();
 
         // Validate Database settings
-        if (value.Database is null)
-        {
-            errors.Add("Database settings cannot be null.");
-        }
-        else
-        {
-            errors.AddRange(value.Database.Validate());
-        }
+        errors.AddRange(value.Database?.Validate() ?? ["Database settings cannot be null."]);
 
         // Validate Analysis settings
-        if (value.Analysis is null)
-        {
-            errors.Add("Analysis settings cannot be null.");
-        }
-        else
-        {
-            errors.AddRange(value.Analysis.Validate());
-        }
+        errors.AddRange(value.Analysis?.Validate() ?? ["Analysis settings cannot be null."]);
 
         // Validate Cache settings
-        if (value.Cache is null)
-        {
-            errors.Add("Cache settings cannot be null.");
-        }
-        else
-        {
-            errors.AddRange(value.Cache.Validate());
-        }
+        errors.AddRange(value.Cache?.Validate() ?? ["Cache settings cannot be null."]);
 
         // Validate Performance settings
-        if (value.Performance is null)
-        {
-            errors.Add("Performance settings cannot be null.");
-        }
-        else
-        {
-            errors.AddRange(value.Performance.Validate());
-        }
+        errors.AddRange(value.Performance?.Validate() ?? ["Performance settings cannot be null."]);
 
         // Validate Logging settings
-        if (value.Logging is null)
-        {
-            errors.Add("Logging settings cannot be null.");
-        }
-        else
-        {
-            errors.AddRange(value.Logging.Validate());
-        }
+        errors.AddRange(value.Logging?.Validate() ?? ["Logging settings cannot be null."]);
 
         return errors.AsReadOnly();
     }
@@ -87,6 +50,7 @@ public static class AnalyzerSettingsValidation
     /// </summary>
     /// <param name="value">The database settings to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this DatabaseSettings value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -125,6 +89,7 @@ public static class AnalyzerSettingsValidation
     /// </summary>
     /// <param name="value">The analysis settings to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this AnalysisSettings value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -136,7 +101,7 @@ public static class AnalyzerSettingsValidation
             errors.Add("Analysis.MaxThreads must be at least 1.");
         }
 
-        if (value.CriticalIssueSensitivity < 0 || value.CriticalIssueSensitivity > 1)
+        if (value.CriticalIssueSensitivity is < 0 or > 1)
         {
             errors.Add("Analysis.CriticalIssueSensitivity must be between 0 and 1 (inclusive).");
         }
@@ -156,6 +121,7 @@ public static class AnalyzerSettingsValidation
     /// </summary>
     /// <param name="value">The cache settings to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this CacheSettings value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -199,6 +165,7 @@ public static class AnalyzerSettingsValidation
     /// </summary>
     /// <param name="value">The performance settings to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this PerformanceSettings value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -238,6 +205,7 @@ public static class AnalyzerSettingsValidation
     /// </summary>
     /// <param name="value">The logging settings to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this LoggingSettings value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -276,6 +244,7 @@ public static class AnalyzerSettingsValidation
     /// </summary>
     /// <param name="value">The index severity thresholds to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this IndexSeverityThresholds value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -377,8 +346,7 @@ public static class AnalyzerSettingsValidation
         var errors = value.Validate();
         if (errors.Count > 0)
         {
-            throw new ArgumentException(
-                $"AnalyzerSettings validation failed:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}");
+            throw new ArgumentException($"AnalyzerSettings validation failed:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}");
         }
     }
 }
