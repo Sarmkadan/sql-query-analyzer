@@ -86,26 +86,60 @@ public class QueryAnalysisPipelineBenchmarks
     {
         var q = new DatabaseQuery { QueryText = ComplexQueryText };
         q.Parse();
-        return q.GenerateHash();
-    }
 
-    [BenchmarkCategory("Combined"), Benchmark(Description = "Full pattern suite — 7 checks on complex query")]
-    public (bool selectStar, bool funcOnCol, bool leadingWildcard, int orCount, bool subquery, int caseCount, bool aggregate)
-        FullPatternSuite()
-    {
-        var query = ComplexQueryText;
-        return (
-            SqlPatternAnalyzer.HasSelectStar(query),
-            SqlPatternAnalyzer.HasFunctionOnColumn(query),
-            SqlPatternAnalyzer.HasLeadingWildcardLike(query),
-            SqlPatternAnalyzer.CountOrConditions(query),
-            SqlPatternAnalyzer.HasSubquery(query),
-            SqlPatternAnalyzer.CountCaseStatements(query),
-            SqlPatternAnalyzer.HasAggregateFunction(query)
-        );
-    }
+        [BenchmarkCategory("Parse"), Benchmark(Description = "Parse simple SELECT — validation helper")]
+        public void ParseSimpleQueryBenchmark()
+        {
+            var q = new DatabaseQuery { QueryText = SimpleQueryText };
+            q.Parse();
+        }
 
-    [BenchmarkCategory("Combined"), Benchmark(Description = "Extract join conditions from 4-JOIN query")]
-    public List<string> ExtractJoinConditions() =>
-        SqlPatternAnalyzer.ExtractJoinConditions(ComplexQueryText);
-}
+        [BenchmarkCategory("Parse"), Benchmark(Description = "Parse 4-JOIN query — validation helper")]
+        public void ParseComplexQueryBenchmark()
+        {
+            var q = new DatabaseQuery { QueryText = ComplexQueryText };
+            q.Parse();
+        }
+
+        [BenchmarkCategory("Parse"), Benchmark(Description = "Parse stored procedure — validation helper")]
+        public void ParseStoredProcQueryBenchmark()
+        {
+            var q = new DatabaseQuery { QueryText = StoredProcQueryText };
+            q.Parse();
+        }
+
+        [BenchmarkCategory("Hash"), Benchmark(Description = "Parse + SHA-256 hash — simple query validation")]
+        public string HashSimpleQueryBenchmark()
+        {
+            var q = new DatabaseQuery { QueryText = SimpleQueryText };
+            q.Parse();
+            return q.GenerateHash();
+        }
+
+        [BenchmarkCategory("Hash"), Benchmark(Description = "Parse + SHA-256 hash — complex query validation")]
+        public string HashComplexQueryBenchmark()
+        {
+            var q = new DatabaseQuery { QueryText = ComplexQueryText };
+            q.Parse();
+            return q.GenerateHash();
+        }
+
+        [BenchmarkCategory("Combined"), Benchmark(Description = "Full pattern suite — validation helper")]
+        public (bool selectStar, bool funcOnCol, bool leadingWildcard, int orCount, bool subquery, int caseCount, bool aggregate) FullPatternSuiteBenchmark()
+        {
+            var query = ComplexQueryText;
+            return (
+                SqlPatternAnalyzer.HasSelectStar(query),
+                SqlPatternAnalyzer.HasFunctionOnColumn(query),
+                SqlPatternAnalyzer.HasLeadingWildcardLike(query),
+                SqlPatternAnalyzer.CountOrConditions(query),
+                SqlPatternAnalyzer.HasSubquery(query),
+                SqlPatternAnalyzer.CountCaseStatements(query),
+                SqlPatternAnalyzer.HasAggregateFunction(query)
+            );
+        }
+
+        [BenchmarkCategory("Combined"), Benchmark(Description = "Extract join conditions — validation helper")]
+        public List<string> ExtractJoinConditionsBenchmark() =>
+            SqlPatternAnalyzer.ExtractJoinConditions(ComplexQueryText);
+    }

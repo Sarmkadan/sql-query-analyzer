@@ -3,22 +3,20 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 
 namespace SqlQueryAnalyzer.Benchmarks;
 
 /// <summary>
-/// Validation helpers for <see cref="QueryAnalysisPipelineBenchmarks"/> to ensure benchmark configurations are valid.
+/// Validation helpers for <see cref="QueryAnalysisPipelineBenchmarks"/> to ensure benchmark configurations and results are valid.
 /// </summary>
 public static class QueryAnalysisPipelineBenchmarksValidation
 {
     /// <summary>
-    /// Validates that a <see cref="QueryAnalysisPipelineBenchmarks"/> instance is properly configured.
+    /// Validates that a <see cref="QueryAnalysisPipelineBenchmarks"/> instance is properly configured and that benchmark operations produce valid results.
     /// </summary>
     /// <param name="value">The benchmarks instance to validate.</param>
     /// <returns>A list of validation messages (empty if valid).</returns>
@@ -29,71 +27,95 @@ public static class QueryAnalysisPipelineBenchmarksValidation
 
         var errors = new List<string>();
 
-        // Validate that benchmark methods produce valid results
+        // Validate benchmark queries can be parsed without throwing
         try
         {
-            value.ParseSimpleQuery();
+            value.ParseSimpleQueryBenchmark();
         }
         catch (Exception ex)
         {
-            errors.Add($"ParseSimpleQuery() threw: {ex.Message}");
+            errors.Add($"ParseSimpleQueryBenchmark() threw: {ex.Message} ({ex.GetType().Name})");
         }
 
         try
         {
-            value.ParseComplexQuery();
+            value.ParseComplexQueryBenchmark();
         }
         catch (Exception ex)
         {
-            errors.Add($"ParseComplexQuery() threw: {ex.Message}");
+            errors.Add($"ParseComplexQueryBenchmark() threw: {ex.Message} ({ex.GetType().Name})");
         }
 
         try
         {
-            value.ParseStoredProcQuery();
+            value.ParseStoredProcQueryBenchmark();
         }
         catch (Exception ex)
         {
-            errors.Add($"ParseStoredProcQuery() threw: {ex.Message}");
+            errors.Add($"ParseStoredProcQueryBenchmark() threw: {ex.Message} ({ex.GetType().Name})");
         }
 
+        // Validate hash generation produces non-empty results
         try
         {
-            var hashResult = value.HashSimpleQuery();
+            var hashResult = value.HashSimpleQueryBenchmark();
             if (string.IsNullOrWhiteSpace(hashResult))
             {
-                errors.Add("HashSimpleQuery() returned null or empty hash");
+                errors.Add("HashSimpleQueryBenchmark() returned null or empty hash");
+            }
+            else if (hashResult.Length != 64)
+            {
+                errors.Add($"HashSimpleQueryBenchmark() returned hash with unexpected length {hashResult.Length} (expected 64 for SHA-256)");
             }
         }
         catch (Exception ex)
         {
-            errors.Add($"HashSimpleQuery() threw: {ex.Message}");
+            errors.Add($"HashSimpleQueryBenchmark() threw: {ex.Message} ({ex.GetType().Name})");
         }
 
         try
         {
-            var complexHash = value.HashComplexQuery();
+            var complexHash = value.HashComplexQueryBenchmark();
             if (string.IsNullOrWhiteSpace(complexHash))
             {
-                errors.Add("HashComplexQuery() returned null or empty hash");
+                errors.Add("HashComplexQueryBenchmark() returned null or empty hash");
+            }
+            else if (complexHash.Length != 64)
+            {
+                errors.Add($"HashComplexQueryBenchmark() returned hash with unexpected length {complexHash.Length} (expected 64 for SHA-256)");
             }
         }
         catch (Exception ex)
         {
-            errors.Add($"HashComplexQuery() threw: {ex.Message}");
+            errors.Add($"HashComplexQueryBenchmark() threw: {ex.Message} ({ex.GetType().Name})");
         }
 
+        // Validate join condition extraction returns valid results
         try
         {
-            var joinConditions = value.ExtractJoinConditions();
+            var joinConditions = value.ExtractJoinConditionsBenchmark();
             if (joinConditions == null)
             {
-                errors.Add("ExtractJoinConditions() returned null");
+                errors.Add("ExtractJoinConditionsBenchmark() returned null");
             }
         }
         catch (Exception ex)
         {
-            errors.Add($"ExtractJoinConditions() threw: {ex.Message}");
+            errors.Add($"ExtractJoinConditionsBenchmark() threw: {ex.Message} ({ex.GetType().Name})");
+        }
+
+        // Validate combined pattern analysis returns valid tuple
+        try
+        {
+            var patternResults = value.FullPatternSuiteBenchmark();
+            if (patternResults == default)
+            {
+                errors.Add("FullPatternSuiteBenchmark() returned default tuple");
+            }
+        }
+        catch (Exception ex)
+        {
+            errors.Add($"FullPatternSuiteBenchmark() threw: {ex.Message} ({ex.GetType().Name})");
         }
 
         return errors.AsReadOnly();
@@ -115,7 +137,9 @@ public static class QueryAnalysisPipelineBenchmarksValidation
     /// </summary>
     /// <param name="value">The benchmarks instance to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if the instance is not valid, containing validation messages.</exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if the instance is not valid, containing validation messages.
+    /// </exception>
     public static void EnsureValid(this QueryAnalysisPipelineBenchmarks value)
     {
         ArgumentNullException.ThrowIfNull(value);
