@@ -1066,3 +1066,54 @@ var dryRunArgs = new CommandLineArguments
     ShowExecutionPlan = true
 };
 ```
+
+---
+
+## WebhookNotificationServiceExtensions
+
+The `WebhookNotificationServiceExtensions` class provides extension methods for managing webhook configurations in the SQL Query Analyzer. It enables bulk registration, filtering, enabling/disabling, and statistics gathering for webhook notifications, making it easier to manage multiple webhook endpoints for different event types.
+
+### Usage Example
+
+```csharp
+// Configure webhook notifications for SQL query analysis results
+var services = new ServiceCollection();
+services.AddSingleton<WebhookNotificationService>();
+var serviceProvider = services.BuildServiceProvider();
+var webhookService = serviceProvider.GetRequiredService<WebhookNotificationService>();
+
+// Register multiple webhooks at once
+var webhookConfigs = new List<WebhookConfiguration>
+{
+    webhookService.CreateWebhookConfiguration("https://hooks.slack.com/services/xxx/yyy/zzz", "Slack Alerts", WebhookType.Slack),
+    webhookService.CreateWebhookConfiguration("https://outlook.office.com/webhook/xxx/yyy/zzz", "Teams Notifications", WebhookType.MicrosoftTeams)
+};
+webhookService.RegisterWebhooks(webhookConfigs);
+
+// Get all enabled webhooks for completion events
+var enabledCompletionWebhooks = webhookService.GetWebhooksForEvent(typeof(AnalysisCompletedEvent))
+                                              .Where(w => w.Enabled)
+                                              .ToList();
+
+// Get webhook statistics
+var stats = webhookService.GetWebhookStatistics();
+Console.WriteLine($"Total webhooks: {stats["Total"]}, Enabled: {stats["Enabled"]}");
+
+// Check if we have webhooks for critical issues
+if (webhookService.HasWebhookForEvent(typeof(CriticalIssueDetectedEvent)))
+{
+    Console.WriteLine("Critical issue notifications are configured");
+}
+
+// Disable webhooks for a specific pattern (e.g., all Slack webhooks)
+int disabledCount = webhookService.DisableWebhooks(w => w.Type == WebhookType.Slack);
+Console.WriteLine($"Disabled {disabledCount} Slack webhooks");
+
+// Add custom headers to a specific webhook
+var headers = new Dictionary<string, string>
+{
+    ["Authorization"] = "Bearer token123",
+    ["X-Custom-Header"] = "custom-value"
+};
+int addedHeaders = webhookService.AddCustomHeaders("Slack Alerts", headers);
+```
