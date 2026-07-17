@@ -1,20 +1,20 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SqlQueryAnalyzer.Models;
 
 /// <summary>
-/// Provides extension methods for the <see cref="QueryRewriteSuggestion"/> class.
+/// Provides extension methods for the <see cref="QueryRewriteSuggestion"/> class
+/// to analyze and describe query rewrite suggestions.
 /// </summary>
 public static class QueryRewriteSuggestionExtensions
 {
     /// <summary>
-    /// Determines if the suggestion is considered high-impact (estimated improvement >= 20%).
+    /// Determines whether the suggestion is considered high-impact based on the estimated improvement.
     /// </summary>
-    /// <param name="suggestion">The suggestion to analyze.</param>
-    /// <returns><see langword="true"/> if the estimated improvement is high; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="suggestion"/> is null.</exception>
+    /// <param name="suggestion">The suggestion to analyze. Must not be <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if the estimated improvement is 20% or greater; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException"><inheritdoc cref="ArgumentNullException.ThrowIfNull" path="/param[@name='suggestion']"/></exception>
     public static bool IsHighImpact(this QueryRewriteSuggestion suggestion)
     {
         ArgumentNullException.ThrowIfNull(suggestion);
@@ -22,11 +22,12 @@ public static class QueryRewriteSuggestionExtensions
     }
 
     /// <summary>
-    /// Determines if the suggestion can be safely applied without human review.
+    /// Determines whether the suggestion can be safely applied without human review.
+    /// A suggestion is safely applicable when it is marked as auto-applicable and is not a breaking change.
     /// </summary>
-    /// <param name="suggestion">The suggestion to analyze.</param>
-    /// <returns><see langword="true"/> if auto-applicable and not a breaking change; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="suggestion"/> is null.</exception>
+    /// <param name="suggestion">The suggestion to analyze. Must not be <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if the suggestion is auto-applicable and not a breaking change; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException"><inheritdoc cref="ArgumentNullException.ThrowIfNull" path="/param[@name='suggestion']"/></exception>
     public static bool IsSafelyApplicable(this QueryRewriteSuggestion suggestion)
     {
         ArgumentNullException.ThrowIfNull(suggestion);
@@ -34,19 +35,14 @@ public static class QueryRewriteSuggestionExtensions
     }
 
     /// <summary>
-    /// Gets a detailed summary of the suggestion including priority and risk level.
+    /// Gets a detailed summary of the suggestion including identifier, priority, risk level, and summary text.
     /// </summary>
-    /// <param name="suggestion">The suggestion to describe.</param>
-    /// <returns>A detailed string summary.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="suggestion"/> is null.</exception>
+    /// <param name="suggestion">The suggestion to describe. Must not be <see langword="null"/>.</param>
+    /// <returns>A detailed string summary containing the suggestion ID, priority, risk level, and summary.</returns>
+    /// <exception cref="ArgumentNullException"><inheritdoc cref="ArgumentNullException.ThrowIfNull" path="/param[@name='suggestion']"/></exception>
     public static string ToDetailedSummary(this QueryRewriteSuggestion suggestion)
     {
         ArgumentNullException.ThrowIfNull(suggestion);
-        return string.Format(CultureInfo.InvariantCulture,
-            "ID: {0} | Priority: {1} | Risk: {2} | Summary: {3}",
-            suggestion.SuggestionId,
-            suggestion.Priority,
-            suggestion.GetRiskLevel(),
-            suggestion.GetSummary());
+        return $"ID: {suggestion.SuggestionId} | Priority: {suggestion.Priority} | Risk: {suggestion.GetRiskLevel()} | Summary: {suggestion.GetSummary()}";
     }
 }
