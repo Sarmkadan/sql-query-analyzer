@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SqlQueryAnalyzer.Validation;
 
@@ -15,10 +14,16 @@ public static class ValidationRuleEngineExtensions
     /// <param name="engine">The validation rule engine.</param>
     /// <param name="query">The SQL query to validate.</param>
     /// <returns>True if the query is valid; otherwise, false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when engine is null.</exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="engine"/> is null.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="query"/> is null.
+    /// </exception>
     public static bool IsValidQuery(this ValidationRuleEngine engine, string query)
     {
         ArgumentNullException.ThrowIfNull(engine);
+        ArgumentNullException.ThrowIfNull(query);
         return engine.ValidateQuery(query).IsValid;
     }
 
@@ -28,10 +33,16 @@ public static class ValidationRuleEngineExtensions
     /// <param name="engine">The validation rule engine.</param>
     /// <param name="query">The SQL query to validate.</param>
     /// <returns>The number of errors.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when engine is null.</exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="engine"/> is null.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="query"/> is null.
+    /// </exception>
     public static int GetErrorCount(this ValidationRuleEngine engine, string query)
     {
         ArgumentNullException.ThrowIfNull(engine);
+        ArgumentNullException.ThrowIfNull(query);
         return engine.ValidateQuery(query).Errors.Count;
     }
 
@@ -41,10 +52,16 @@ public static class ValidationRuleEngineExtensions
     /// <param name="engine">The validation rule engine.</param>
     /// <param name="query">The SQL query to validate.</param>
     /// <returns>The number of warnings.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when engine is null.</exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="engine"/> is null.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="query"/> is null.
+    /// </exception>
     public static int GetWarningCount(this ValidationRuleEngine engine, string query)
     {
         ArgumentNullException.ThrowIfNull(engine);
+        ArgumentNullException.ThrowIfNull(query);
         return engine.ValidateQuery(query).Warnings.Count;
     }
 }
