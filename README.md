@@ -1963,6 +1963,137 @@ Console.WriteLine($"Stage validation errors: {stageErrors.Count}");
 - `Validate(this ExecutionStage? stage)` - Validates an execution stage and returns a list of validation errors; empty if valid
 - `IsValid(this ExecutionStage? stage)` - Determines whether the specified execution stage is valid
 - `EnsureValid(this ExecutionStage? stage)` - Ensures that the specified execution stage is valid, throwing an exception if not
+
+---
+
+## ExplainPlanParserServiceExtensions
+
+
+The `ExplainPlanParserServiceExtensions` class provides extension methods for the `ExplainPlanParserService` type that simplify parsing and analysis of database execution plans from various database systems (SQL Server, PostgreSQL, MySQL). It offers convenient methods for parsing execution plans, extracting performance metrics, checking for performance issues, and identifying expensive operations in query plans.
+
+### Usage Example
+
+```csharp
+// Create an ExplainPlanParserService instance
+var planParser = new ExplainPlanParserService();
+
+// Example SQL Server execution plan (XML format)
+string sqlServerPlan = @"
+<ShowPlanXML xmlns="http://schemas.microsoft.com/sqlserver/2004/07/showplan">
+  <Batch>
+    <Statements>
+      <StmtSimple StatementText="SELECT u.Name, COUNT(o.Id) as OrderCount FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId WHERE u.Status = 'active' GROUP BY u.Name" StatementId="1" StatementCompId="2" StatementType="SELECT" QueryHash="0xABC123" QueryPlanHash="0xDEF456">
+        <QueryPlan>
+          <RelOp NodeId="0" PhysicalOp="Hash Match" LogicalOp="Aggregate" EstimateRows="100" EstimateIO="0.01" EstimateCPU="0.001">
+            <OutputList>
+              <ColumnReference Column="Name" />
+              <ColumnReference Column="OrderCount" />
+            </OutputList>
+            <Hash>
+              <RelOp NodeId="1" PhysicalOp="Index Scan" LogicalOp="Index Scan" EstimateRows="1000" EstimateIO="0.1" EstimateCPU="0.01">
+                <OutputList>
+                  <ColumnReference Column="Name" />
+                </OutputList>
+                <IndexScan>
+                  <Object Database="[MyDatabase]" Schema="[dbo]" Table="[Users]" Index="[IX_Users_Status]" />
+                </IndexScan>
+              </RelOp>
+            </Hash>
+          </RelOp>
+        </QueryPlan>
+      </StmtSimple>
+    </Statements>
+  </Batch>
+</ShowPlanXML>
+";
+
+// Parse SQL Server execution plan
+var sqlServerQueryPlan = await planParser.ParseSqlServerPlanAsync(sqlServerPlan);
+Console.WriteLine($"SQL Server plan parsed: {sqlServerQueryPlan.DatabaseName}");
+
+// Parse PostgreSQL EXPLAIN plan (JSON format)
+string postgreSqlPlan = @"
+{
+  "Plan": {
+    "Node Type": "Aggregate",
+    "Actual Total Time": 0.123,
+    "Actual Rows": 100,
+    "Plans": [
+      {
+        "Node Type": "Seq Scan",
+        "Relation Name": "users",
+        "Actual Total Time": 0.045,
+        "Actual Rows": 1000,
+        "Startup Cost": 0.00,
+        "Total Cost": 14.29,
+        "Plan Rows": 1000,
+        "Plan Width": 36
+      }
+    ]
+  }
+}
+";
+
+var postgreSqlQueryPlan = await planParser.ParsePostgreSqlPlanAsync(postgreSqlPlan);
+Console.WriteLine($"PostgreSQL plan parsed: {postgreSqlQueryPlan.DatabaseName}");
+
+// Parse MySQL EXPLAIN plan (JSON format)
+string mySqlPlan = @"
+{
+  "query_block": {
+    "select_id": 1,
+    "table": {
+      "table_name": "users",
+      "access_type": "index",
+      "possible_keys": ["PRIMARY"],
+      "key": "PRIMARY",
+      "rows": 1000,
+      "filtered": 100.00,
+      "Extra": "Using where"
+    }
+  }
+}
+";
+
+var mySqlQueryPlan = await planParser.ParseMySqlPlanAsync(mySqlPlan);
+Console.WriteLine($"MySQL plan parsed: {mySqlQueryPlan.DatabaseName}");
+
+// Extract performance metrics from a query plan
+var metrics = await planParser.ExtractPlanMetricsAsync(sqlServerQueryPlan);
+Console.WriteLine($"Total cost: {metrics["totalCost"]}");
+Console.WriteLine($"Estimated rows: {metrics["estimatedRows"]}");
+Console.WriteLine($"Efficiency: {metrics["efficiency"]}");
+
+// Get a simplified performance summary
+var summary = await planParser.GetPlanSummaryAsync(sqlServerQueryPlan);
+Console.WriteLine($"Plan summary - Database: {summary["database"]}, Format: {summary["format"]}");
+
+// Check if the plan has performance issues
+bool hasIssues = await planParser.HasPerformanceIssuesAsync(sqlServerQueryPlan);
+Console.WriteLine($"Has performance issues: {hasIssues}");
+
+// Get the most expensive operations in the plan
+var expensiveOps = await planParser.GetMostExpensiveOperationsAsync(sqlServerQueryPlan, count: 3);
+Console.WriteLine($"Most expensive operations: {expensiveOps.Count}");
+foreach (var op in expensiveOps)
+{
+  Console.WriteLine($"- {op.NodeType} on {op.ObjectName} (cost: {op.EstimatedCost:F3})");
+}
+```
+
+### Public Members
+
+- `ParseSqlServerPlanAsync(this ExplainPlanParserService service, string xmlPlan)` - Parses a SQL Server execution plan from XML format and returns the query plan
+- `ParsePostgreSqlPlanAsync(this ExplainPlanParserService service, string jsonPlan)` - Parses a PostgreSQL EXPLAIN plan from JSON format and returns the query plan
+- `ParseMySqlPlanAsync(this ExplainPlanParserService service, string jsonPlan)` - Parses a MySQL EXPLAIN plan from JSON or tabular format and returns the query plan
+- `ExtractPlanMetricsAsync(this ExplainPlanParserService service, QueryPlan plan)` - Extracts performance metrics from a query plan and returns them as a dictionary
+- `GetPlanSummaryAsync(this ExplainPlanParserService service, QueryPlan plan)` - Parses a query plan and extracts a simplified performance summary
+- `HasPerformanceIssuesAsync(this ExplainPlanParserService service, QueryPlan plan)` - Determines if a query plan has performance issues based on common bottlenecks
+- `GetMostExpensiveOperationsAsync(this ExplainPlanParserService service, QueryPlan plan, int count = 5)` - Gets the most expensive operations in the query plan
+
+---
+
+## PerformanceIssueDetectorServiceExtensions
 - `Validate(this ProfilerMetric? metric)` - Validates a profiler metric and returns a list of validation errors; empty if valid
 - `IsValid(this ProfilerMetric? metric)` - Determines whether the specified profiler metric is valid
 - `EnsureValid(this ProfilerMetric? metric)` - Ensures that the specified profiler metric is valid, throwing an exception if not
