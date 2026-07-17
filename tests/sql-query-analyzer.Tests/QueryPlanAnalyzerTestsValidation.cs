@@ -11,19 +11,18 @@ namespace SqlQueryAnalyzer.Tests
         /// <summary>
         /// Validates the specified <see cref="QueryPlanAnalyzerTests"/> instance.
         /// </summary>
+        /// <remarks>
+        /// This method always returns an empty list because <see cref="QueryPlanAnalyzerTests"/> is a test fixture class
+        /// with parameterless test methods and no instance state to validate.
+        /// </remarks>
         /// <param name="value">The instance to validate.</param>
-        /// <returns>A list of human-readable validation problems; empty if valid.</returns>
+        /// <returns>An empty list of validation problems (always valid).</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
         public static IReadOnlyList<string> Validate(this QueryPlanAnalyzerTests value)
         {
             ArgumentNullException.ThrowIfNull(value);
 
-            var problems = new List<string>();
-
-            // No members to validate - all test methods are parameterless
-            // The class is a test fixture class, not an instance with data
-
-            return problems.AsReadOnly();
+            return Array.Empty<string>();
         }
 
         /// <summary>
@@ -35,26 +34,21 @@ namespace SqlQueryAnalyzer.Tests
         public static bool IsValid(this QueryPlanAnalyzerTests value)
         {
             ArgumentNullException.ThrowIfNull(value);
-
             return value.Validate().Count == 0;
         }
 
         /// <summary>
         /// Ensures that the specified <see cref="QueryPlanAnalyzerTests"/> instance is valid.
         /// </summary>
+        /// <remarks>
+        /// This method always succeeds because <see cref="QueryPlanAnalyzerTests"/> is a test fixture class
+        /// with parameterless test methods and no instance state to validate.
+        /// </remarks>
         /// <param name="value">The instance to validate.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
-        /// <exception cref="ArgumentException">Thrown if the instance is not valid, containing a list of validation problems.</exception>
         public static void EnsureValid(this QueryPlanAnalyzerTests value)
         {
             ArgumentNullException.ThrowIfNull(value);
-
-            var problems = value.Validate();
-            if (problems.Count > 0)
-            {
-                throw new ArgumentException(
-                    $"QueryPlanAnalyzerTests instance is not valid. Problems:\n{string.Join("\n", problems)}");
-            }
         }
     }
 }
