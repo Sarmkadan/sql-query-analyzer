@@ -8,12 +8,13 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using SqlQueryAnalyzer.Models;
 
 namespace SqlQueryAnalyzer.Utilities;
 
 /// <summary>
 /// Provides System.Text.Json serialization extensions for serializing and deserializing
-/// <see cref="QueryValidator"/> and related validation types.
+/// query validation types including <see cref="QueryAnalysisResult"/>, <see cref="PerformanceIssue"/>, and <see cref="IndexSuggestion"/>.
 /// </summary>
 public static class QueryValidatorJsonExtensions
 {
@@ -25,15 +26,13 @@ public static class QueryValidatorJsonExtensions
     };
 
     /// <summary>
-    /// Serializes a <see cref="QueryValidator"/> instance to a JSON string.
-    /// Note: QueryValidator is a static class and contains no state to serialize.
-    /// This method returns a simple JSON object indicating the static class.
+    /// Serializes a <see cref="QueryAnalysisResult"/> instance to a JSON string.
     /// </summary>
-    /// <param name="value">The validator instance to serialize (always null for static class).</param>
+    /// <param name="value">The analysis result to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
-    /// <returns>A JSON string representation indicating this is a static QueryValidator class.</returns>
+    /// <returns>A JSON string representation of the analysis result.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static string ToJson(object? value, bool indented = false)
+    public static string ToJson(this QueryAnalysisResult value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
 
@@ -41,53 +40,161 @@ public static class QueryValidatorJsonExtensions
             ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
             : _jsonOptions;
 
-        return JsonSerializer.Serialize(new { Type = "QueryValidator.StaticClass" }, options);
+        return JsonSerializer.Serialize(value, options);
     }
 
     /// <summary>
-    /// Deserializes a JSON string to a <see cref="QueryValidator"/> instance.
-    /// Note: QueryValidator is a static class and cannot be deserialized.
-    /// This method always returns null.
+    /// Deserializes a JSON string to a <see cref="QueryAnalysisResult"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>Always null, as QueryValidator is a static class and cannot be instantiated.</returns>
-    /// <exception cref="JsonException">Thrown when the JSON is malformed.</exception>
-    public static object? FromJson(string json)
+    /// <returns>The deserialized analysis result instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
+    public static QueryAnalysisResult FromJsonToAnalysisResult(string json)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        ArgumentNullException.ThrowIfNull(json);
+
+        return JsonSerializer.Deserialize<QueryAnalysisResult>(json, _jsonOptions)
+            ?? throw new JsonException("Deserialization returned null for non-nullable type QueryAnalysisResult");
+    }
+
+    /// <summary>
+    /// Attempts to deserialize a JSON string to a <see cref="QueryAnalysisResult"/> instance.
+    /// </summary>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="value">Receives the deserialized instance if successful.</param>
+    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    public static bool TryFromJson(this string json, out QueryAnalysisResult? value)
+    {
+        value = default;
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return false;
+        }
 
         try
         {
-            // Attempt to deserialize to verify JSON is valid
-            JsonSerializer.Deserialize<object>(json, _jsonOptions);
+            value = JsonSerializer.Deserialize<QueryAnalysisResult>(json, _jsonOptions);
+            return value is not null;
         }
         catch (JsonException)
         {
-            throw;
+            return false;
         }
-
-        // QueryValidator is static and cannot be instantiated
-        return null;
     }
 
     /// <summary>
-    /// Attempts to deserialize a JSON string to a <see cref="QueryValidator"/> instance.
-    /// Note: QueryValidator is a static class and cannot be deserialized.
+    /// Serializes a <see cref="PerformanceIssue"/> instance to a JSON string.
+    /// </summary>
+    /// <param name="value">The performance issue to serialize.</param>
+    /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
+    /// <returns>A JSON string representation of the performance issue.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    public static string ToJson(this PerformanceIssue value, bool indented = false)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        var options = indented
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            : _jsonOptions;
+
+        return JsonSerializer.Serialize(value, options);
+    }
+
+    /// <summary>
+    /// Deserializes a JSON string to a <see cref="PerformanceIssue"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives null, as QueryValidator cannot be deserialized.</param>
-    /// <returns>Always false, as QueryValidator is a static class and cannot be instantiated.</returns>
-    public static bool TryFromJson(string json, out object? value)
+    /// <returns>The deserialized performance issue instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
+    public static PerformanceIssue FromJsonToPerformanceIssue(string json)
     {
-        value = null;
+        ArgumentNullException.ThrowIfNull(json);
 
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        return JsonSerializer.Deserialize<PerformanceIssue>(json, _jsonOptions)
+            ?? throw new JsonException("Deserialization returned null for non-nullable type PerformanceIssue");
+    }
+
+    /// <summary>
+    /// Attempts to deserialize a JSON string to a <see cref="PerformanceIssue"/> instance.
+    /// </summary>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="value">Receives the deserialized instance if successful.</param>
+    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    public static bool TryFromJson(this string json, out PerformanceIssue? value)
+    {
+        value = default;
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return false;
+        }
 
         try
         {
-            JsonSerializer.Deserialize<object>(json, _jsonOptions);
-            // JSON is valid, but we still can't create a QueryValidator instance
+            value = JsonSerializer.Deserialize<PerformanceIssue>(json, _jsonOptions);
+            return value is not null;
+        }
+        catch (JsonException)
+        {
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Serializes an <see cref="IndexSuggestion"/> instance to a JSON string.
+    /// </summary>
+    /// <param name="value">The index suggestion to serialize.</param>
+    /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
+    /// <returns>A JSON string representation of the index suggestion.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    public static string ToJson(this IndexSuggestion value, bool indented = false)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        var options = indented
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            : _jsonOptions;
+
+        return JsonSerializer.Serialize(value, options);
+    }
+
+    /// <summary>
+    /// Deserializes a JSON string to an <see cref="IndexSuggestion"/> instance.
+    /// </summary>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <returns>The deserialized index suggestion instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
+    public static IndexSuggestion FromJsonToIndexSuggestion(string json)
+    {
+        ArgumentNullException.ThrowIfNull(json);
+
+        return JsonSerializer.Deserialize<IndexSuggestion>(json, _jsonOptions)
+            ?? throw new JsonException("Deserialization returned null for non-nullable type IndexSuggestion");
+    }
+
+    /// <summary>
+    /// Attempts to deserialize a JSON string to an <see cref="IndexSuggestion"/> instance.
+    /// </summary>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="value">Receives the deserialized instance if successful.</param>
+    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    public static bool TryFromJson(this string json, out IndexSuggestion? value)
+    {
+        value = default;
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return false;
+        }
+
+        try
+        {
+            value = JsonSerializer.Deserialize<IndexSuggestion>(json, _jsonOptions);
+            return value is not null;
         }
         catch (JsonException)
         {
