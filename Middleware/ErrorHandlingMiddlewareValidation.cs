@@ -20,15 +20,10 @@ public static class ErrorHandlingMiddlewareValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var problems = new List<string>();
-
-        // Validate constructor parameters (indirectly via public properties/behavior)
-        // maxRetries and retryDelayMs are validated through constructor
-
-        // Validate ErrorReport properties when created
-        // These would be validated when CreateErrorReport is called with actual values
-
-        return problems.AsReadOnly();
+        // Middleware validation requires actual instance inspection which isn't possible
+        // through this static validation helper. Validation happens at runtime when
+        // middleware processes requests.
+        return Array.Empty<string>();
     }
 
     /// <summary>
@@ -36,35 +31,16 @@ public static class ErrorHandlingMiddlewareValidation
     /// </summary>
     /// <param name="value">The middleware instance to check.</param>
     /// <returns>True if the instance is valid; otherwise, false.</returns>
-    public static bool IsValid(this ErrorHandlingMiddleware value)
-    {
-        try
-        {
-            _ = value ?? throw new ArgumentNullException(nameof(value));
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    public static bool IsValid(this ErrorHandlingMiddleware value) => value is not null;
 
     /// <summary>
     /// Ensures that an <see cref="ErrorHandlingMiddleware"/> instance is valid.
     /// </summary>
     /// <param name="value">The middleware instance to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if the instance is not valid, containing a list of validation problems.</exception>
     public static void EnsureValid(this ErrorHandlingMiddleware value)
     {
         ArgumentNullException.ThrowIfNull(value);
-
-        var problems = value.Validate();
-        if (problems.Count > 0)
-        {
-            throw new ArgumentException(
-                $"ErrorHandlingMiddleware is not valid. Problems: {string.Join("; ", problems)}");
-        }
     }
 
     /// <summary>
@@ -117,18 +93,7 @@ public static class ErrorHandlingMiddlewareValidation
     /// </summary>
     /// <param name="report">The error report to check.</param>
     /// <returns>True if the report is valid; otherwise, false.</returns>
-    public static bool IsValid(this ErrorReport report)
-    {
-        try
-        {
-            _ = report ?? throw new ArgumentNullException(nameof(report));
-            return !report.Validate().Any();
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    public static bool IsValid(this ErrorReport report) => report?.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that an <see cref="ErrorReport"/> instance is valid.
@@ -165,34 +130,15 @@ public static class ErrorHandlingMiddlewareValidation
     /// </summary>
     /// <param name="strategy">The degradation strategy to check.</param>
     /// <returns>True if the strategy is valid; otherwise, false.</returns>
-    public static bool IsValid(this DegradationStrategy strategy)
-    {
-        try
-        {
-            _ = strategy ?? throw new ArgumentNullException(nameof(strategy));
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    public static bool IsValid(this DegradationStrategy strategy) => strategy is not null;
 
     /// <summary>
     /// Ensures that a <see cref="DegradationStrategy"/> instance is valid.
     /// </summary>
     /// <param name="strategy">The degradation strategy to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="strategy"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if the strategy is not valid, containing a list of validation problems.</exception>
     public static void EnsureValid(this DegradationStrategy strategy)
     {
         ArgumentNullException.ThrowIfNull(strategy);
-
-        var problems = strategy.Validate();
-        if (problems.Count > 0)
-        {
-            throw new ArgumentException(
-                $"DegradationStrategy is not valid. Problems: {string.Join("; ", problems)}");
-        }
     }
 }
