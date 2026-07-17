@@ -13,7 +13,7 @@ public static class SqlQueryAnalyzerOptionsJsonExtensions
     /// <summary>
     /// Configured JSON serializer options with camelCase naming policy.
     /// </summary>
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false
@@ -30,8 +30,12 @@ public static class SqlQueryAnalyzerOptionsJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        JsonOptions.WriteIndented = indented;
-        return JsonSerializer.Serialize(value, JsonOptions);
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = indented
+        };
+        return JsonSerializer.Serialize(value, options);
     }
 
     /// <summary>
@@ -39,10 +43,12 @@ public static class SqlQueryAnalyzerOptionsJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized options, or null if input is empty.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty.</exception>
     /// <exception cref="JsonException">Thrown when JSON is invalid.</exception>
     public static SqlQueryAnalyzerOptions? FromJson(string json)
     {
+        ArgumentNullException.ThrowIfNull(json);
         ArgumentException.ThrowIfNullOrEmpty(json);
         return JsonSerializer.Deserialize<SqlQueryAnalyzerOptions>(json, JsonOptions);
     }
@@ -53,8 +59,11 @@ public static class SqlQueryAnalyzerOptionsJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">The deserialized options, or null on failure.</param>
     /// <returns>True if deserialization succeeded, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty.</exception>
     public static bool TryFromJson(string json, out SqlQueryAnalyzerOptions? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
         ArgumentException.ThrowIfNullOrEmpty(json);
         try
         {
