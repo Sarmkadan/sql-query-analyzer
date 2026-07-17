@@ -43,6 +43,7 @@ public static class AnalysisRequestDtoJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized DTO, or null if the JSON is invalid.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is malformed and cannot be deserialized.</exception>
     public static AnalysisRequestDto? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -64,6 +65,7 @@ public static class AnalysisRequestDtoJsonExtensions
     /// <param name="value">Receives the deserialized DTO if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is malformed and cannot be deserialized.</exception>
     public static bool TryFromJson(string json, out AnalysisRequestDto? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
