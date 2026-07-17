@@ -1403,6 +1403,54 @@ Console.WriteLine($"Stage validation errors: {stageErrors.Count}");
 - `EnsureValid(this IEnumerable<QueryProfilerReport> values)` - Ensures all query profiler reports in a collection are valid, throwing an exception if not
 
 
+## SampleQueryProviderJsonExtensions
+
+The `SampleQueryProviderJsonExtensions` class provides static methods for serializing and deserializing sample query data to and from JSON. It supports conversion of sample queries organized by issue type, all samples, and random samples, enabling easy storage and transmission of test query data for SQL performance analysis scenarios.
+
+### Usage Example
+
+```csharp
+// Serialize sample queries to JSON for storage or transmission
+var json = SampleQueryProviderJsonExtensions.ToJson();
+File.WriteAllText("sample_queries.json", json);
+
+// Serialize with pretty printing for readability
+var prettyJson = SampleQueryProviderJsonExtensions.ToJson(indented: true);
+Console.WriteLine(prettyJson);
+
+// Deserialize sample queries from JSON
+string jsonData = File.ReadAllText("sample_queries.json");
+var deserializedData = SampleQueryProviderJsonExtensions.FromJson(jsonData);
+
+// Try to deserialize with error handling
+if (SampleQueryProviderJsonExtensions.TryFromJson(jsonData, out var result))
+{
+    Console.WriteLine("Successfully deserialized sample queries");
+}
+else
+{
+    Console.WriteLine("Failed to deserialize sample queries");
+}
+
+// Access the actual sample data structure
+var typedResult = SampleQueryProviderJsonExtensions.FromJson(jsonData) as JsonElement?;
+if (typedResult?.Value.TryGetProperty("allSamples", out var allSamples) == true)
+{
+    foreach (var sample in allSamples.EnumerateObject())
+    {
+        Console.WriteLine($"Issue type '{sample.Name}': {sample.Value.GetRawText()}");
+    }
+}
+```
+
+### Public Members
+
+- `ToJson(bool indented = false)` - Serializes sample queries to a JSON string, optionally formatted with indentation
+- `FromJson(string json)` - Deserializes a JSON string to sample query data
+- `TryFromJson(string json, out object? value)` - Attempts to deserialize a JSON string with error handling
+
+---
+
 ## PlanVisualizationExtensions
 
 The `PlanVisualizationExtensions` type provides extension methods for analyzing and visualizing query plan bottlenecks. It offers methods to calculate bottleneck costs, retrieve bottleneck annotations by various criteria (cost, depth, node type), analyze bottleneck distributions, and generate summary strings for plan visualization purposes.
