@@ -5,6 +5,7 @@
 // =====================================================================
 
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace SqlQueryAnalyzer.Models;
 
@@ -14,13 +15,15 @@ namespace SqlQueryAnalyzer.Models;
 public static class IndexRecommendationJsonExtensions
 {
     /// <summary>
-    /// Shared JSON serialization options with camelCase property naming.
+    /// Shared JSON serialization options with camelCase property naming and optimized settings
+    /// for <see cref="IndexRecommendation"/> serialization.
     /// </summary>
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
-        IgnoreNullValues = true
+        IgnoreNullValues = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
     /// <summary>
