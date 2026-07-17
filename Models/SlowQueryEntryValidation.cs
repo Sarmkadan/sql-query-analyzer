@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace SqlQueryAnalyzer.Models;
 
 /// <summary>
@@ -167,6 +165,7 @@ public static class SlowQueryEntryValidation
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static bool IsValid(this SlowQueryEntry value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         return value.Validate().Count == 0;
     }
 
