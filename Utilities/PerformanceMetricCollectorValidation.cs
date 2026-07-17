@@ -5,7 +5,6 @@
 // CTO & Software Architect
 // =============================================================================
 
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -26,7 +25,7 @@ public static class PerformanceMetricCollectorValidation
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate(this PerformanceMetricCollector? value)
     {
-        ArgumentNullException.ThrowIfNull(value);
+        _ = value ?? throw new ArgumentNullException(nameof(value));
 
         var errors = new List<string>();
 
@@ -97,10 +96,11 @@ public static class PerformanceMetricCollectorValidation
     /// Determines whether the specified <see cref="PerformanceMetricCollector"/> is valid.
     /// </summary>
     /// <param name="value">The performance metric collector to check.</param>
-    /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
+    /// <returns><see langword="true"/> if valid or <see langword="null"/>; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
     public static bool IsValid(this PerformanceMetricCollector? value)
     {
-        return value?.Validate().Count == 0;
+        return value is null || value.Validate().Count == 0;
     }
 
     /// <summary>
@@ -111,16 +111,12 @@ public static class PerformanceMetricCollectorValidation
     /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is invalid.</exception>
     public static void EnsureValid(this PerformanceMetricCollector? value)
     {
-        ArgumentNullException.ThrowIfNull(value);
+        _ = value ?? throw new ArgumentNullException(nameof(value));
 
         var errors = value.Validate();
         if (errors.Count > 0)
         {
-            throw new ArgumentException(
-                $"PerformanceMetricCollector is invalid:{Environment.NewLine}- {
-                    string.Join(Environment.NewLine + "- ", errors)
-                }");
+            throw new ArgumentException($"PerformanceMetricCollector is invalid:{Environment.NewLine}- {string.Join(Environment.NewLine + "- ", errors)}");
         }
     }
-
 }
