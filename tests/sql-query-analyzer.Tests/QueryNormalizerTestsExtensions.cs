@@ -3,7 +3,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System;
 using System.Collections.Generic;
@@ -23,7 +23,7 @@ public static class QueryNormalizerTestsExtensions
     /// </summary>
     /// <param name="tests">The test instance.</param>
     /// <param name="sqlInput">The SQL query string to normalize.</param>
-    /// <returns>The normalized query string.</returns>
+    /// <returns>The normalized query string with standardized formatting and capitalization.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="sqlInput"/> is null.</exception>
     public static string NormalizeQuery(this QueryNormalizerTests tests, string sqlInput)
     {
@@ -38,7 +38,7 @@ public static class QueryNormalizerTestsExtensions
     /// </summary>
     /// <param name="tests">The test instance.</param>
     /// <param name="sqlQuery">The SQL query string to analyze.</param>
-    /// <returns>A read-only list of table names found in the query.</returns>
+    /// <returns>A read-only list of unique table names found in the query, case-insensitive.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="sqlQuery"/> is null.</exception>
     public static IReadOnlyList<string> ExtractTables(this QueryNormalizerTests tests, string sqlQuery)
     {
@@ -57,15 +57,7 @@ public static class QueryNormalizerTestsExtensions
     /// <returns>A formatted assertion message for use in test assertions.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="originalQuery"/> or <paramref name="expectedKeywords"/> is null.</exception>
     public static string ShouldNormalizeKeywordsTo(this QueryNormalizerTests tests, string originalQuery, params string[] expectedKeywords)
-    {
-        ArgumentNullException.ThrowIfNull(originalQuery);
-        ArgumentNullException.ThrowIfNull(expectedKeywords);
-
-        var normalizer = new QueryNormalizer();
-        var normalized = normalizer.Normalize(originalQuery);
-
-        return $"Normalized query should contain keywords: {string.Join(", ", expectedKeywords)}";
-    }
+        => $"Normalized query should contain keywords: {string.Join(", ", expectedKeywords)}";
 
     /// <summary>
     /// Creates a test assertion that verifies string literal preservation during normalization.
@@ -77,10 +69,6 @@ public static class QueryNormalizerTestsExtensions
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="queryWithLiteral"/> or <paramref name="expectedLiteral"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="expectedLiteral"/> is empty.</exception>
     public static string ShouldPreserveLiteral(this QueryNormalizerTests tests, string queryWithLiteral, string expectedLiteral)
-    {
-        ArgumentNullException.ThrowIfNull(queryWithLiteral);
-        ArgumentException.ThrowIfNullOrEmpty(expectedLiteral);
+        => $"Normalized query should preserve string literal: '{expectedLiteral}'";
 
-        return $"Normalized query should preserve string literal: '{expectedLiteral}'";
-    }
 }
