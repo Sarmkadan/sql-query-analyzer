@@ -1298,6 +1298,87 @@ Console.WriteLine($"Stage validation errors: {stageErrors.Count}");
 - `EnsureValid(this IEnumerable<QueryProfilerReport> values)` - Ensures all query profiler reports in a collection are valid, throwing an exception if not
 
 
+## QueryRewriteExtensionsValidation
+
+The `QueryRewriteExtensionsValidation` class provides validation extension methods for the `QueryRewriteExtensions` class. It validates `QueryRewriteSuggestion` collections and results from extension methods like `GetAutoApplicable()`, `GetNonBreaking()`, `OfType()`, `ForClause()`, `OrderByImpact()`, `GetTotalEstimatedImprovement()`, `GetAllIndexSuggestions()`, and `GetRewriteSummary()`. These validation methods ensure suggestions are properly structured, have valid values, and return expected results, helping to catch issues during query rewrite analysis and optimization workflows.
+
+### Usage Example
+
+```csharp
+// Generate query rewrite suggestions from analysis results
+var analyzer = new QueryAnalyzerService();
+var analysis = await analyzer.AnalyzeQueryAsync(
+    "SELECT * FROM Orders WHERE CustomerId = 123 AND Status = 'active'");
+
+var suggestions = analysis.GetRewriteSuggestions()
+    .Where(s => s.EstimatedImprovementPercent > 5)
+    .ToList();
+
+// Validate the suggestions collection
+var validationProblems = suggestions.Validate();
+if (validationProblems.Count > 0)
+{
+    Console.WriteLine("Validation errors found:");
+    foreach (var problem in validationProblems)
+    {
+        Console.WriteLine($"- {problem}");
+    }
+    return;
+}
+
+// Validate specific extension method results
+var autoApplicableProblems = suggestions.ValidateAutoApplicable();
+var nonBreakingProblems = suggestions.ValidateNonBreaking();
+var totalImprovement = suggestions.ValidateTotalEstimatedImprovement();
+
+// Validate filtered suggestions by type
+var indexSuggestions = suggestions.ValidateAllIndexSuggestions();
+var selectStarFixes = suggestions.ValidateOfType(RewriteType.SelectStarToExplicitColumns);
+
+// Validate suggestions for a specific clause
+var whereClauseSuggestions = suggestions.ValidateForClause("WHERE");
+
+// Validate ordered suggestions by impact
+var orderedByImpact = suggestions.OrderByImpact();
+var impactValidation = orderedByImpact.ValidateOrderByImpact();
+
+// Get total estimated improvement across all suggestions
+double totalImprovementPercent = suggestions.GetTotalEstimatedImprovement();
+Console.WriteLine($"Total estimated improvement: {totalImprovementPercent:F1}%");
+
+// Get rewrite summary
+var summary = suggestions.GetRewriteSummary();
+Console.WriteLine($"Rewrite summary: {summary}");
+
+// Ensure suggestions are valid (throws exception if not)
+try
+{
+    suggestions.EnsureValid();
+    orderedByImpact.EnsureValid();
+    Console.WriteLine("All validations passed successfully!");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `Validate(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Validates a collection of query rewrite suggestions and returns a list of validation problems; empty if valid
+- `ValidateAutoApplicable(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Validates results from `GetAutoApplicable()` and ensures all suggestions are marked as auto-applicable
+- `ValidateNonBreaking(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Validates results from `GetNonBreaking()` and ensures no suggestions are breaking changes
+- `ValidateOfType(this IEnumerable<QueryRewriteSuggestion> suggestions, RewriteType rewriteType)` - Validates results from `OfType()` and ensures all suggestions have the specified rewrite type
+- `ValidateForClause(this IEnumerable<QueryRewriteSuggestion> suggestions, string clause)` - Validates results from `ForClause()` and ensures all suggestions affect the specified clause
+- `ValidateOrderByImpact(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Validates results from `OrderByImpact()` and ensures suggestions are ordered by estimated improvement (descending)
+- `ValidateTotalEstimatedImprovement(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Validates the result from `GetTotalEstimatedImprovement()` and ensures it's a valid percentage (0-100)
+- `ValidateAllIndexSuggestions(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Validates results from `GetAllIndexSuggestions()` and ensures all index suggestions have valid names and positive performance gains
+- `ValidateRewriteSummary(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Validates results from `GetRewriteSummary()` and ensures it returns a non-empty summary string
+- `IsValid(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Checks if the suggestions collection is valid (no validation problems)
+- `EnsureValid(this IEnumerable<QueryRewriteSuggestion> suggestions)` - Ensures the suggestions collection is valid, throwing an exception if not
+
+---
+
 ## QueryProfilerExtensionsJsonExtensions
 
 The `QueryProfilerExtensionsJsonExtensions` class provides static methods for serializing and deserializing query profiler-related data types to and from JSON. It supports conversion of `QueryProfilerReport`, `ProfileComparison`, `ProfilerBatchSummary`, and collections of `QueryProfilerReport` objects, enabling easy storage and transmission of profiling data.
