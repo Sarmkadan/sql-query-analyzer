@@ -42,11 +42,9 @@ public static class QueryProfilerExtensionsJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented
+        return JsonSerializer.Serialize(value, indented
             ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
-            : _jsonOptions;
-
-        return JsonSerializer.Serialize(value, options);
+            : _jsonOptions);
     }
 
     /// <summary>
@@ -104,11 +102,9 @@ public static class QueryProfilerExtensionsJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented
+        return JsonSerializer.Serialize(value, indented
             ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
-            : _jsonOptions;
-
-        return JsonSerializer.Serialize(value, options);
+            : _jsonOptions);
     }
 
     /// <summary>
@@ -166,11 +162,9 @@ public static class QueryProfilerExtensionsJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented
+        return JsonSerializer.Serialize(value, indented
             ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
-            : _jsonOptions;
-
-        return JsonSerializer.Serialize(value, options);
+            : _jsonOptions);
     }
 
     /// <summary>
@@ -228,11 +222,9 @@ public static class QueryProfilerExtensionsJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented
+        return JsonSerializer.Serialize(value, indented
             ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
-            : _jsonOptions;
-
-        return JsonSerializer.Serialize(value, options);
+            : _jsonOptions);
     }
 
     /// <summary>
