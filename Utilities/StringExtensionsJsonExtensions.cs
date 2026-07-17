@@ -12,8 +12,7 @@ namespace SqlQueryAnalyzer.Utilities;
 
 /// <summary>
 /// Provides System.Text.Json serialization extensions for serializing and deserializing
-/// <see cref="StringExtensions"/> static class.
-/// Note: StringExtensions is a static class with no state to serialize.
+/// string content with consistent JSON formatting.
 /// </summary>
 public static class StringExtensionsJsonExtensions
 {
@@ -25,15 +24,13 @@ public static class StringExtensionsJsonExtensions
     };
 
     /// <summary>
-    /// Serializes a <see cref="StringExtensions"/> static class reference to a JSON string.
-    /// Note: StringExtensions is a static class and contains no state to serialize.
-    /// This method returns a simple JSON object indicating the static class.
+    /// Serializes a string to a JSON string.
     /// </summary>
-    /// <param name="value">The StringExtensions static class reference to serialize (always null for static class).</param>
+    /// <param name="value">The string value to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
-    /// <returns>A JSON string representation indicating this is a static StringExtensions class.</returns>
+    /// <returns>A JSON string representation of the input value.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static string ToJson(object? value, bool indented = false)
+    public static string ToJson(string? value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
 
@@ -41,56 +38,43 @@ public static class StringExtensionsJsonExtensions
             ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
             : _jsonOptions;
 
-        return JsonSerializer.Serialize(new { Type = "StringExtensions.StaticClass" }, options);
+        return JsonSerializer.Serialize(value, options);
     }
 
     /// <summary>
-    /// Deserializes a JSON string to a <see cref="StringExtensions"/> instance.
-    /// Note: StringExtensions is a static class and cannot be deserialized.
-    /// This method always returns null.
+    /// Deserializes a JSON string to a string value.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>Always null, as StringExtensions is a static class and cannot be instantiated.</returns>
-    /// <exception cref="JsonException">Thrown when the JSON is malformed.</exception>
-    public static object? FromJson(string json)
+    /// <returns>The deserialized string value.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is malformed or not a string.</exception>
+    public static string FromJson(string json)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(json);
+
+        return JsonSerializer.Deserialize<string>(json, _jsonOptions)
+            ?? throw new JsonException("Deserialized value cannot be null.");
+    }
+
+    /// <summary>
+    /// Attempts to deserialize a JSON string to a string value.
+    /// </summary>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="value">Receives the deserialized string value if successful.</param>
+    /// <returns>True if deserialization succeeds; otherwise, false.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    public static bool TryFromJson(string json, out string? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
 
         try
         {
-            // Attempt to deserialize to verify JSON is valid
-            JsonSerializer.Deserialize<object>(json, _jsonOptions);
+            value = JsonSerializer.Deserialize<string>(json, _jsonOptions);
+            return true;
         }
-        catch (JsonException)
+        catch
         {
-            throw;
-        }
-
-        // StringExtensions is static and cannot be instantiated
-        return null;
-    }
-
-    /// <summary>
-    /// Attempts to deserialize a JSON string to a <see cref="StringExtensions"/> instance.
-    /// Note: StringExtensions is a static class and cannot be deserialized.
-    /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives null, as StringExtensions cannot be deserialized.</param>
-    /// <returns>Always false, as StringExtensions is a static class and cannot be instantiated.</returns>
-    public static bool TryFromJson(string json, out object? value)
-    {
-        value = null;
-
-        ArgumentException.ThrowIfNullOrEmpty(json);
-
-        try
-        {
-            JsonSerializer.Deserialize<object>(json, _jsonOptions);
-            // JSON is valid, but we still can't create a StringExtensions instance
-            return false;
-        }
-        catch (JsonException)
-        {
+            value = null;
             return false;
         }
     }
