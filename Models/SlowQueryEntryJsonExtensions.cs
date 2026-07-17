@@ -30,6 +30,7 @@ public static class SlowQueryEntryJsonExtensions
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>A JSON string representation of the slow query entry.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="JsonException">Thrown when serialization fails.</exception>
     public static string ToJson(this SlowQueryEntry value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
