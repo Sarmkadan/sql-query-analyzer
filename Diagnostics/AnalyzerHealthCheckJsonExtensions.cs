@@ -5,7 +5,7 @@ namespace SqlQueryAnalyzer.Diagnostics;
 
 public static class AnalyzerHealthCheckJsonExtensions
 {
-    private static readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions jsonSerializerOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false
@@ -29,7 +29,9 @@ public static class AnalyzerHealthCheckJsonExtensions
     /// Deserializes an <see cref="AnalyzerHealthCheck"/> instance from a JSON string.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized health check, or <see langword="null"/> if the JSON is empty.</returns>
+    /// <returns>The deserialized health check, or <see langword="null"/> if the JSON is <see langword="null"/> or whitespace.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty or consists only of whitespace.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static AnalyzerHealthCheck? FromJson(string json)
     {
@@ -44,11 +46,14 @@ public static class AnalyzerHealthCheckJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized health check if successful; otherwise, <see langword="null"/>.</param>
     /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
     public static bool TryFromJson(string json, out AnalyzerHealthCheck? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         try
         {
-            value = FromJson(json);
+            value = JsonSerializer.Deserialize<AnalyzerHealthCheck>(json, jsonSerializerOptions);
             return true;
         }
         catch (JsonException)
