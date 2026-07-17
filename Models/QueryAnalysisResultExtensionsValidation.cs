@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
 using SqlQueryAnalyzer.Constants;
 
 namespace SqlQueryAnalyzer.Models;
@@ -60,7 +61,6 @@ public static class QueryAnalysisResultExtensionsValidation
         try
         {
             var result = testResult.IsHighPerformance();
-            // Should return true when performance score >= 90 and no critical issues
             var expectedHighPerformance = testResult.PerformanceScore >= 90 && !testResult.HasCriticalIssues;
             if (result != expectedHighPerformance)
             {
@@ -76,7 +76,6 @@ public static class QueryAnalysisResultExtensionsValidation
         try
         {
             var result = testResult.NeedsOptimization();
-            // Should return true when performance score < 70 or has critical issues
             var expectedNeedsOptimization = testResult.PerformanceScore < 70 || testResult.HasCriticalIssues;
             if (result != expectedNeedsOptimization)
             {
@@ -105,7 +104,6 @@ public static class QueryAnalysisResultExtensionsValidation
                 problems.Add($"GetSeverityLevel returned '{result}', but expected '{expectedSeverity}' for PerformanceScore={testResult.PerformanceScore}, HasCriticalIssues={testResult.HasCriticalIssues}");
             }
 
-            // Validate the returned severity is one of the expected values
             var validSeverities = new[] { "Critical", "High", "Medium", "Low" };
             if (!validSeverities.Contains(result))
             {
@@ -122,11 +120,11 @@ public static class QueryAnalysisResultExtensionsValidation
         {
             var copy = testResult.DeepCopy();
 
-            if (copy == null)
+            if (copy is null)
             {
                 problems.Add("DeepCopy returned null");
             }
-            else if (copy == testResult)
+            else if (ReferenceEquals(copy, testResult))
             {
                 problems.Add("DeepCopy returned the same reference as the original (shallow copy)");
             }
@@ -163,28 +161,27 @@ public static class QueryAnalysisResultExtensionsValidation
                     problems.Add("DeepCopy did not copy EstimatedExecutionTime correctly");
                 }
 
-                if (copy.Issues == null || copy.Issues.Count != testResult.Issues.Count)
+                if (copy.Issues is null || copy.Issues.Count != testResult.Issues.Count)
                 {
                     problems.Add("DeepCopy did not copy Issues correctly");
                 }
 
-                if (copy.IndexSuggestions == null || copy.IndexSuggestions.Count != testResult.IndexSuggestions.Count)
+                if (copy.IndexSuggestions is null || copy.IndexSuggestions.Count != testResult.IndexSuggestions.Count)
                 {
                     problems.Add("DeepCopy did not copy IndexSuggestions correctly");
                 }
 
-                if (copy.ExecutionPlan != testResult.ExecutionPlan)
+                if (!ReferenceEquals(copy.ExecutionPlan, testResult.ExecutionPlan))
                 {
                     problems.Add("DeepCopy did not copy ExecutionPlan correctly");
                 }
 
-                if (copy.Statistics == null || copy.Statistics == testResult.Statistics)
+                if (copy.Statistics is null || ReferenceEquals(copy.Statistics, testResult.Statistics))
                 {
                     problems.Add("DeepCopy did not create a proper deep copy of Statistics");
                 }
                 else
                 {
-                    // Validate Statistics was also deep copied
                     if (copy.Statistics.ExecutionCount != testResult.Statistics.ExecutionCount ||
                         copy.Statistics.TotalCpuTime != testResult.Statistics.TotalCpuTime ||
                         copy.Statistics.TotalLogicalReads != testResult.Statistics.TotalLogicalReads)
@@ -193,7 +190,7 @@ public static class QueryAnalysisResultExtensionsValidation
                     }
                 }
 
-                if (copy.Metadata == null || copy.Metadata.Count != testResult.Metadata.Count || copy.Metadata == testResult.Metadata)
+                if (copy.Metadata is null || copy.Metadata.Count != testResult.Metadata.Count || ReferenceEquals(copy.Metadata, testResult.Metadata))
                 {
                     problems.Add("DeepCopy did not create a proper deep copy of Metadata");
                 }
@@ -209,7 +206,7 @@ public static class QueryAnalysisResultExtensionsValidation
         {
             var result = testResult.FormatSummary();
 
-            if (result == null)
+            if (result is null)
             {
                 problems.Add("FormatSummary returned null");
             }
@@ -219,7 +216,6 @@ public static class QueryAnalysisResultExtensionsValidation
             }
             else
             {
-                // Validate the summary contains expected information
                 if (!result.Contains(testResult.QueryId))
                 {
                     problems.Add("FormatSummary does not contain QueryId");
@@ -246,7 +242,7 @@ public static class QueryAnalysisResultExtensionsValidation
         {
             var result = testResult.ToJsonString();
 
-            if (result == null)
+            if (result is null)
             {
                 problems.Add("ToJsonString returned null");
             }
@@ -256,10 +252,9 @@ public static class QueryAnalysisResultExtensionsValidation
             }
             else
             {
-                // Validate it's valid JSON by attempting to parse it
                 try
                 {
-                    System.Text.Json.JsonDocument.Parse(result);
+                    JsonDocument.Parse(result);
                 }
                 catch (Exception jsonEx)
                 {
@@ -283,6 +278,7 @@ public static class QueryAnalysisResultExtensionsValidation
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null</exception>
     public static bool AreQueryAnalysisResultExtensionsValid(this QueryAnalysisResult value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         return value.ValidateQueryAnalysisResultExtensions().Count == 0;
     }
 
@@ -294,6 +290,7 @@ public static class QueryAnalysisResultExtensionsValidation
     /// <exception cref="ArgumentException">Thrown when extension method results contain validation problems</exception>
     public static void EnsureQueryAnalysisResultExtensionsAreValid(this QueryAnalysisResult value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         var problems = value.ValidateQueryAnalysisResultExtensions();
 
         if (problems.Count > 0)
