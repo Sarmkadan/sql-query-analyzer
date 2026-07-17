@@ -1555,6 +1555,87 @@ catch (ArgumentException ex)
 
 ---
 
+## DatabaseConnectionValidatorJsonExtensions
+
+The `DatabaseConnectionValidatorJsonExtensions` class provides static extension methods for serializing and deserializing `DatabaseConnectionValidator`, `ConnectionValidationResult`, and `ConnectionTestResult` objects to and from JSON. These methods support both compact and indented JSON formatting, with proper null handling and error checking for robust serialization workflows.
+
+### Usage Example
+
+```csharp
+// Create a database connection validator
+var validator = new DatabaseConnectionValidator(
+    server: "localhost",
+    database: "TestDB",
+    username: "admin",
+    password: "securePassword123",
+    timeoutSeconds: 30);
+
+// Serialize to JSON (compact format)
+string json = validator.ToJson();
+Console.WriteLine(json);
+
+// Serialize to pretty-printed JSON for logging
+string prettyJson = validator.ToJson(indented: true);
+File.WriteAllText("validator.json", prettyJson);
+
+// Validate a connection and get the result
+var validationResult = new ConnectionValidationResult
+{
+    IsSuccessful = true,
+    ConnectionTimeMs = 125,
+    ServerVersion = "Microsoft SQL Server 2022 (RTM)",
+    DatabaseExists = true,
+    SchemaValidated = true,
+    RequiredTablesExist = true,
+    Message = "Connection validated successfully"
+};
+
+// Serialize validation result
+string validationJson = validationResult.ToJson();
+Console.WriteLine(validationJson);
+
+// Deserialize validation result (returns null if JSON is empty)
+string validationJsonData = File.ReadAllText("validation_result.json");
+var deserializedResult = DatabaseConnectionValidatorJsonExtensions.FromJsonToConnectionValidationResult(validationJsonData);
+
+// Try to deserialize with error handling
+if (DatabaseConnectionValidatorJsonExtensions.TryFromJson(validationJsonData, out var result))
+{
+    Console.WriteLine("Successfully deserialized ConnectionValidationResult");
+    Console.WriteLine($"Connection time: {result?.ConnectionTimeMs}ms");
+}
+
+// Serialize a connection test result
+var testResult = new ConnectionTestResult
+{
+    TestName = "Login Test",
+    IsSuccessful = true,
+    DurationMs = 45,
+    Message = "Login successful"
+};
+
+string testJson = testResult.ToJson();
+Console.WriteLine(testJson);
+
+// Deserialize test result
+var deserializedTest = DatabaseConnectionValidatorJsonExtensions.FromJsonToConnectionTestResult(testJson);
+Console.WriteLine($"Test result: {deserializedTest?.TestName} - {(deserializedTest?.IsSuccessful == true ? "PASSED" : "FAILED")}");
+```
+
+### Public Members
+
+- `ToJson(this DatabaseConnectionValidator value, bool indented = false)` - Serializes a `DatabaseConnectionValidator` to a JSON string, optionally formatted with indentation
+- `FromJson(string json)` - Deserializes JSON to a `DatabaseConnectionValidator` instance (always returns null as the type requires dependency injection)
+- `TryFromJson(string json, out DatabaseConnectionValidator? value)` - Attempts to deserialize JSON to a `DatabaseConnectionValidator` instance (always returns false)
+- `ToJson(this ConnectionValidationResult value, bool indented = false)` - Serializes a `ConnectionValidationResult` to a JSON string, optionally formatted with indentation
+- `FromJsonToConnectionValidationResult(string json)` - Deserializes JSON to a `ConnectionValidationResult` instance, or null if JSON is empty
+- `TryFromJson(string json, out ConnectionValidationResult? value)` - Attempts to deserialize JSON to a `ConnectionValidationResult` instance with error handling
+- `ToJson(this ConnectionTestResult value, bool indented = false)` - Serializes a `ConnectionTestResult` to a JSON string, optionally formatted with indentation
+- `FromJsonToConnectionTestResult(string json)` - Deserializes JSON to a `ConnectionTestResult` instance, or null if JSON is empty
+- `TryFromJson(string json, out ConnectionTestResult? value)` - Attempts to deserialize JSON to a `ConnectionTestResult` instance with error handling
+
+---
+
 ## CommandLineArgumentsExtensions
 
 The `CommandLineArgumentsExtensions` class provides extension methods for the `CommandLineArguments` type, enhancing type safety and simplifying common operations when working with command-line arguments. It includes methods for determining output behavior, resolving file paths with appropriate extensions, checking feature flags, normalizing configuration values, and filtering analysis parameters. These utilities help ensure consistent behavior across the CLI while reducing boilerplate code.
