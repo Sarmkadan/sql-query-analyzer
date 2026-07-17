@@ -1427,6 +1427,90 @@ catch (ArgumentException ex)
 
 ---
 
+## ErrorHandlingMiddlewareValidation
+
+The `ErrorHandlingMiddlewareValidation` class provides validation helpers for the `ErrorHandlingMiddleware` and related error handling types. It offers extension methods for validating middleware instances, error reports, and degradation strategies, returning validation errors or boolean validation status. Methods are provided for both validation with error collection and exception-throwing validation.
+
+### Usage Example
+
+```csharp
+// Create and configure error handling middleware
+var errorHandlingMiddleware = new ErrorHandlingMiddleware(
+    loggerFactory: LoggerFactory.Create(builder => builder.AddConsole()),
+    includeStackTrace: true,
+    degradationStrategy: DegradationStrategy.GracefulDegradation
+);
+
+// Validate middleware instance
+var middlewareErrors = errorHandlingMiddleware.Validate();
+Console.WriteLine($"Middleware validation errors: {middlewareErrors.Count}");
+
+// Check if middleware is valid
+bool isMiddlewareValid = errorHandlingMiddleware.IsValid();
+Console.WriteLine($"Middleware is valid: {isMiddlewareValid}");
+
+// Validate an error report
+var errorReport = new ErrorReport
+{
+    ErrorMessage = "Database connection failed",
+    ErrorType = "DatabaseException",
+    StackTrace = "at SqlQueryAnalyzer.DatabaseService.Connect() in DatabaseService.cs:line 42",
+    Context = "Query analysis pipeline",
+    Timestamp = DateTime.UtcNow,
+    Suggestion = "Check database connection string and ensure server is available"
+};
+
+var reportErrors = errorReport.Validate();
+if (reportErrors.Count > 0)
+{
+    Console.WriteLine("Error report validation errors:");
+    foreach (var error in reportErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("Error report is valid!");
+}
+
+// Check if error report is valid
+bool isReportValid = errorReport.IsValid();
+Console.WriteLine($"Error report is valid: {isReportValid}");
+
+// Validate a degradation strategy
+var strategy = DegradationStrategy.GracefulDegradation;
+var strategyErrors = strategy.Validate();
+Console.WriteLine($"Degradation strategy validation errors: {strategyErrors.Count}");
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+    errorHandlingMiddleware.EnsureValid();
+    errorReport.EnsureValid();
+    strategy.EnsureValid();
+    Console.WriteLine("All validations passed successfully!");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `Validate(this ErrorHandlingMiddleware value)` - Validates an ErrorHandlingMiddleware instance and returns a list of validation problems (empty if valid)
+- `IsValid(this ErrorHandlingMiddleware value)` - Determines whether the specified ErrorHandlingMiddleware instance is valid
+- `EnsureValid(this ErrorHandlingMiddleware value)` - Ensures that the specified ErrorHandlingMiddleware instance is valid, throwing an exception if not
+- `Validate(this ErrorReport report)` - Validates an ErrorReport instance and returns a list of validation problems
+- `IsValid(this ErrorReport report)` - Determines whether the specified ErrorReport is valid
+- `EnsureValid(this ErrorReport report)` - Ensures that the specified ErrorReport is valid, throwing an exception if not
+- `Validate(this DegradationStrategy strategy)` - Validates a DegradationStrategy instance and returns a list of validation problems (empty if valid)
+- `IsValid(this DegradationStrategy strategy)` - Determines whether the specified DegradationStrategy is valid
+- `EnsureValid(this DegradationStrategy strategy)` - Ensures that the specified DegradationStrategy is valid, throwing an exception if not
+
+---
+
 ## SqlPatternAnalyzerTestsExtensions
 
 The `SqlPatternAnalyzerTestsExtensions` class provides extension methods for the `SqlPatternAnalyzerTests` class that simplify execution of related test groups. These methods combine multiple test invocations into convenient one-call methods, making it easier to run specific categories of tests without boilerplate code. The extensions cover SELECT * pattern detection, N+1 pattern detection, readability score calculation, and optimization recommendations.
