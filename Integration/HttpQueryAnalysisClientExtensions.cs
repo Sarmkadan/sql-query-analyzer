@@ -5,8 +5,6 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Globalization;
-using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Models;
 using SqlQueryAnalyzer.Constants;
 
@@ -25,7 +23,7 @@ public static class HttpQueryAnalysisClientExtensions
     /// <param name="queries">The queries to analyze.</param>
     /// <param name="maxDegreeOfParallelism">Maximum degree of parallelism for analysis.</param>
     /// <returns>Read-only list of analysis results in the same order as input queries.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="queries"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="client"/> or <paramref name="queries"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="queries"/> is empty.</exception>
     public static async Task<IReadOnlyList<QueryAnalysisResult>> AnalyzeQueriesAsync(
         this HttpQueryAnalysisClient client,
@@ -40,18 +38,13 @@ public static class HttpQueryAnalysisClientExtensions
             throw new ArgumentException("Queries collection cannot be empty.", nameof(queries));
         }
 
-        var request = new BatchAnalysisRequest
-        {
-            Queries = queries,
-            MaxDegreeOfParallelism = maxDegreeOfParallelism
-        };
-
-        var results = await client.AnalyzeBatchAsync(request.Queries);
+        var results = await client.AnalyzeBatchAsync(queries);
 
         // Ensure results are in the same order as input queries
         if (results.Count != queries.Length)
         {
-            // No logging available as logger is private in HttpQueryAnalysisClient
+            throw new InvalidOperationException(
+                $"Batch analysis returned {results.Count} results but expected {queries.Length}. Query order cannot be guaranteed.");
         }
 
         return results.AsReadOnly();
@@ -64,7 +57,7 @@ public static class HttpQueryAnalysisClientExtensions
     /// <param name="query">The SQL query to analyze.</param>
     /// <param name="options">Optional analysis options (e.g., timeout, rules to apply).</param>
     /// <returns>The analysis result.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="query"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="client"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="query"/> is empty or whitespace.</exception>
     public static async Task<QueryAnalysisResult> AnalyzeQueryAsync(
         this HttpQueryAnalysisClient client,
@@ -74,13 +67,7 @@ public static class HttpQueryAnalysisClientExtensions
         ArgumentNullException.ThrowIfNull(client);
         ArgumentException.ThrowIfNullOrWhiteSpace(query, nameof(query));
 
-        var request = new AnalysisRequest
-        {
-            Query = query,
-            Options = options
-        };
-
-        return await client.AnalyzeQueryAsync(request.Query);
+        return await client.AnalyzeQueryAsync(query, options: options);
     }
 
     /// <summary>
@@ -173,7 +160,7 @@ public static class HttpQueryAnalysisClientExtensions
         catch (OperationCanceledException)
         {
             throw new TimeoutException(
-                $"Query analysis timed out after {timeout.TotalSeconds.ToString(CultureInfo.InvariantCulture)} seconds.");
+                $"Query analysis timed out after {timeout.TotalSeconds:F1} seconds.");
         }
     }
 
@@ -239,10 +226,7 @@ public static class HttpQueryAnalysisClientExtensions
 
             for (var j = 0; j < results.Count; j++)
             {
-                if (j < totalScores.Length)
-                {
-                    totalScores[j] += results[j].PerformanceScore;
-                }
+                totalScores[j] += results[j].PerformanceScore;
             }
         }
 
