@@ -43,11 +43,13 @@ public static class BatchAnalysisProcessorJsonExtensions
 
     /// <summary>
     /// Deserializes a JSON string into a <see cref="BatchAnalysisProcessor"/> instance.
-    /// Note: BatchAnalysisProcessor requires constructor parameters and cannot be deserialized directly.
-    /// This method attempts deserialization and returns null if it fails.
+    /// Note: BatchAnalysisProcessor requires constructor parameters (IQueryAnalyzerService, ILogger{BatchAnalysisProcessor})
+    /// and cannot be deserialized directly. This method throws JsonException for invalid JSON.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized processor instance, or null if deserialization fails.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
     public static BatchAnalysisProcessor? FromJson(string json)
     {
@@ -66,18 +68,18 @@ public static class BatchAnalysisProcessorJsonExtensions
     /// <summary>
     /// Attempts to deserialize a JSON string into a <see cref="BatchAnalysisProcessor"/> instance.
     /// Note: BatchAnalysisProcessor requires constructor parameters and cannot be deserialized directly.
-    /// This method returns false if deserialization fails.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized processor if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out BatchAnalysisProcessor? value)
     {
         value = null;
 
         if (string.IsNullOrEmpty(json))
         {
-            return true;
+            return false;
         }
 
         try
