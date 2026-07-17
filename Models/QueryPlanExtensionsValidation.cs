@@ -3,12 +3,10 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =====================================================================
+// ===================================================================
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 
 namespace SqlQueryAnalyzer.Models;
 
@@ -20,9 +18,9 @@ public static class QueryPlanExtensionsValidation
     /// <summary>
     /// Validates the return values from QueryPlanExtensions extension methods
     /// </summary>
-    /// <param name="plan">The query plan to validate extension method results against</param>
-    /// <returns>List of validation problems (empty if all extension method results are valid)</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="plan"/> is null</exception>
+    /// <param name="plan">The query plan to validate extension method results against.</param>
+    /// <returns>List of validation problems (empty if all extension method results are valid).</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="plan"/> is null.</exception>
     public static IReadOnlyList<string> ValidateQueryPlanExtensions(this QueryPlan plan)
     {
         ArgumentNullException.ThrowIfNull(plan);
@@ -34,11 +32,13 @@ public static class QueryPlanExtensionsValidation
         {
             var node = new PlanNode { EstimatedCost = 100 };
             var result = plan.GetCostPercentage(node);
+
             if (double.IsNaN(result) || double.IsInfinity(result))
             {
                 problems.Add("GetCostPercentage returned NaN or Infinity");
             }
-            if (result < 0 || result > 100)
+
+            if (result is < 0 or > 100)
             {
                 problems.Add("GetCostPercentage returned value outside valid range [0, 100]");
             }
@@ -52,7 +52,8 @@ public static class QueryPlanExtensionsValidation
         try
         {
             var result = plan.GetNodesAboveThreshold(0);
-            if (result == null)
+
+            if (result is null)
             {
                 problems.Add("GetNodesAboveThreshold returned null");
             }
@@ -70,10 +71,12 @@ public static class QueryPlanExtensionsValidation
         try
         {
             var result = plan.CalculateCumulativeCost();
+
             if (double.IsNaN(result) || double.IsInfinity(result))
             {
                 problems.Add("CalculateCumulativeCost returned NaN or Infinity");
             }
+
             if (result < 0)
             {
                 problems.Add("CalculateCumulativeCost returned negative value");
@@ -88,8 +91,9 @@ public static class QueryPlanExtensionsValidation
         try
         {
             var result = plan.GetMostExpensiveTableAccess();
+
             // Null is acceptable if no table accesses exist
-            if (result != null && result.GetType().Name != nameof(TableAccess))
+            if (result is not null && result.GetType() != typeof(TableAccess))
             {
                 problems.Add("GetMostExpensiveTableAccess did not return TableAccess or null");
             }
@@ -103,8 +107,9 @@ public static class QueryPlanExtensionsValidation
         try
         {
             var result = plan.GetMostExpensiveJoin();
+
             // Null is acceptable if no joins exist
-            if (result != null && result.GetType().Name != nameof(Join))
+            if (result is not null && result.GetType() != typeof(Join))
             {
                 problems.Add("GetMostExpensiveJoin did not return Join or null");
             }
@@ -117,7 +122,7 @@ public static class QueryPlanExtensionsValidation
         // Test HasTableScans
         try
         {
-            var _ = plan.HasTableScans();
+            _ = plan.HasTableScans();
         }
         catch (Exception ex)
         {
@@ -128,7 +133,8 @@ public static class QueryPlanExtensionsValidation
         try
         {
             var result = plan.GetFilteringNodes();
-            if (result == null)
+
+            if (result is null)
             {
                 problems.Add("GetFilteringNodes returned null");
             }
@@ -146,10 +152,12 @@ public static class QueryPlanExtensionsValidation
         try
         {
             var result = plan.GetCpuToIoCostRatio();
+
             if (double.IsNaN(result) || double.IsInfinity(result))
             {
                 problems.Add("GetCpuToIoCostRatio returned NaN or Infinity");
             }
+
             if (result < 0)
             {
                 problems.Add("GetCpuToIoCostRatio returned negative value");
@@ -164,7 +172,8 @@ public static class QueryPlanExtensionsValidation
         try
         {
             var result = plan.GetSortingNodes();
-            if (result == null)
+
+            if (result is null)
             {
                 problems.Add("GetSortingNodes returned null");
             }
@@ -182,7 +191,8 @@ public static class QueryPlanExtensionsValidation
         try
         {
             var result = plan.GetPerformanceSummary();
-            if (result == null)
+
+            if (result is null)
             {
                 problems.Add("GetPerformanceSummary returned null");
             }
@@ -199,7 +209,7 @@ public static class QueryPlanExtensionsValidation
         // Test IsEfficient
         try
         {
-            var _ = plan.IsEfficient();
+            _ = plan.IsEfficient();
         }
         catch (Exception ex)
         {
@@ -210,7 +220,8 @@ public static class QueryPlanExtensionsValidation
         try
         {
             var result = plan.GetNodesForTable("test");
-            if (result == null)
+
+            if (result is null)
             {
                 problems.Add("GetNodesForTable returned null");
             }
@@ -228,23 +239,27 @@ public static class QueryPlanExtensionsValidation
     }
 
     /// <summary>
-    /// Determines whether the QueryPlanExtensions extension method results are valid
+    /// Determines whether the QueryPlanExtensions extension method results are valid.
     /// </summary>
-    /// <param name="plan">The query plan to check extension method results against</param>
-    /// <returns>True if all extension method results are valid; otherwise, false</returns>
+    /// <param name="plan">The query plan to check extension method results against.</param>
+    /// <returns>True if all extension method results are valid; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="plan"/> is null.</exception>
     public static bool AreQueryPlanExtensionsValid(this QueryPlan plan)
     {
+        ArgumentNullException.ThrowIfNull(plan);
         return plan.ValidateQueryPlanExtensions().Count == 0;
     }
 
     /// <summary>
-    /// Ensures that the QueryPlanExtensions extension method results are valid, throwing an exception if they are not
+    /// Ensures that the QueryPlanExtensions extension method results are valid, throwing an exception if they are not.
     /// </summary>
-    /// <param name="plan">The query plan to validate extension method results against</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="plan"/> is null</exception>
-    /// <exception cref="ArgumentException">Thrown when extension method results contain validation problems</exception>
+    /// <param name="plan">The query plan to validate extension method results against.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="plan"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when extension method results contain validation problems.</exception>
     public static void EnsureQueryPlanExtensionsAreValid(this QueryPlan plan)
     {
+        ArgumentNullException.ThrowIfNull(plan);
+
         var problems = plan.ValidateQueryPlanExtensions();
 
         if (problems.Count > 0)
