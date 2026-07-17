@@ -6,8 +6,7 @@ using System.Text.Json.Serialization;
 namespace SqlQueryAnalyzer.Integration;
 
 /// <summary>
-/// Provides System.Text.Json serialization extensions for HttpQueryAnalysisClientJsonExtensions.
-/// Enables easy JSON serialization/deserialization of type markers for HttpQueryAnalysisClientJsonExtensions.
+/// Provides JSON serialization utilities for type markers used with HttpQueryAnalysisClient.
 /// </summary>
 public static class HttpQueryAnalysisClientJsonExtensionsJsonExtensions
 {
@@ -19,11 +18,11 @@ public static class HttpQueryAnalysisClientJsonExtensionsJsonExtensions
     };
 
     /// <summary>
-    /// Serializes a type marker representing HttpQueryAnalysisClientJsonExtensions to a JSON string.
+    /// Serializes a type marker representing HttpQueryAnalysisClient to a JSON string.
     /// </summary>
     /// <param name="value">This parameter is ignored; only the type context is used.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
-    /// <returns>A JSON string representation of the HttpQueryAnalysisClientJsonExtensions type marker.</returns>
+    /// <returns>A JSON string representation of the HttpQueryAnalysisClient type marker.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public static string ToJson(this object value, bool indented = false)
     {
@@ -33,11 +32,11 @@ public static class HttpQueryAnalysisClientJsonExtensionsJsonExtensions
             ? new JsonSerializerOptions(_jsonSerializerOptions) { WriteIndented = true }
             : _jsonSerializerOptions;
 
-        return JsonSerializer.Serialize(new { Type = nameof(HttpQueryAnalysisClientJsonExtensions) }, options);
+        return JsonSerializer.Serialize(new { Type = nameof(HttpQueryAnalysisClient) }, options);
     }
 
     /// <summary>
-    /// Deserializes a JSON string into a type marker representing HttpQueryAnalysisClientJsonExtensions.
+    /// Deserializes a JSON string into a type marker object.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A type marker object, or <see langword="null"/> if the JSON is empty or invalid.</returns>
@@ -57,7 +56,7 @@ public static class HttpQueryAnalysisClientJsonExtensionsJsonExtensions
     }
 
     /// <summary>
-    /// Attempts to deserialize a JSON string into a type marker representing HttpQueryAnalysisClientJsonExtensions.
+    /// Attempts to deserialize a JSON string into a type marker object.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized type marker if successful.</param>
