@@ -53,12 +53,9 @@ public static class PerformanceIssueExtensions
 
         var impactText = issue.EstimatedPerformanceImpact.ToString("P0", CultureInfo.InvariantCulture);
 
-        if (issue.AffectedRowCount.HasValue && issue.AffectedRowCount > 0)
-        {
-            return $"{impactText} impact on {issue.AffectedRowCount:N0} rows";
-        }
-
-        return $"{impactText} performance impact";
+        return issue.AffectedRowCount.HasValue && issue.AffectedRowCount > 0
+            ? $"{impactText} impact on {issue.AffectedRowCount:N0} rows"
+            : $"{impactText} performance impact";
     }
 
     /// <summary>
@@ -90,12 +87,12 @@ public static class PerformanceIssueExtensions
     }
 
     /// <summary>
-    /// Gets the formatted metadata as a dictionary of key-value pairs.
+    /// Gets the formatted metadata as a collection of key-value pairs.
     /// </summary>
     /// <param name="issue">The performance issue.</param>
-    /// <returns>An enumerable of key-value pairs for the metadata.</returns>
+    /// <returns>A read-only collection of key-value pairs for the metadata.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="issue"/> is null.</exception>
-    public static IEnumerable<KeyValuePair<string, string>> GetMetadataPairs(this PerformanceIssue issue)
+    public static IReadOnlyCollection<KeyValuePair<string, string>> GetMetadataPairs(this PerformanceIssue issue)
     {
         ArgumentNullException.ThrowIfNull(issue);
 
@@ -190,7 +187,7 @@ public static class PerformanceIssueExtensions
     /// Orders a collection of performance issues by priority (descending).
     /// </summary>
     /// <param name="issues">The collection of performance issues.</param>
-    /// <returns>An enumerable of performance issues ordered by priority.</returns>
+    /// <returns>An ordered enumerable of performance issues ordered by priority.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="issues"/> is null.</exception>
     public static IOrderedEnumerable<PerformanceIssue> OrderByPriority(
         this IEnumerable<PerformanceIssue> issues)
@@ -198,7 +195,7 @@ public static class PerformanceIssueExtensions
         ArgumentNullException.ThrowIfNull(issues);
 
         return issues.OrderByDescending(i => i.Priority)
-                   .ThenByDescending(i => i.EstimatedPerformanceImpact);
+            .ThenByDescending(i => i.EstimatedPerformanceImpact);
     }
 
     /// <summary>
@@ -213,8 +210,9 @@ public static class PerformanceIssueExtensions
         ArgumentNullException.ThrowIfNull(issues);
 
         return issues.GroupBy(i => i.IssueType)
-                   .ToDictionary(
-                       g => g.Key,
-                       g => (IReadOnlyList<PerformanceIssue>)g.ToList().AsReadOnly());
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<PerformanceIssue>)g.ToList().AsReadOnly()
+            );
     }
 }
