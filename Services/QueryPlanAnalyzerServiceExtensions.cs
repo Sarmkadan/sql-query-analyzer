@@ -1,4 +1,5 @@
 #nullable enable
+
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -25,17 +26,20 @@ public static class QueryPlanAnalyzerServiceExtensions
     /// <param name="plan">The query plan to analyze</param>
     /// <param name="topN">Number of top operations to return (default: 5)</param>
     /// <returns>List of expensive operations sorted by estimated cost</returns>
+    /// <exception cref="ArgumentNullException">Thrown when service is null</exception>
     /// <exception cref="ArgumentNullException">Thrown when plan is null</exception>
-    public static async Task<IReadOnlyList<PlanNode>> GetExpensiveOperationsAsync(
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when topN is less than 1</exception>
+    public static Task<IReadOnlyList<PlanNode>> GetExpensiveOperationsAsync(
         this QueryPlanAnalyzerService service,
         QueryPlan plan,
         int topN = 5)
     {
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(plan);
+        ArgumentOutOfRangeException.ThrowIfLessThan(topN, 1);
 
-        await Task.CompletedTask;
-        return plan.GetExpensiveOperations(topN);
+        var result = plan.GetExpensiveOperations(topN);
+        return Task.FromResult<IReadOnlyList<PlanNode>>(result);
     }
 
     /// <summary>
@@ -44,16 +48,17 @@ public static class QueryPlanAnalyzerServiceExtensions
     /// <param name="service">The analyzer service instance</param>
     /// <param name="plan">The query plan to analyze</param>
     /// <returns>List of all index operations</returns>
+    /// <exception cref="ArgumentNullException">Thrown when service is null</exception>
     /// <exception cref="ArgumentNullException">Thrown when plan is null</exception>
-    public static async Task<IReadOnlyList<PlanNode>> GetIndexOperationsAsync(
+    public static Task<IReadOnlyList<PlanNode>> GetIndexOperationsAsync(
         this QueryPlanAnalyzerService service,
         QueryPlan plan)
     {
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(plan);
 
-        await Task.CompletedTask;
-        return plan.GetIndexOperations();
+        var result = plan.GetIndexOperations();
+        return Task.FromResult<IReadOnlyList<PlanNode>>(result);
     }
 
     /// <summary>
@@ -62,16 +67,16 @@ public static class QueryPlanAnalyzerServiceExtensions
     /// <param name="service">The analyzer service instance</param>
     /// <param name="plan">The query plan to analyze</param>
     /// <returns>Dictionary containing plan summary statistics</returns>
+    /// <exception cref="ArgumentNullException">Thrown when service is null</exception>
     /// <exception cref="ArgumentNullException">Thrown when plan is null</exception>
-    public static async Task<Dictionary<string, object>> GetPlanSummaryAsync(
+    public static Task<Dictionary<string, object>> GetPlanSummaryAsync(
         this QueryPlanAnalyzerService service,
         QueryPlan plan)
     {
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(plan);
 
-        await Task.CompletedTask;
-        return plan.ToSummary();
+        return Task.FromResult(plan.ToSummary());
     }
 
     /// <summary>
@@ -80,7 +85,8 @@ public static class QueryPlanAnalyzerServiceExtensions
     /// <param name="service">The analyzer service instance</param>
     /// <param name="issues">List of performance issues to group</param>
     /// <returns>Dictionary grouping issues by their <see cref="IssueType"/></returns>
-    /// <exception cref="ArgumentNullException">Thrown when service or issues is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown when service is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown when issues is null</exception>
     public static IReadOnlyDictionary<IssueType, IReadOnlyList<PerformanceIssue>> GroupByIssueType(
         this QueryPlanAnalyzerService service,
         IEnumerable<PerformanceIssue> issues)
@@ -105,19 +111,22 @@ public static class QueryPlanAnalyzerServiceExtensions
     /// <param name="plan">The query plan to analyze</param>
     /// <param name="minRowThreshold">Minimum row count threshold for high-impact scans (default: 1000)</param>
     /// <returns>List of high-impact table scans</returns>
-    /// <exception cref="ArgumentNullException">Thrown when service or plan is null</exception>
-    public static async Task<IReadOnlyList<PlanNode>> GetHighImpactTableScansAsync(
+    /// <exception cref="ArgumentNullException">Thrown when service is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown when plan is null</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when minRowThreshold is less than 0</exception>
+    public static Task<IReadOnlyList<PlanNode>> GetHighImpactTableScansAsync(
         this QueryPlanAnalyzerService service,
         QueryPlan plan,
         int minRowThreshold = 1000)
     {
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(plan);
+        ArgumentOutOfRangeException.ThrowIfNegative(minRowThreshold);
 
-        await Task.CompletedTask;
-        return plan.GetTableScans()
+        var result = plan.GetTableScans()
             .Where(scan => scan.EstimatedRows >= minRowThreshold)
             .ToList();
+        return Task.FromResult<IReadOnlyList<PlanNode>>(result);
     }
 
     /// <summary>
@@ -126,15 +135,14 @@ public static class QueryPlanAnalyzerServiceExtensions
     /// <param name="service">The analyzer service instance</param>
     /// <param name="plan">The query plan to analyze</param>
     /// <returns>Performance score where 0 is optimal and 100 is worst</returns>
-    /// <exception cref="ArgumentNullException">Thrown when service or plan is null</exception>
-    public static async Task<int> GetPerformanceScoreAsync(
+    /// <exception cref="ArgumentNullException">Thrown when service is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown when plan is null</exception>
+    public static Task<int> GetPerformanceScoreAsync(
         this QueryPlanAnalyzerService service,
         QueryPlan plan)
     {
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(plan);
-
-        await Task.CompletedTask;
 
         var score = 0;
 
@@ -148,27 +156,27 @@ public static class QueryPlanAnalyzerServiceExtensions
         score += (int)Math.Min(plan.Joins.Sum(j => j.EstimatedCost) * 3, 20);
 
         // Add penalty for high row estimates
-        if (plan.TotalEstimatedRows > 1000000)
+        if (plan.TotalEstimatedRows > 1_000_000)
         {
             score += 15;
         }
-        else if (plan.TotalEstimatedRows > 100000)
+        else if (plan.TotalEstimatedRows > 100_000)
         {
             score += 10;
         }
-        else if (plan.TotalEstimatedRows > 10000)
+        else if (plan.TotalEstimatedRows > 10_000)
         {
             score += 5;
         }
 
         // Add penalty for large result sets
-        if (plan.TotalEstimatedRows > 10000)
+        if (plan.TotalEstimatedRows > 10_000)
         {
             score += 10;
         }
 
         // Cap at 100
-        return Math.Min(score, 100);
+        return Task.FromResult(Math.Min(score, 100));
     }
 
     /// <summary>
@@ -178,7 +186,8 @@ public static class QueryPlanAnalyzerServiceExtensions
     /// <param name="plan">The query plan to analyze</param>
     /// <param name="culture">Culture for formatting numbers (default: InvariantCulture)</param>
     /// <returns>Formatted analysis report string</returns>
-    /// <exception cref="ArgumentNullException">Thrown when service or plan is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown when service is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown when plan is null</exception>
     public static async Task<string> GetAnalysisReportAsync(
         this QueryPlanAnalyzerService service,
         QueryPlan plan,
@@ -187,7 +196,6 @@ public static class QueryPlanAnalyzerServiceExtensions
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(plan);
 
-        await Task.CompletedTask;
         culture ??= CultureInfo.InvariantCulture;
 
         var report = new System.Text.StringBuilder();
@@ -200,13 +208,13 @@ public static class QueryPlanAnalyzerServiceExtensions
 
         report.AppendLine("=== PLAN SUMMARY ===");
         report.AppendLine($"Total Estimated Cost: {plan.TotalEstimatedCost:F2}");
-        report.AppendLine($"Total Estimated Rows: {plan.TotalEstimatedRows:N0}");
-        report.AppendLine($"Total Logical Reads: {plan.TotalLogicalReads:N0}");
-        report.AppendLine($"Total Physical Reads: {plan.TotalPhysicalReads:N0}");
-        report.AppendLine($"Total Nodes: {plan.AllNodes.Count:N0}");
-        report.AppendLine($"Table Accesses: {plan.TableAccesses.Count:N0}");
-        report.AppendLine($"Joins: {plan.Joins.Count:N0}");
-        report.AppendLine($"Table Scans: {plan.GetTableScans().Count:N0}");
+        report.AppendLine(string.Format(culture, "Total Estimated Rows: {0:N0}", plan.TotalEstimatedRows));
+        report.AppendLine(string.Format(culture, "Total Logical Reads: {0:N0}", plan.TotalLogicalReads));
+        report.AppendLine(string.Format(culture, "Total Physical Reads: {0:N0}", plan.TotalPhysicalReads));
+        report.AppendLine(string.Format(culture, "Total Nodes: {0:N0}", plan.AllNodes.Count));
+        report.AppendLine(string.Format(culture, "Table Accesses: {0:N0}", plan.TableAccesses.Count));
+        report.AppendLine(string.Format(culture, "Joins: {0:N0}", plan.Joins.Count));
+        report.AppendLine(string.Format(culture, "Table Scans: {0:N0}", plan.GetTableScans().Count));
         report.AppendLine();
 
         report.AppendLine("=== TOP 5 EXPENSIVE OPERATIONS ===");
@@ -214,7 +222,7 @@ public static class QueryPlanAnalyzerServiceExtensions
         foreach (var (index, op) in expensiveOps.Select((op, i) => (i + 1, op)))
         {
             report.AppendLine($"{index}. [{op.NodeType}] {op.ObjectName}");
-            report.AppendLine($"   Cost: {op.EstimatedCost:F2}, Rows: {op.EstimatedRows:N0}");
+            report.AppendLine(string.Format(culture, " Cost: {0:F2}, Rows: {1:N0}", op.EstimatedCost, op.EstimatedRows));
             report.AppendLine();
         }
 
@@ -238,7 +246,7 @@ public static class QueryPlanAnalyzerServiceExtensions
             report.AppendLine("🔍 High-impact table scans detected:");
             foreach (var scan in tableScans)
             {
-                report.AppendLine($"  - {scan.ObjectName}: {scan.EstimatedRows:N0} rows, Cost: {scan.EstimatedCost:F2}");
+                report.AppendLine(string.Format(culture, " - {0}: {1:N0} rows, Cost: {2:F2}", scan.ObjectName, scan.EstimatedRows, scan.EstimatedCost));
             }
             report.AppendLine();
         }
@@ -246,7 +254,7 @@ public static class QueryPlanAnalyzerServiceExtensions
         var indexOps = await service.GetIndexOperationsAsync(plan);
         if (indexOps.Count > 0)
         {
-            report.AppendLine($"✅ Index operations: {indexOps.Count} found");
+            report.AppendLine(string.Format(culture, "✅ Index operations: {0} found", indexOps.Count));
         }
 
         return report.ToString();
