@@ -480,6 +480,51 @@ Console.WriteLine($"\nEngine status: {validationEngine}");
 
 ---
 
+## BadQueryFixturesTests
+
+The `BadQueryFixturesTests` class contains correctness tests driven by SQL fixture files that verify the detection rules in `SqlPatternAnalyzer` correctly identify common SQL performance anti-patterns. Each test loads a known-bad query pattern from the `fixtures/` directory and asserts that the corresponding detection rule fires as expected. The `CleanFixture_DoesNotTripBadQueryRules` test verifies that a properly-structured query does not trigger any of the bad query rules.
+
+### Usage Example
+
+```csharp
+// Create test instance
+var fixturesTests = new BadQueryFixturesTests();
+
+// Test that SELECT * pattern is detected
+fixturesTests.SelectStarFixture_TripsSelectStarRule();
+
+// Test that non-sargable predicates (functions on columns, leading wildcard LIKE) are detected
+fixturesTests.MissingIndexFixture_TripsNonSargablePredicateRules();
+
+// Test that implicit (cartesian) joins are detected
+fixturesTests.CartesianJoinFixture_TripsImplicitJoinRule();
+
+// Test that N+1 query patterns are detected
+fixturesTests.NPlusOneFixture_TripsNPlusOneRule();
+
+// Test that queries without WHERE clauses are detected
+fixturesTests.MissingWhereFixture_TripsMissingWhereRule();
+
+// Test that all bad fixtures produce at least one optimization recommendation
+fixturesTests.EveryBadFixture_ProducesAtLeastOneRecommendation();
+
+// Test that clean queries don't trigger any bad query rules
+fixturesTests.CleanFixture_DoesNotTripBadQueryRules();
+```
+
+### Public Members
+
+- `SelectStarFixture_TripsSelectStarRule()` - Verifies that the SELECT * detection rule correctly identifies queries with SELECT * patterns
+- `MissingIndexFixture_TripsNonSargablePredicateRules()` - Verifies that non-sargable predicate detection rules (functions on columns and leading wildcard LIKE) correctly identify problematic patterns
+- `CartesianJoinFixture_TripsImplicitJoinRule()` - Verifies that implicit (comma-separated) JOIN detection works correctly
+- `NPlusOneFixture_TripsNPlusOneRule()` - Verifies that N+1 query pattern detection works correctly
+- `MissingWhereFixture_TripsMissingWhereRule()` - Verifies that missing WHERE clause detection works correctly
+- `EveryBadFixture_ProducesAtLeastOneRecommendation()` - Verifies that all known-bad fixtures produce optimization recommendations
+- `CleanFixture_DoesNotTripBadQueryRules()` - Verifies that properly-structured queries don't trigger any bad query detection rules
+
+
+---
+
 ## SqlQueryAnalyzerExceptionExtensions
 
 The `SqlQueryAnalyzerExceptionExtensions` class provides extension methods for exception handling, formatting, and analysis of SQL Query Analyzer exceptions. It includes methods for creating formatted error messages, checking exception types, extracting error information, and generating detailed reports. These utilities help with consistent error handling, logging, and user-friendly error messages across the application.
