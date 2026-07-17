@@ -28,34 +28,33 @@ public static class AnalysisBuilderValidation
         var errors = new List<string>();
 
         // Validate query text
-        if (string.IsNullOrWhiteSpace(value.GetErrors().FirstOrDefault(e => e.Contains("Query text"))))
+        if (string.IsNullOrWhiteSpace(value.Build().QueryText))
         {
             errors.Add("Query text is required");
         }
 
-        // Validate application name (if set)
-        if (!string.IsNullOrWhiteSpace(value.GetErrors().FirstOrDefault(e => e.Contains("Application"))))
+        // Validate application name
+        if (string.IsNullOrWhiteSpace(value.Build().ApplicationName))
         {
             errors.Add("Application name is required");
         }
 
-        // Validate procedure name (if set)
-        if (!string.IsNullOrWhiteSpace(value.GetErrors().FirstOrDefault(e => e.Contains("Procedure"))))
+        // Validate procedure name
+        if (string.IsNullOrWhiteSpace(value.Build().ProcedureName))
         {
             errors.Add("Procedure name is required");
         }
 
-        // Validate module name (if set)
-        if (!string.IsNullOrWhiteSpace(value.GetErrors().FirstOrDefault(e => e.Contains("Module"))))
+        // Validate module name
+        if (string.IsNullOrWhiteSpace(value.Build().ModuleName))
         {
             errors.Add("Module name is required");
         }
 
-        // Validate execution plan XML (if set)
-        var executionPlanErrors = value.GetErrors().FirstOrDefault(e => e.Contains("ExecutionPlan"));
-        if (!string.IsNullOrWhiteSpace(executionPlanErrors))
+        // Validate execution plan XML
+        if (string.IsNullOrWhiteSpace(value.Build().ExecutionPlanXml))
         {
-            errors.Add(executionPlanErrors);
+            errors.Add("Execution plan XML is required");
         }
 
         return errors;
@@ -70,7 +69,7 @@ public static class AnalysisBuilderValidation
     public static bool IsValid(this AnalysisBuilder value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        return value.GetErrors().Count == 0 && !string.IsNullOrWhiteSpace(value.Build().QueryText);
+        return !string.IsNullOrWhiteSpace(value.Build().QueryText);
     }
 
     /// <summary>
@@ -86,41 +85,34 @@ public static class AnalysisBuilderValidation
 
         var errors = new List<string>();
 
-        // Collect all validation errors from the builder
-        errors.AddRange(value.GetErrors());
-
-        // Additional validation for query text
+        // Validate query text
         if (string.IsNullOrWhiteSpace(value.Build().QueryText))
         {
             errors.Add("Query text is required");
         }
 
         // Validate application name
-        if (!string.IsNullOrWhiteSpace(value.Build().ApplicationName) &&
-            string.IsNullOrWhiteSpace(value.Build().ApplicationName))
+        if (string.IsNullOrWhiteSpace(value.Build().ApplicationName))
         {
-            errors.Add("Application name cannot be empty");
+            errors.Add("Application name is required");
         }
 
         // Validate procedure name
-        if (!string.IsNullOrWhiteSpace(value.Build().ProcedureName) &&
-            string.IsNullOrWhiteSpace(value.Build().ProcedureName))
+        if (string.IsNullOrWhiteSpace(value.Build().ProcedureName))
         {
-            errors.Add("Procedure name cannot be empty");
+            errors.Add("Procedure name is required");
         }
 
         // Validate module name
-        if (!string.IsNullOrWhiteSpace(value.Build().ModuleName) &&
-            string.IsNullOrWhiteSpace(value.Build().ModuleName))
+        if (string.IsNullOrWhiteSpace(value.Build().ModuleName))
         {
-            errors.Add("Module name cannot be empty");
+            errors.Add("Module name is required");
         }
 
         // Validate execution plan XML
-        if (!string.IsNullOrWhiteSpace(value.Build().ExecutionPlanXml) &&
-            string.IsNullOrWhiteSpace(value.Build().ExecutionPlanXml))
+        if (string.IsNullOrWhiteSpace(value.Build().ExecutionPlanXml))
         {
-            errors.Add("Execution plan XML cannot be empty");
+            errors.Add("Execution plan XML is required");
         }
 
         if (errors.Count > 0)
@@ -157,11 +149,10 @@ public static class BatchAnalysisBuilderValidation
             errors.Add("Maximum 100 queries per batch");
         }
 
-        // Validate application name (if set)
-        if (!string.IsNullOrWhiteSpace(value.Build().ApplicationName) &&
-            string.IsNullOrWhiteSpace(value.Build().ApplicationName))
+        // Validate application name
+        if (string.IsNullOrWhiteSpace(value.Build().ApplicationName))
         {
-            errors.Add("Application name cannot be empty");
+            errors.Add("Application name is required");
         }
 
         // Validate timeout
@@ -182,7 +173,7 @@ public static class BatchAnalysisBuilderValidation
     public static bool IsValid(this BatchAnalysisBuilder value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        return value.GetErrors().Count == 0 && value.Build().Queries.Count > 0;
+        return value.Build().Queries.Count > 0;
     }
 
     /// <summary>
@@ -198,9 +189,6 @@ public static class BatchAnalysisBuilderValidation
 
         var errors = new List<string>();
 
-        // Collect validation errors
-        errors.AddRange(value.GetErrors());
-
         // Validate queries count
         if (value.Build().Queries.Count == 0)
         {
@@ -212,10 +200,9 @@ public static class BatchAnalysisBuilderValidation
         }
 
         // Validate application name
-        if (!string.IsNullOrWhiteSpace(value.Build().ApplicationName) &&
-            string.IsNullOrWhiteSpace(value.Build().ApplicationName))
+        if (string.IsNullOrWhiteSpace(value.Build().ApplicationName))
         {
-            errors.Add("Application name cannot be empty");
+            errors.Add("Application name is required");
         }
 
         // Validate timeout
@@ -266,7 +253,7 @@ public static class IndexAnalysisBuilderValidation
     public static bool IsValid(this IndexAnalysisBuilder value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        return value.GetErrors().Count == 0 && !string.IsNullOrWhiteSpace(value.Build().TableName);
+        return !string.IsNullOrWhiteSpace(value.Build().TableName);
     }
 
     /// <summary>
@@ -281,9 +268,6 @@ public static class IndexAnalysisBuilderValidation
         ArgumentNullException.ThrowIfNull(value);
 
         var errors = new List<string>();
-
-        // Collect validation errors
-        errors.AddRange(value.GetErrors());
 
         // Validate table name
         if (string.IsNullOrWhiteSpace(value.Build().TableName))
