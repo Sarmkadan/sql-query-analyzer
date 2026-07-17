@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SqlQueryAnalyzer.Benchmarks;
 
@@ -28,9 +27,6 @@ public static class SqlPatternAnalyzerBenchmarksValidation
 
         var problems = new List<string>();
 
-        // Validate Setup method - this is a benchmark setup, so we validate the state it creates
-        // Since Setup is called by BenchmarkDotNet, we can't validate its internal state directly
-        // But we can validate that the benchmark instance itself is not in a default state
 
         // Validate boolean flags - should not be default(bool)
         if (value.DetectNPlusOneRepeated == default)
@@ -55,7 +51,7 @@ public static class SqlPatternAnalyzerBenchmarksValidation
         ValidateList(problems, value.RecommendationsProblematic, nameof(value.RecommendationsProblematic));
 
         // Validate readability score - should be a reasonable value (0-100 range)
-        if (value.ReadabilityScoreProblematic < 0 || value.ReadabilityScoreProblematic > 100)
+        if (value.ReadabilityScoreProblematic is < 0 or > 100)
         {
             problems.Add(
                 $"ReadabilityScoreProblematic should be between 0 and 100, but was {value.ReadabilityScoreProblematic:F2}.");
@@ -102,7 +98,8 @@ public static class SqlPatternAnalyzerBenchmarksValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"SqlPatternAnalyzerBenchmarks instance is not valid. Problems:\n{string.Join("\n", problems)}");
+                $"SqlPatternAnalyzerBenchmarks instance is not valid. Problems:\n{string.Join("\n", problems)}",
+                nameof(value));
         }
     }
 
@@ -112,8 +109,12 @@ public static class SqlPatternAnalyzerBenchmarksValidation
     /// <param name="problems">The list to add problems to.</param>
     /// <param name="list">The list to validate.</param>
     /// <param name="propertyName">The name of the property being validated.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="problems"/> is null.</exception>
     private static void ValidateList(List<string> problems, List<string>? list, string propertyName)
     {
+        ArgumentNullException.ThrowIfNull(problems);
+        ArgumentException.ThrowIfNullOrEmpty(propertyName);
+
         if (list is null)
         {
             problems.Add($"{propertyName} should not be null.");
