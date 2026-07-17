@@ -26,14 +26,7 @@ public static class HttpQueryAnalysisClientValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var errors = new List<string>();
-
-        // The HttpQueryAnalysisClient class has private fields but exposes public methods
-        // We validate the instance itself (non-null check already done above)
-        // Additional validation would require reflection or exposing internal state
-        // For now, we consider the instance valid if it's not null
-
-        return errors.AsReadOnly();
+        return Array.Empty<string>();
     }
 
     /// <summary>
@@ -61,8 +54,8 @@ public static class HttpQueryAnalysisClientValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"HttpQueryAnalysisClient validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", errors)}");
+                "HttpQueryAnalysisClient validation failed:" + Environment.NewLine +
+                "- " + string.Join(Environment.NewLine + "- ", errors));
         }
     }
 
@@ -71,8 +64,11 @@ public static class HttpQueryAnalysisClientValidation
     /// </summary>
     /// <param name="query">The SQL query to validate.</param>
     /// <returns>An immutable list of validation errors; empty if valid.</returns>
+    /// <exception cref="ArgumentException">Thrown when query is null, empty, or exceeds maximum length.</exception>
     public static IReadOnlyList<string> ValidateQuery(this string? query)
     {
+        ArgumentNullException.ThrowIfNull(query);
+
         var errors = new List<string>();
 
         if (string.IsNullOrWhiteSpace(query))
@@ -104,13 +100,15 @@ public static class HttpQueryAnalysisClientValidation
     /// <exception cref="ArgumentException">Thrown when validation fails, containing error messages.</exception>
     public static void EnsureValidQuery(this string? query)
     {
+        ArgumentNullException.ThrowIfNull(query);
+
         var errors = ValidateQuery(query);
 
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"Query validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", errors)}");
+                "Query validation failed:" + Environment.NewLine +
+                "- " + string.Join(Environment.NewLine + "- ", errors));
         }
     }
 
@@ -119,15 +117,12 @@ public static class HttpQueryAnalysisClientValidation
     /// </summary>
     /// <param name="queries">The array of SQL queries to validate.</param>
     /// <returns>An immutable list of validation errors; empty if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when queries array is null.</exception>
     public static IReadOnlyList<string> ValidateQueries(this string[]? queries)
     {
-        var errors = new List<string>();
+        ArgumentNullException.ThrowIfNull(queries);
 
-        if (queries is null)
-        {
-            errors.Add("Queries array cannot be null.");
-            return errors.AsReadOnly();
-        }
+        var errors = new List<string>();
 
         if (queries.Length == 0)
         {
@@ -173,13 +168,15 @@ public static class HttpQueryAnalysisClientValidation
     /// <exception cref="ArgumentException">Thrown when validation fails, containing error messages.</exception>
     public static void EnsureValidQueries(this string[]? queries)
     {
+        ArgumentNullException.ThrowIfNull(queries);
+
         var errors = ValidateQueries(queries);
 
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"Queries array validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", errors)}");
+                "Queries array validation failed:" + Environment.NewLine +
+                "- " + string.Join(Environment.NewLine + "- ", errors));
         }
     }
 
@@ -188,6 +185,7 @@ public static class HttpQueryAnalysisClientValidation
     /// </summary>
     /// <param name="options">The options dictionary to validate.</param>
     /// <returns>An immutable list of validation errors; empty if valid.</returns>
+    /// <exception cref="ArgumentException">Thrown when options dictionary is invalid.</exception>
     public static IReadOnlyList<string> ValidateOptions(this Dictionary<string, string>? options)
     {
         var errors = new List<string>();
@@ -254,8 +252,8 @@ public static class HttpQueryAnalysisClientValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"Options dictionary validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", errors)}");
+                "Options dictionary validation failed:" + Environment.NewLine +
+                "- " + string.Join(Environment.NewLine + "- ", errors));
         }
     }
 
@@ -306,8 +304,8 @@ public static class HttpQueryAnalysisClientValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"Max degree of parallelism validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", errors)}");
+                "Max degree of parallelism validation failed:" + Environment.NewLine +
+                "- " + string.Join(Environment.NewLine + "- ", errors));
         }
     }
 
@@ -316,6 +314,7 @@ public static class HttpQueryAnalysisClientValidation
     /// </summary>
     /// <param name="timeoutSeconds">The timeout in seconds.</param>
     /// <returns>An immutable list of validation errors; empty if valid.</returns>
+    /// <exception cref="ArgumentException">Thrown when timeout is not positive or exceeds maximum.</exception>
     public static IReadOnlyList<string> ValidateTimeoutSeconds(this int timeoutSeconds)
     {
         var errors = new List<string>();
@@ -354,8 +353,8 @@ public static class HttpQueryAnalysisClientValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"Timeout seconds validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", errors)}");
+                "Timeout seconds validation failed:" + Environment.NewLine +
+                "- " + string.Join(Environment.NewLine + "- ", errors));
         }
     }
 }
