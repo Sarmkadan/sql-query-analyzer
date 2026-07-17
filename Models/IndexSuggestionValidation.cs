@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SqlQueryAnalyzer.Models
 {
@@ -39,8 +38,9 @@ namespace SqlQueryAnalyzer.Models
                 errors.Add("IndexName must be a non-empty string.");
             }
 
-            // Validate IndexColumns
-            if (value.IndexColumns == null || value.IndexColumns.Count == 0)
+            // Validate IndexColumns - required collection
+            ArgumentNullException.ThrowIfNull(value.IndexColumns);
+            if (value.IndexColumns.Count == 0)
             {
                 errors.Add("IndexColumns must contain at least one column.");
             }
@@ -55,8 +55,8 @@ namespace SqlQueryAnalyzer.Models
                 }
             }
 
-            // Validate IncludeColumns (optional)
-            if (value.IncludeColumns != null)
+            // Validate IncludeColumns (optional collection)
+            if (value.IncludeColumns is not null)
             {
                 for (int i = 0; i < value.IncludeColumns.Count; i++)
                 {
@@ -72,12 +72,12 @@ namespace SqlQueryAnalyzer.Models
             {
                 errors.Add("IndexType must be a non-empty string.");
             }
-            else if (value.IndexType.IndexOf(' ', StringComparison.Ordinal) >= 0)
+            else if (value.IndexType.Contains(' ', StringComparison.Ordinal))
             {
                 errors.Add("IndexType must not contain spaces.");
             }
 
-            // Validate EstimatedPerformanceGain
+            // Validate EstimatedPerformanceGain - must be valid and within range
             if (double.IsNaN(value.EstimatedPerformanceGain) || double.IsInfinity(value.EstimatedPerformanceGain))
             {
                 errors.Add("EstimatedPerformanceGain must be a valid number.");
@@ -87,32 +87,26 @@ namespace SqlQueryAnalyzer.Models
                 errors.Add("EstimatedPerformanceGain must be non-negative.");
             }
 
-            // Validate EstimatedExecutionTimeReduction
+            // Validate EstimatedExecutionTimeReduction - percentage between 0-100
             if (double.IsNaN(value.EstimatedExecutionTimeReduction) || double.IsInfinity(value.EstimatedExecutionTimeReduction))
             {
                 errors.Add("EstimatedExecutionTimeReduction must be a valid number.");
             }
-            else if (value.EstimatedExecutionTimeReduction < 0 || value.EstimatedExecutionTimeReduction > 100)
+            else if (value.EstimatedExecutionTimeReduction is < 0 or > 100)
             {
                 errors.Add("EstimatedExecutionTimeReduction must be between 0 and 100.");
             }
 
-            // Validate EstimatedIndexSizeKB
-            if (value.EstimatedIndexSizeKB.HasValue)
+            // Validate EstimatedIndexSizeKB - must be positive if specified
+            if (value.EstimatedIndexSizeKB.HasValue && value.EstimatedIndexSizeKB <= 0)
             {
-                if (value.EstimatedIndexSizeKB <= 0)
-                {
-                    errors.Add("EstimatedIndexSizeKB must be positive if specified.");
-                }
+                errors.Add("EstimatedIndexSizeKB must be positive if specified.");
             }
 
-            // Validate EstimatedMaintenanceCost
-            if (value.EstimatedMaintenanceCost.HasValue)
+            // Validate EstimatedMaintenanceCost - must be non-negative if specified
+            if (value.EstimatedMaintenanceCost.HasValue && value.EstimatedMaintenanceCost < 0)
             {
-                if (value.EstimatedMaintenanceCost < 0)
-                {
-                    errors.Add("EstimatedMaintenanceCost must be non-negative if specified.");
-                }
+                errors.Add("EstimatedMaintenanceCost must be non-negative if specified.");
             }
 
             // Validate GeneratedCreateScript
@@ -127,13 +121,13 @@ namespace SqlQueryAnalyzer.Models
                 errors.Add("GeneratedDropScript must be a non-empty string.");
             }
 
-            // Validate AffectedQueries
+            // Validate AffectedQueries - must be positive
             if (value.AffectedQueries <= 0)
             {
                 errors.Add("AffectedQueries must be positive.");
             }
 
-            // Validate SuggestedAt
+            // Validate SuggestedAt - must be valid and not too far in the future
             if (value.SuggestedAt == default)
             {
                 errors.Add("SuggestedAt must be a valid DateTime.");
@@ -149,8 +143,8 @@ namespace SqlQueryAnalyzer.Models
                 errors.Add("Rationale must be a non-empty string.");
             }
 
-            // Validate ConflictingIndexes (optional)
-            if (value.ConflictingIndexes != null)
+            // Validate ConflictingIndexes (optional collection)
+            if (value.ConflictingIndexes is not null)
             {
                 for (int i = 0; i < value.ConflictingIndexes.Count; i++)
                 {
