@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
+
 using SqlQueryAnalyzer.Models;
 using ModelIndex = SqlQueryAnalyzer.Models.Index;
 
@@ -9,7 +9,7 @@ namespace SqlQueryAnalyzer.Utilities
     /// <summary>
     /// Provides validation helpers for <see cref="PerformanceMetricsCalculator"/> method parameters.
     /// </summary>
-    public static class PerformanceMetricsCalculatorValidation
+    public sealed class PerformanceMetricsCalculatorValidation
     {
         /// <summary>
         /// Validates parameters for <see cref="PerformanceMetricsCalculator.CalculateCombinedScore(QueryAnalysisResult, double)"/>.
@@ -40,25 +40,29 @@ namespace SqlQueryAnalyzer.Utilities
         }
 
         /// <summary>
-        /// Validates parameters for <see cref="PerformanceMetricsCalculator.EstimateTotalOptimization(List{PerformanceIssue}, List{IndexSuggestion})/>.
+        /// Validates parameters for <see cref="PerformanceMetricsCalculator.EstimateTotalOptimization(List{PerformanceIssue}, List{IndexSuggestion})"/>.
         /// </summary>
         /// <param name="issues">The list of performance issues to validate.</param>
         /// <param name="suggestions">The list of index suggestions to validate.</param>
         /// <returns>A list of human-readable validation problems; empty if valid.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="issues"/> or <paramref name="suggestions"/> is null.</exception>
         public static IReadOnlyList<string> Validate(
             List<PerformanceIssue>? issues,
             List<IndexSuggestion>? suggestions)
         {
+            ArgumentNullException.ThrowIfNull(issues);
+            ArgumentNullException.ThrowIfNull(suggestions);
+
             var errors = new List<string>();
 
-            if (issues is null || issues.Count == 0)
+            if (issues.Count == 0)
             {
-                errors.Add("Issues list must not be null or empty.");
+                errors.Add("Issues list must not be empty.");
             }
 
-            if (suggestions is null || suggestions.Count == 0)
+            if (suggestions.Count == 0)
             {
-                errors.Add("Suggestions list must not be null or empty.");
+                errors.Add("Suggestions list must not be empty.");
             }
 
             return errors.AsReadOnly();
@@ -98,24 +102,27 @@ namespace SqlQueryAnalyzer.Utilities
         }
 
         /// <summary>
-        /// Validates parameters for <see cref="PerformanceMetricsCalculator.CalculateMaintenanceEffort(List{ModelIndex})/>.
+        /// Validates parameters for <see cref="PerformanceMetricsCalculator.CalculateMaintenanceEffort(List{ModelIndex})"/>.
         /// </summary>
         /// <param name="indexes">The list of indexes to validate.</param>
         /// <returns>A list of human-readable validation problems; empty if valid.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="indexes"/> is null.</exception>
         public static IReadOnlyList<string> Validate(List<ModelIndex>? indexes)
         {
+            ArgumentNullException.ThrowIfNull(indexes);
+
             var errors = new List<string>();
 
-            if (indexes is null || indexes.Count == 0)
+            if (indexes.Count == 0)
             {
-                errors.Add("Indexes list must not be null or empty.");
+                errors.Add("Indexes list must not be empty.");
             }
 
             return errors.AsReadOnly();
         }
 
         /// <summary>
-        /// Validates parameters for <see cref="PerformanceMetricsCalculator.GetPerformanceTrend(List{QueryAnalysisResult})/>.
+        /// Validates parameters for <see cref="PerformanceMetricsCalculator.GetPerformanceTrend(List{QueryAnalysisResult})"/>.
         /// </summary>
         /// <param name="analysisHistory">The analysis history to validate.</param>
         /// <returns>A list of human-readable validation problems; empty if valid.</returns>
@@ -202,23 +209,18 @@ namespace SqlQueryAnalyzer.Utilities
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="analysis"/> is null.</exception>
         public static bool IsValid(
             QueryAnalysisResult analysis,
-            double weight = 1.0)
-        {
-            return Validate(analysis, weight).Count == 0;
-        }
+            double weight = 1.0) => Validate(analysis, weight).Count == 0;
 
         /// <summary>
-        /// Determines whether the parameters for <see cref="PerformanceMetricsCalculator.EstimateTotalOptimization(List{PerformanceIssue}, List{IndexSuggestion})/> are valid.
+        /// Determines whether the parameters for <see cref="PerformanceMetricsCalculator.EstimateTotalOptimization(List{PerformanceIssue}, List{IndexSuggestion})"/> are valid.
         /// </summary>
         /// <param name="issues">The list of performance issues to check.</param>
         /// <param name="suggestions">The list of index suggestions to check.</param>
         /// <returns>True if the parameters are valid; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="issues"/> or <paramref name="suggestions"/> is null.</exception>
         public static bool IsValid(
             List<PerformanceIssue>? issues,
-            List<IndexSuggestion>? suggestions)
-        {
-            return Validate(issues, suggestions).Count == 0;
-        }
+            List<IndexSuggestion>? suggestions) => Validate(issues, suggestions).Count == 0;
 
         /// <summary>
         /// Determines whether the parameters for <see cref="PerformanceMetricsCalculator.CalculateComplexityScore(DatabaseQuery)"/> are valid.
@@ -226,10 +228,7 @@ namespace SqlQueryAnalyzer.Utilities
         /// <param name="query">The database query to check.</param>
         /// <returns>True if the parameters are valid; otherwise, false.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="query"/> is null.</exception>
-        public static bool IsValid(DatabaseQuery query)
-        {
-            return Validate(query).Count == 0;
-        }
+        public static bool IsValid(DatabaseQuery query) => Validate(query).Count == 0;
 
         /// <summary>
         /// Determines whether the parameters for <see cref="PerformanceMetricsCalculator.CalculateIndexUsageScore(ModelIndex)"/> are valid.
@@ -237,31 +236,23 @@ namespace SqlQueryAnalyzer.Utilities
         /// <param name="index">The index to check.</param>
         /// <returns>True if the parameters are valid; otherwise, false.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="index"/> is null.</exception>
-        public static bool IsValid(ModelIndex index)
-        {
-            return Validate(index).Count == 0;
-        }
+        public static bool IsValid(ModelIndex index) => Validate(index).Count == 0;
 
         /// <summary>
-        /// Determines whether the parameters for <see cref="PerformanceMetricsCalculator.CalculateMaintenanceEffort(List{ModelIndex})/> are valid.
+        /// Determines whether the parameters for <see cref="PerformanceMetricsCalculator.CalculateMaintenanceEffort(List{ModelIndex})"/> are valid.
         /// </summary>
         /// <param name="indexes">The list of indexes to check.</param>
         /// <returns>True if the parameters are valid; otherwise, false.</returns>
-        public static bool IsValid(List<ModelIndex>? indexes)
-        {
-            return Validate(indexes).Count == 0;
-        }
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="indexes"/> is null.</exception>
+        public static bool IsValid(List<ModelIndex>? indexes) => Validate(indexes).Count == 0;
 
         /// <summary>
-        /// Determines whether the parameters for <see cref="PerformanceMetricsCalculator.GetPerformanceTrend(List{QueryAnalysisResult})/> are valid.
+        /// Determines whether the parameters for <see cref="PerformanceMetricsCalculator.GetPerformanceTrend(List{QueryAnalysisResult})"/> are valid.
         /// </summary>
         /// <param name="analysisHistory">The analysis history to check.</param>
         /// <returns>True if the parameters are valid; otherwise, false.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="analysisHistory"/> is null.</exception>
-        public static bool IsValid(List<QueryAnalysisResult> analysisHistory)
-        {
-            return Validate(analysisHistory).Count == 0;
-        }
+        public static bool IsValid(List<QueryAnalysisResult> analysisHistory) => Validate(analysisHistory).Count == 0;
 
         /// <summary>
         /// Determines whether the parameters for <see cref="PerformanceMetricsCalculator.CalculateExecutionTimeDistribution(QueryStatistics)"/> are valid.
@@ -269,10 +260,7 @@ namespace SqlQueryAnalyzer.Utilities
         /// <param name="stats">The query statistics to check.</param>
         /// <returns>True if the parameters are valid; otherwise, false.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="stats"/> is null.</exception>
-        public static bool IsValid(QueryStatistics stats)
-        {
-            return Validate(stats).Count == 0;
-        }
+        public static bool IsValid(QueryStatistics stats) => Validate(stats).Count == 0;
 
         /// <summary>
         /// Determines whether the parameters for <see cref="PerformanceMetricsCalculator.CalculateIndexROI(IndexSuggestion, long)"/> are valid.
@@ -283,10 +271,7 @@ namespace SqlQueryAnalyzer.Utilities
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="suggestion"/> is null.</exception>
         public static bool IsValid(
             IndexSuggestion suggestion,
-            long tableSizeKB)
-        {
-            return Validate(suggestion, tableSizeKB).Count == 0;
-        }
+            long tableSizeKB) => Validate(suggestion, tableSizeKB).Count == 0;
 
         /// <summary>
         /// Determines whether the parameters for <see cref="PerformanceMetricsCalculator.PredictExecutionTime(QueryStatistics, int)"/> are valid.
@@ -297,10 +282,7 @@ namespace SqlQueryAnalyzer.Utilities
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="stats"/> is null.</exception>
         public static bool IsValid(
             QueryStatistics stats,
-            int estimatedRows)
-        {
-            return Validate(stats, estimatedRows).Count == 0;
-        }
+            int estimatedRows) => Validate(stats, estimatedRows).Count == 0;
 
         /// <summary>
         /// Ensures that the parameters for <see cref="PerformanceMetricsCalculator.CalculateCombinedScore(QueryAnalysisResult, double)"/> are valid, throwing an <see cref="ArgumentException"/> if not.
@@ -322,10 +304,11 @@ namespace SqlQueryAnalyzer.Utilities
         }
 
         /// <summary>
-        /// Ensures that the parameters for <see cref="PerformanceMetricsCalculator.EstimateTotalOptimization(List{PerformanceIssue}, List{IndexSuggestion})/> are valid, throwing an <see cref="ArgumentException"/> if not.
+        /// Ensures that the parameters for <see cref="PerformanceMetricsCalculator.EstimateTotalOptimization(List{PerformanceIssue}, List{IndexSuggestion})"/> are valid, throwing an <see cref="ArgumentException"/> if not.
         /// </summary>
         /// <param name="issues">The list of performance issues to validate.</param>
         /// <param name="suggestions">The list of index suggestions to validate.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="issues"/> or <paramref name="suggestions"/> is null.</exception>
         /// <exception cref="ArgumentException">Thrown if the parameters are not valid, containing a list of validation problems.</exception>
         public static void EnsureValid(
             List<PerformanceIssue>? issues,
@@ -372,9 +355,10 @@ namespace SqlQueryAnalyzer.Utilities
         }
 
         /// <summary>
-        /// Ensures that the parameters for <see cref="PerformanceMetricsCalculator.CalculateMaintenanceEffort(List{ModelIndex})/> are valid, throwing an <see cref="ArgumentException"/> if not.
+        /// Ensures that the parameters for <see cref="PerformanceMetricsCalculator.CalculateMaintenanceEffort(List{ModelIndex})"/> are valid, throwing an <see cref="ArgumentException"/> if not.
         /// </summary>
         /// <param name="indexes">The list of indexes to validate.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="indexes"/> is null.</exception>
         /// <exception cref="ArgumentException">Thrown if the parameters are not valid, containing a list of validation problems.</exception>
         public static void EnsureValid(List<ModelIndex>? indexes)
         {
@@ -387,7 +371,7 @@ namespace SqlQueryAnalyzer.Utilities
         }
 
         /// <summary>
-        /// Ensures that the parameters for <see cref="PerformanceMetricsCalculator.GetPerformanceTrend(List{QueryAnalysisResult})/> are valid, throwing an <see cref="ArgumentException"/> if not.
+        /// Ensures that the parameters for <see cref="PerformanceMetricsCalculator.GetPerformanceTrend(List{QueryAnalysisResult})"/> are valid, throwing an <see cref="ArgumentException"/> if not.
         /// </summary>
         /// <param name="analysisHistory">The analysis history to validate.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="analysisHistory"/> is null.</exception>
