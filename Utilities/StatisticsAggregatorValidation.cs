@@ -14,6 +14,7 @@ namespace SqlQueryAnalyzer.Utilities;
 /// <summary>
 /// Provides validation helpers for <see cref="StatisticsAggregator"/> instances.
 /// Validates aggregated statistics for correctness, completeness, and data integrity.
+/// All validation methods are implemented as extension methods for <see cref="StatisticsAggregator"/>.
 /// </summary>
 public static class StatisticsAggregatorValidation
 {
@@ -40,7 +41,7 @@ public static class StatisticsAggregatorValidation
         }
 
         // Validate score metrics
-        if (double.IsNaN(summary.AverageScore) || double.IsInfinity(summary.AverageScore))
+        if (summary.AverageScore is double.NaN or double.PositiveInfinity or double.NegativeInfinity)
         {
             errors.Add("AverageScore is NaN or Infinity");
         }
@@ -49,7 +50,7 @@ public static class StatisticsAggregatorValidation
             errors.Add($"AverageScore must be between 0 and 100 (found: {summary.AverageScore:F2})");
         }
 
-        if (double.IsNaN(summary.MinScore) || double.IsInfinity(summary.MinScore))
+        if (summary.MinScore is double.NaN or double.PositiveInfinity or double.NegativeInfinity)
         {
             errors.Add("MinScore is NaN or Infinity");
         }
@@ -58,7 +59,7 @@ public static class StatisticsAggregatorValidation
             errors.Add($"MinScore must be between 0 and 100 (found: {summary.MinScore:F2})");
         }
 
-        if (double.IsNaN(summary.MaxScore) || double.IsInfinity(summary.MaxScore))
+        if (summary.MaxScore is double.NaN or double.PositiveInfinity or double.NegativeInfinity)
         {
             errors.Add("MaxScore is NaN or Infinity");
         }
@@ -82,7 +83,7 @@ public static class StatisticsAggregatorValidation
         }
 
         // Validate standard deviation
-        if (double.IsNaN(summary.ScoreStdDev) || double.IsInfinity(summary.ScoreStdDev))
+        if (summary.ScoreStdDev is double.NaN or double.PositiveInfinity or double.NegativeInfinity)
         {
             errors.Add("ScoreStdDev is NaN or Infinity");
         }
@@ -121,7 +122,7 @@ public static class StatisticsAggregatorValidation
         }
 
         // Validate optimization potential
-        if (double.IsNaN(summary.TotalOptimizationPotential) || double.IsInfinity(summary.TotalOptimizationPotential))
+        if (summary.TotalOptimizationPotential is double.NaN or double.PositiveInfinity or double.NegativeInfinity)
         {
             errors.Add("TotalOptimizationPotential is NaN or Infinity");
         }
@@ -142,7 +143,7 @@ public static class StatisticsAggregatorValidation
         }
 
         // Validate AverageBugDensity
-        if (double.IsNaN(summary.AverageBugDensity) || double.IsInfinity(summary.AverageBugDensity))
+        if (summary.AverageBugDensity is double.NaN or double.PositiveInfinity or double.NegativeInfinity)
         {
             errors.Add("AverageBugDensity is NaN or Infinity");
         }
