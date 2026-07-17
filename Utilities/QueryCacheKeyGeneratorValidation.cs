@@ -2,9 +2,11 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
-using System.Globalization;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlQueryAnalyzer.Utilities;
 
@@ -115,7 +117,7 @@ public static class QueryCacheKeyGeneratorValidation
                 errors.Add("IsValidCacheKey returned true for an invalid key");
             }
 
-            if (value.IsValidCacheKey(null!))
+            if (value.IsValidCacheKey(null))
             {
                 errors.Add("IsValidCacheKey returned true for null input");
             }
@@ -123,6 +125,11 @@ public static class QueryCacheKeyGeneratorValidation
             if (value.IsValidCacheKey(string.Empty))
             {
                 errors.Add("IsValidCacheKey returned true for empty string input");
+            }
+
+            if (value.IsValidCacheKey("   "))
+            {
+                errors.Add("IsValidCacheKey returned true for whitespace-only input");
             }
         }
         catch (Exception ex)
@@ -153,6 +160,12 @@ public static class QueryCacheKeyGeneratorValidation
             if (invalidHash != null)
             {
                 errors.Add("ExtractHashFromKey returned a value for an invalid key");
+            }
+
+            var nullHash = value.ExtractHashFromKey(null);
+            if (nullHash != null)
+            {
+                errors.Add("ExtractHashFromKey returned a value for null input");
             }
         }
         catch (Exception ex)
@@ -210,6 +223,7 @@ public static class QueryCacheKeyGeneratorValidation
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this QueryCacheKeyGenerator value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         return value.Validate().Count == 0;
     }
 
@@ -237,21 +251,10 @@ public static class QueryCacheKeyGeneratorValidation
     /// <summary>
     /// Checks if a string consists only of hexadecimal characters.
     /// </summary>
+    /// <param name="input">The string to validate.</param>
+    /// <returns><see langword="true"/> if the string contains only hexadecimal characters; otherwise, <see langword="false"/>.</returns>
     private static bool IsHexString(string input)
     {
-        if (string.IsNullOrEmpty(input))
-        {
-            return false;
-        }
-
-        foreach (var c in input)
-        {
-            if (!Uri.IsHexDigit(c))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return !string.IsNullOrEmpty(input) && input.All(c => Uri.IsHexDigit(c));
     }
 }
