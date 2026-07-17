@@ -745,6 +745,88 @@ Console.WriteLine(formattedJoins);
 
 ---
 
+## HttpQueryAnalysisClientExtensions
+
+The `HttpQueryAnalysisClientExtensions` class provides extension methods for the `HttpQueryAnalysisClient` HTTP client that simplify common query analysis operations. It offers convenient methods for analyzing single queries, batch queries, checking service health with retry logic, retrieving version information, timeout-based analysis, performance metrics calculation, and filtering queries by complexity level. These extensions make it easier to work with the HTTP client by providing higher-level abstractions and common patterns.
+
+### Usage Example
+
+```csharp
+// Create an HttpQueryAnalysisClient instance
+var client = new HttpQueryAnalysisClient(
+    baseUrl: "https://api.sqlqueryanalyzer.com",
+    apiKey: "your-api-key-here",
+    timeoutSeconds: 30);
+
+// Analyze a single query
+var singleResult = await client.AnalyzeQueryAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId WHERE u.Status = 'active' GROUP BY u.Name");
+Console.WriteLine($"Single query performance score: {singleResult.PerformanceScore}");
+
+// Analyze multiple queries in parallel
+var queries = new string[]
+{
+    "SELECT * FROM Users WHERE Status = 'active'",
+    "SELECT p.Name, p.Price FROM Products p WHERE p.Price > 100",
+    "SELECT COUNT(*) FROM Orders WHERE Date > '2024-01-01'"
+};
+
+var batchResults = await client.AnalyzeQueriesAsync(queries, maxDegreeOfParallelism: 4);
+foreach (var result in batchResults)
+{
+    Console.WriteLine($"Query: {result.QueryText.Substring(0, Math.Min(50, result.QueryText.Length))}...");
+    Console.WriteLine($"  Score: {result.PerformanceScore}, Complexity: {result.Complexity}");
+}
+
+// Check service health with retry logic
+bool isHealthy = await client.IsHealthyWithRetryAsync(maxRetries: 5, delayMs: 2000);
+Console.WriteLine($"Service healthy: {isHealthy}");
+
+// Get version information with fallback
+var version = await client.GetVersionAsync(fallbackVersion: "2.0.0");
+Console.WriteLine($"Analyzer version: {version}");
+
+// Analyze queries with timeout
+var timedResults = await client.AnalyzeWithTimeoutAsync(
+    queries,
+    timeout: TimeSpan.FromSeconds(15),
+    maxDegreeOfParallelism: 2);
+
+// Calculate performance metrics across multiple iterations
+var metrics = await client.GetPerformanceMetricsAsync(
+    queries,
+    iterations: 5,
+    maxDegreeOfParallelism: 4);
+
+foreach (var metric in metrics)
+{
+    Console.WriteLine($"Query: {metric.Key.Substring(0, 40)}...");
+    Console.WriteLine($"  Average performance score: {metric.Value:F2}");
+}
+
+// Filter queries by complexity level
+var complexQueries = await client.FilterQueriesByComplexityAsync(
+    queries,
+    minComplexity: QueryComplexity.Medium,
+    maxComplexity: QueryComplexity.High,
+    maxDegreeOfParallelism: 4);
+
+Console.WriteLine($"Found {complexQueries.Count} queries with medium to high complexity");
+```
+
+### Public Members
+
+- `AnalyzeQueriesAsync(HttpQueryAnalysisClient, string[], int?)` - Analyzes multiple queries with a specified degree of parallelism and returns results in the same order as input queries
+- `AnalyzeQueryAsync(HttpQueryAnalysisClient, string, Dictionary<string, string>?)` - Analyzes a single query with optional analysis options
+- `IsHealthyWithRetryAsync(HttpQueryAnalysisClient, int, int)` - Checks if the remote analyzer service is healthy with retry logic and configurable delay between attempts
+- `GetVersionAsync(HttpQueryAnalysisClient, string)` - Gets the version information from the remote analyzer with a fallback version if the call fails
+- `AnalyzeWithTimeoutAsync(HttpQueryAnalysisClient, string[], TimeSpan, int?)` - Analyzes queries with timeout and throws if timeout is exceeded
+- `AnalyzeWithTimeoutAsync(HttpQueryAnalysisClient, string[], int, int?)` - Analyzes queries with timeout specified as milliseconds
+- `GetPerformanceMetricsAsync(HttpQueryAnalysisClient, string[], int, int?)` - Gets performance metrics for queries by analyzing them multiple times and calculating average performance scores
+- `FilterQueriesByComplexityAsync(HttpQueryAnalysisClient, string[], QueryComplexity, QueryComplexity, int?)` - Filters queries by their complexity level after analysis
+
+---
+
 ## HttpQueryAnalysisClientValidation
 
 The `HttpQueryAnalysisClientValidation` class provides validation helpers for the `HttpQueryAnalysisClient` HTTP client. It offers extension methods for validating constructor arguments, method parameters, and internal state of HTTP query analysis client instances. The validation covers client instances, individual queries, query arrays for batch operations, analysis options dictionaries, maximum degree of parallelism settings, and timeout values in seconds. Methods are provided for both validation with error collection and exception-throwing validation.
