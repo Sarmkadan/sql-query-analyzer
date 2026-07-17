@@ -82,6 +82,7 @@ public static class SqlQueryAnalyzerOptionsValidation
     /// <param name="value">The database options to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when validation of nested options fails.</exception>
     public static IReadOnlyList<string> Validate(this DatabaseOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -121,6 +122,7 @@ public static class SqlQueryAnalyzerOptionsValidation
     /// <param name="value">The analysis options to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when validation of nested options fails.</exception>
     public static IReadOnlyList<string> Validate(this AnalysisOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -160,6 +162,7 @@ public static class SqlQueryAnalyzerOptionsValidation
     /// <param name="value">The cache options to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when validation of nested options fails.</exception>
     public static IReadOnlyList<string> Validate(this CacheOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -190,7 +193,7 @@ public static class SqlQueryAnalyzerOptionsValidation
             errors.Add("CacheOptions.ExpirationSeconds must be at least 1.");
         }
 
-        if (value.Provider.Equals("Redis", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(value.RedisConnectionString))
+        if (value.Provider?.Equals("Redis", StringComparison.OrdinalIgnoreCase) == true && string.IsNullOrWhiteSpace(value.RedisConnectionString))
         {
             errors.Add("CacheOptions.RedisConnectionString is required when CacheOptions.Provider is Redis.");
         }
@@ -204,6 +207,7 @@ public static class SqlQueryAnalyzerOptionsValidation
     /// <param name="value">The performance options to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when validation of nested options fails.</exception>
     public static IReadOnlyList<string> Validate(this PerformanceOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -244,6 +248,7 @@ public static class SqlQueryAnalyzerOptionsValidation
     /// <param name="value">The logging options to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when validation of nested options fails.</exception>
     public static IReadOnlyList<string> Validate(this LoggingOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -283,6 +288,7 @@ public static class SqlQueryAnalyzerOptionsValidation
     /// <param name="value">The index severity thresholds to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when validation of nested options fails.</exception>
     public static IReadOnlyList<string> Validate(this IndexSeverityThresholdsOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -329,9 +335,10 @@ public static class SqlQueryAnalyzerOptionsValidation
     /// <returns>True if valid; otherwise, false.</returns>
     private static bool IsValidProvider(string provider)
     {
-        return provider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase) ||
-               provider.Equals("PostgreSql", StringComparison.OrdinalIgnoreCase) ||
-               provider.Equals("MySql", StringComparison.OrdinalIgnoreCase);
+        return provider is not null &&
+               (provider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase) ||
+                provider.Equals("PostgreSql", StringComparison.OrdinalIgnoreCase) ||
+                provider.Equals("MySql", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -341,8 +348,9 @@ public static class SqlQueryAnalyzerOptionsValidation
     /// <returns>True if valid; otherwise, false.</returns>
     private static bool IsValidCacheProvider(string provider)
     {
-        return provider.Equals("InMemory", StringComparison.OrdinalIgnoreCase) ||
-               provider.Equals("Redis", StringComparison.OrdinalIgnoreCase);
+        return provider is not null &&
+               (provider.Equals("InMemory", StringComparison.OrdinalIgnoreCase) ||
+                provider.Equals("Redis", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -352,10 +360,11 @@ public static class SqlQueryAnalyzerOptionsValidation
     /// <returns>True if valid; otherwise, false.</returns>
     private static bool IsValidLogLevel(string level)
     {
-        return level.Equals("Debug", StringComparison.OrdinalIgnoreCase) ||
-               level.Equals("Information", StringComparison.OrdinalIgnoreCase) ||
-               level.Equals("Warning", StringComparison.OrdinalIgnoreCase) ||
-               level.Equals("Error", StringComparison.OrdinalIgnoreCase);
+        return level is not null &&
+               (level.Equals("Debug", StringComparison.OrdinalIgnoreCase) ||
+                level.Equals("Information", StringComparison.OrdinalIgnoreCase) ||
+                level.Equals("Warning", StringComparison.OrdinalIgnoreCase) ||
+                level.Equals("Error", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
