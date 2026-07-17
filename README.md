@@ -223,6 +223,76 @@ Console.WriteLine($"Bottleneck Summary: {bottleneck}");
 
 ---
 
+## RateLimitingMiddlewareExtensions
+
+The `RateLimitingMiddlewareExtensions` class provides extension methods for the `RateLimitingMiddleware` type, enabling fluent APIs for common rate limiting scenarios, monitoring, and system state inspection. It offers methods for acquiring rate limit slots, retrieving query statistics, calculating system load metrics, and generating system state summaries.
+
+### Usage Example
+
+```csharp
+// Create and configure rate limiting middleware
+var rateLimiter = new RateLimitingMiddleware(
+    maxConcurrentRequests: 100,
+    requestTimeout: TimeSpan.FromSeconds(30));
+
+// Register rate limiting middleware in your application
+services.AddSingleton(rateLimiter);
+
+// Attempt to acquire a rate limit slot for a query
+var queryHash = "SELECT_Users_Status_Active";
+bool acquired = await rateLimiter.TryAcquireSlotAsync(queryHash);
+
+if (acquired) {
+    Console.WriteLine("Rate limit slot acquired successfully!");
+    
+    // Get statistics for all tracked queries
+    var allStats = rateLimiter.GetAllQueryStats();
+    Console.WriteLine($"Total tracked queries: {allStats.Count}");
+    
+    // Get system load metrics
+    var load = rateLimiter.GetNormalizedLoad();
+    Console.WriteLine($"System load: {load:P0}");
+    
+    var totalRequests = rateLimiter.GetTotalRequests();
+    Console.WriteLine($"Total requests processed: {totalRequests}");
+    
+    var currentRate = rateLimiter.GetCurrentRequestRate();
+    Console.WriteLine($"Current request rate: {currentRate:F2} req/s");
+    
+    // Get throttled queries (queries exceeding threshold)
+    var throttled = rateLimiter.GetThrottledQueries(threshold: 100);
+    Console.WriteLine($"Throttled queries: {throttled.Count}");
+    
+    // Get most active queries
+    var activeQueries = rateLimiter.GetMostActiveQueries(count: 5);
+    Console.WriteLine("Most active queries:");
+    foreach (var query in activeQueries) {
+        Console.WriteLine($"  - {query.QueryHash}: {query.TotalRequests} requests");
+    }
+    
+    // Get system state summary
+    var systemSummary = rateLimiter.GetSystemStateSummary();
+    Console.WriteLine(systemSummary);
+}
+else {
+    Console.WriteLine("Failed to acquire rate limit slot - timeout occurred");
+}
+```
+
+### Public Members
+
+- `TryAcquireSlotAsync` - Attempts to acquire a rate limit slot with a timeout, returning success status
+- `GetAllQueryStats` - Gets rate limit statistics for all tracked queries as a read-only collection
+- `GetNormalizedLoad` - Gets the current system load as a normalized value between 0 and 1
+- `GetThrottledQueries` - Gets rate limit statistics for queries that exceed the throttling threshold
+- `GetMostActiveQueries` - Gets the most active queries (highest request count) as a read-only collection
+- `GetAverageRequestIntervalMs` - Gets the average request interval across all tracked queries in milliseconds
+- `GetTotalRequests` - Gets the total number of requests across all tracked queries
+- `GetCurrentRequestRate` - Gets the current request rate (requests per second) across all tracked queries
+- `GetSystemStateSummary` - Gets a summary string representing the current system state
+
+---
+
 ## DtoMapperJsonExtensions
 
 The `DtoMapperJsonExtensions` class provides static extension methods for serializing and deserializing DTO types to and from JSON. It includes methods for converting AnalysisRequestDto, AnalysisResponseDto, PerformanceIssueDto, IndexSuggestionDto, BatchAnalysisRequestDto, BatchAnalysisResponseDto, IndexAnalysisRequestDto, and IndexAnalysisResponseDto objects to JSON strings and parsing them back from JSON, enabling easy storage and transmission of DTO data.
