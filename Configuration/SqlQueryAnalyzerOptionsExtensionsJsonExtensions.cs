@@ -4,12 +4,12 @@ using System.Text.Json;
 namespace SqlQueryAnalyzer.Configuration;
 
 /// <summary>
-/// Provides JSON serialization helpers for <see cref="SqlQueryAnalyzerOptionsExtensions"/> extension methods.
+/// Provides JSON serialization extensions for <see cref="SqlQueryAnalyzerOptions"/> configuration objects.
 /// </summary>
 public static class SqlQueryAnalyzerOptionsExtensionsJsonExtensions
 {
     /// <summary>
-    /// Configured JSON serializer options with camelCase naming policy.
+    /// Gets the configured JSON serializer options with camelCase naming policy for consistent serialization.
     /// </summary>
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -54,6 +54,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">The deserialized options, or null on failure.</param>
     /// <returns>True if deserialization succeeded, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static bool TryFromJson(string json, out SqlQueryAnalyzerOptions? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
