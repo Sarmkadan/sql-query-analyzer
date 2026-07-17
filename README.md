@@ -480,6 +480,108 @@ Console.WriteLine($"\nEngine status: {validationEngine}");
 
 ---
 
+---
+
+## AnalysisControllerValidation
+
+The `AnalysisControllerValidation` class provides validation helpers for API request/response types used by the AnalysisController. It offers extension methods for validating `AnalysisRequest`, `BatchAnalysisRequest`, `ApiResponse<T>`, and `HealthStatus` instances, returning lists of validation errors or boolean validation status. Methods are provided for both validation with error collection and exception-throwing validation.
+
+### Usage Example
+
+```csharp
+// Validate an AnalysisRequest
+var request = new AnalysisRequest
+{
+    Query = "SELECT * FROM Users WHERE Status = 'active'",
+    Options = new Dictionary<string, string> { { "format", "json" } }
+};
+
+// Validate and check results
+var errors = request.Validate();
+if (errors.Count > 0)
+{
+    Console.WriteLine("Validation errors found:");
+    foreach (var error in errors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("AnalysisRequest is valid!");
+}
+
+// Check validity with IsValid extension
+bool isValid = request.IsValid();
+Console.WriteLine($"Is valid: {isValid}");
+
+// Validate a BatchAnalysisRequest
+var batchRequest = new BatchAnalysisRequest
+{
+    Queries = new[] { 
+        "SELECT * FROM Users",
+        "SELECT Name FROM Products WHERE Price > 100"
+    },
+    MaxDegreeOfParallelism = 4
+};
+
+var batchErrors = batchRequest.Validate();
+Console.WriteLine($"Batch validation errors: {batchErrors.Count}");
+
+// Validate an ApiResponse
+var response = new ApiResponse<string>
+{
+    StatusCode = 200,
+    Message = "Analysis completed successfully",
+    Data = "Analysis result",
+    Timestamp = DateTime.UtcNow,
+    Errors = new List<string>()
+};
+
+var responseErrors = response.Validate();
+Console.WriteLine($"Response validation errors: {responseErrors.Count}");
+
+// Validate a HealthStatus
+var healthStatus = new HealthStatus
+{
+    Message = "All systems operational",
+    Version = "1.0.0",
+    Timestamp = DateTime.UtcNow,
+    IsHealthy = true
+};
+
+var statusErrors = healthStatus.Validate();
+Console.WriteLine($"Health status validation errors: {statusErrors.Count}");
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+    request.EnsureValid();
+    Console.WriteLine("Request is valid - no exception thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `Validate(this AnalysisRequest? request)` - Validates an AnalysisRequest instance and returns a list of validation errors
+- `Validate(this BatchAnalysisRequest? request)` - Validates a BatchAnalysisRequest instance and returns a list of validation errors
+- `Validate<T>(this ApiResponse<T>? response)` - Validates an ApiResponse instance and returns a list of validation errors
+- `Validate(this HealthStatus? status)` - Validates a HealthStatus instance and returns a list of validation errors
+- `IsValid(this AnalysisRequest? request)` - Determines whether the specified AnalysisRequest is valid
+- `IsValid(this BatchAnalysisRequest? request)` - Determines whether the specified BatchAnalysisRequest is valid
+- `IsValid<T>(this ApiResponse<T>? response)` - Determines whether the specified ApiResponse is valid
+- `IsValid(this HealthStatus? status)` - Determines whether the specified HealthStatus is valid
+- `EnsureValid(this AnalysisRequest? request)` - Ensures that the specified AnalysisRequest is valid, throwing an exception if not
+- `EnsureValid(this BatchAnalysisRequest? request)` - Ensures that the specified BatchAnalysisRequest is valid, throwing an exception if not
+- `EnsureValid<T>(this ApiResponse<T>? response)` - Ensures that the specified ApiResponse is valid, throwing an exception if not
+- `EnsureValid(this HealthStatus? status)` - Ensures that the specified HealthStatus is valid, throwing an exception if not
+
+---
+
 ## CommandLineArguments
 
 The `CommandLineArguments` class represents the parsed command-line arguments for the SQL Query Analyzer. It supports various analysis modes including single query analysis, batch processing, configuration overrides, and output formatting. This type serves as the primary configuration container for CLI operations and can be used programmatically for integration scenarios.
