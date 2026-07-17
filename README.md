@@ -800,6 +800,46 @@ catch (ArgumentException ex)
 
 ---
 
+## SqlPatternAnalyzerTestsExtensions
+
+The `SqlPatternAnalyzerTestsExtensions` class provides extension methods for the `SqlPatternAnalyzerTests` class that simplify execution of related test groups. These methods combine multiple test invocations into convenient one-call methods, making it easier to run specific categories of tests without boilerplate code. The extensions cover SELECT * pattern detection, N+1 pattern detection, readability score calculation, and optimization recommendations.
+
+### Usage Example
+
+```csharp
+// Create a test instance
+var tests = new SqlPatternAnalyzerTests();
+
+// Execute all SELECT * related tests
+SqlPatternAnalyzerTestsExtensions.ExecuteAllSelectStarTests(tests);
+
+// Execute all N+1 pattern detection tests
+SqlPatternAnalyzerTestsExtensions.ExecuteAllNPlusOneTests(tests);
+
+// Execute all readability score calculation tests
+SqlPatternAnalyzerTestsExtensions.ExecuteAllReadabilityTests(tests);
+
+// Execute all pattern detection tests
+SqlPatternAnalyzerTestsExtensions.ExecuteAllPatternDetectionTests(tests);
+
+// Execute individual tests for specific scenarios
+SqlPatternAnalyzerTestsExtensions.ExecuteSelectStarDetectionTest(tests);
+SqlPatternAnalyzerTestsExtensions.ExecuteSelectStarWithColumnsTest(tests);
+SqlPatternAnalyzerTestsExtensions.ExecuteOptimizationRecommendationsTest(tests);
+```
+
+### Public Members
+
+- `ExecuteAllSelectStarTests(this SqlPatternAnalyzerTests tests)` - Executes all tests related to SELECT * pattern detection and optimization recommendations
+- `ExecuteAllNPlusOneTests(this SqlPatternAnalyzerTests tests)` - Executes all tests related to N+1 pattern detection
+- `ExecuteAllReadabilityTests(this SqlPatternAnalyzerTests tests)` - Executes all tests related to readability score calculation
+- `ExecuteAllPatternDetectionTests(this SqlPatternAnalyzerTests tests)` - Executes all tests related to pattern detection for leading wildcard LIKE clauses
+- `ExecuteSelectStarDetectionTest(this SqlPatternAnalyzerTests tests)` - Executes the test that verifies SELECT * detection works correctly
+- `ExecuteSelectStarWithColumnsTest(this SqlPatternAnalyzerTests tests)` - Executes the test that verifies explicit column selection is detected correctly
+- `ExecuteOptimizationRecommendationsTest(this SqlPatternAnalyzerTests tests)` - Executes the test that verifies optimization recommendations include column replacement advice
+
+---
+
 ## CommandLineArguments
 
 The `CommandLineArguments` class represents the parsed command-line arguments for the SQL Query Analyzer. It supports various analysis modes including single query analysis, batch processing, configuration overrides, and output formatting. This type serves as the primary configuration container for CLI operations and can be used programmatically for integration scenarios.
