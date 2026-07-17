@@ -12,7 +12,7 @@ public static class CliApplicationHostJsonExtensions
     /// <summary>
     /// Configured JSON serializer options with camelCase naming policy.
     /// </summary>
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false
@@ -29,17 +29,26 @@ public static class CliApplicationHostJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        JsonOptions.WriteIndented = indented;
-        return JsonSerializer.Serialize(value, JsonOptions);
+        var options = JsonOptions;
+        if (indented)
+        {
+            options = new JsonSerializerOptions(JsonOptions)
+            {
+                PropertyNamingPolicy = JsonOptions.PropertyNamingPolicy,
+                WriteIndented = true
+            };
+        }
+        return JsonSerializer.Serialize(value, options);
     }
 
     /// <summary>
     /// Deserializes a JSON string to a <see cref="CliApplicationHost"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized host, or null if input is empty.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null or empty.</exception>
-    /// <exception cref="JsonException">Thrown when JSON is invalid.</exception>
+    /// <returns>The deserialized host.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty.</exception>
+    /// <exception cref="JsonException">Thrown when JSON is invalid or cannot be deserialized to <see cref="CliApplicationHost"/>.</exception>
     public static CliApplicationHost? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -52,13 +61,15 @@ public static class CliApplicationHostJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">The deserialized host, or null on failure.</param>
     /// <returns>True if deserialization succeeded, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty.</exception>
     public static bool TryFromJson(string json, out CliApplicationHost? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
         try
         {
             value = JsonSerializer.Deserialize<CliApplicationHost>(json, JsonOptions);
-            return value is not null;
+            return true;
         }
         catch (JsonException)
         {
