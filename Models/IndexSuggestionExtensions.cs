@@ -17,9 +17,13 @@ public static class IndexSuggestionExtensions
     /// <param name="suggestion">The index suggestion.</param>
     /// <returns>A read-only list of all column names.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="suggestion"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="suggestion"/>.IndexColumns is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="suggestion"/>.IncludeColumns is null.</exception>
     public static IReadOnlyList<string> GetAllColumns(this IndexSuggestion suggestion)
     {
         ArgumentNullException.ThrowIfNull(suggestion);
+        ArgumentNullException.ThrowIfNull(suggestion.IndexColumns);
+        ArgumentNullException.ThrowIfNull(suggestion.IncludeColumns);
         return suggestion.IndexColumns.Concat(suggestion.IncludeColumns).ToList().AsReadOnly();
     }
 
@@ -45,7 +49,8 @@ public static class IndexSuggestionExtensions
     public static string ToDisplayString(this IndexSuggestion suggestion)
     {
         ArgumentNullException.ThrowIfNull(suggestion);
-        return string.Format(CultureInfo.InvariantCulture,
+        return string.Format(
+            CultureInfo.InvariantCulture,
             "{0} ({1}) on {2}. Est. Gain: {3:F1}%",
             suggestion.IndexName,
             suggestion.IndexType,
