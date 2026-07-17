@@ -713,6 +713,77 @@ foreach (var issue in issues)
 
 ---
 
+## SqlInjectionDetectorJsonExtensions
+
+The `SqlInjectionDetectorJsonExtensions` class provides static extension methods for serializing and deserializing `SqlInjectionDetector` and `SqlInjectionIssue` objects to and from JSON. It supports both compact and indented JSON formatting with camelCase property naming, making it easy to store and transmit SQL injection detection results programmatically.
+
+This extension class is particularly useful for logging injection vulnerabilities, transmitting results between services, or persisting analysis results for later review.
+
+### Usage Example
+
+```csharp
+// Create a SqlInjectionDetector instance (requires ILogger dependency)
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddSingleton<SqlInjectionDetector>();
+var serviceProvider = services.BuildServiceProvider();
+var detector = serviceProvider.GetRequiredService<SqlInjectionDetector>();
+
+// Analyze a query for SQL injection vulnerabilities
+var query = @"SELECT * FROM Users WHERE Username = 'admin' -- AND Password = '" + userInput + "'";
+var issues = detector.DetectVulnerabilities(query);
+
+// Serialize issues to JSON for logging or transmission
+string json = issues.ToJson(indented: true);
+Console.WriteLine(json);
+
+// Serialize a single issue
+if (issues.Any())
+{
+    string issueJson = issues.First().ToJson();
+    Console.WriteLine($"First issue: {issueJson}");
+}
+
+// Deserialize a SQL injection issue from JSON
+string issueJsonData = @"
+{
+    "type": "CommentInjection",
+    "severity": "High",
+    "location": 45,
+    "pattern": "--",
+    "description": "SQL comment detected in query"
+}";
+
+var deserializedIssue = SqlInjectionDetectorJsonExtensions.FromJsonToSqlInjectionIssue(issueJsonData);
+Console.WriteLine($"Deserialized issue type: {deserializedIssue?.Type}");
+
+// Try to deserialize with error handling
+if (SqlInjectionDetectorJsonExtensions.TryFromJson(issueJsonData, out var result))
+{
+    Console.WriteLine("Successfully deserialized SQL injection issue");
+}
+else
+{
+    Console.WriteLine("Failed to deserialize SQL injection issue");
+}
+
+// Note: SqlInjectionDetector itself cannot be deserialized due to ILogger dependency
+// but can be serialized for logging purposes
+string detectorJson = detector.ToJson();
+Console.WriteLine($"Detector serialized: {detectorJson.Length} characters");
+```
+
+### Public Members
+
+- `ToJson(this SqlInjectionDetector value, bool indented = false)` - Serializes a `SqlInjectionDetector` to a JSON string, optionally formatted with indentation
+- `FromJson(string json)` - Deserializes a JSON string to a `SqlInjectionDetector` instance (always returns null as deserialization is not supported)
+- `TryFromJson(string json, out SqlInjectionDetector? value)` - Attempts to deserialize a JSON string to a `SqlInjectionDetector` instance (always returns false)
+- `ToJson(this SqlInjectionIssue value, bool indented = false)` - Serializes a `SqlInjectionIssue` to a JSON string, optionally formatted with indentation
+- `FromJsonToSqlInjectionIssue(string json)` - Deserializes a JSON string to a `SqlInjectionIssue` instance
+- `TryFromJson(string json, out SqlInjectionIssue? value)` - Attempts to deserialize a JSON string to a `SqlInjectionIssue` instance with error handling
+
+---
+
 ## SqlInjectionDetectorExtensionsValidation 654
 
 The `SqlInjectionDetectorExtensionsValidation` class provides validation helpers for `SqlInjectionDetectorExtensions` extension methods. It validates null values and empty strings for extension method parameters, ensuring that extension methods can be safely invoked with meaningful results. The class includes validation for all public extension methods including filtering by severity, grouping by type, generating summary and detailed reports, and checking for critical issues.
