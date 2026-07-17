@@ -40,7 +40,7 @@ public static class QueryNormalizerBenchmarksValidation
             {
                 problems.Add("NormalizeSimple() returned null or whitespace");
             }
-            else if (simpleResult.Contains("select", StringComparison.OrdinalIgnoreCase) == false)
+            else if (simpleResult.Contains("SELECT", StringComparison.Ordinal) == false)
             {
                 problems.Add("NormalizeSimple() result doesn't contain expected SELECT keyword");
             }
@@ -139,6 +139,7 @@ public static class QueryNormalizerBenchmarksValidation
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this QueryNormalizerBenchmarks value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         return value.Validate().Count == 0;
     }
 
