@@ -1298,6 +1298,70 @@ Console.WriteLine($"Stage validation errors: {stageErrors.Count}");
 - `EnsureValid(this IEnumerable<QueryProfilerReport> values)` - Ensures all query profiler reports in a collection are valid, throwing an exception if not
 
 
+## PlanVisualizationExtensions
+
+The `PlanVisualizationExtensions` type provides extension methods for analyzing and visualizing query plan bottlenecks. It offers methods to calculate bottleneck costs, retrieve bottleneck annotations by various criteria (cost, depth, node type), analyze bottleneck distributions, and generate summary strings for plan visualization purposes.
+
+Example usage:
+
+```csharp
+public class PlanVisualizationExtensionsExample
+{
+    public static void ExampleUsage()
+    {
+        // Calculate total bottleneck cost across all bottlenecks in the current plan
+        double totalBottleneckCost = PlanVisualizationExtensions.GetTotalBottleneckCost();
+        
+        // Get the highest cost bottleneck in the current plan
+        BottleneckAnnotation? highestCostBottleneck = PlanVisualizationExtensions.GetHighestCostBottleneck();
+        
+        // Calculate average bottleneck depth
+        double averageBottleneckDepth = PlanVisualizationExtensions.GetAverageBottleneckDepth();
+        
+        // Get the percentage of query cost attributed to bottlenecks
+        double bottleneckCostPercentage = PlanVisualizationExtensions.GetBottleneckCostPercentage();
+        
+        // Get the most common bottleneck node type
+        string mostCommonNodeType = PlanVisualizationExtensions.GetMostCommonBottleneckNodeType();
+        
+        // Get the maximum bottleneck depth in the plan
+        int maxBottleneckDepth = PlanVisualizationExtensions.GetMaxBottleneckDepth();
+        
+        // Get distribution of bottleneck node types
+        IReadOnlyDictionary<string, int> nodeTypeDistribution = 
+            PlanVisualizationExtensions.GetBottleneckNodeTypeDistribution();
+        
+        // Get all bottlenecks of a specific node type
+        var indexBottlenecks = PlanVisualizationExtensions.GetBottlenecksByNodeType("Index");
+        
+        // Get high-cost bottlenecks (above threshold)
+        var highCostBottlenecks = PlanVisualizationExtensions.GetHighCostBottlenecks();
+        
+        // Get bottlenecks at a specific depth level
+        var depth5Bottlenecks = PlanVisualizationExtensions.GetBottlenecksAtDepth(5);
+        
+        // Generate a summary string for the current bottlenecks
+        string summary = PlanVisualizationExtensions.ToSummaryString();
+        
+        Console.WriteLine(summary);
+    }
+}
+```
+
+### Public Members
+
+- `GetTotalBottleneckCost()` - Calculates the total cost of all bottlenecks in the current query plan
+- `GetHighestCostBottleneck()` - Returns the bottleneck annotation with the highest cost, or null if no bottlenecks exist
+- `GetAverageBottleneckDepth()` - Calculates the average depth of all bottlenecks in the query plan
+- `GetBottleneckCostPercentage()` - Returns the percentage of total query cost attributed to bottlenecks
+- `GetMostCommonBottleneckNodeType()` - Identifies the most frequently occurring bottleneck node type
+- `GetMaxBottleneckDepth()` - Returns the maximum depth at which bottlenecks occur in the plan
+- `GetBottleneckNodeTypeDistribution()` - Returns a dictionary mapping node types to their bottleneck counts
+- `GetBottlenecksByNodeType(string nodeType)` - Filters bottlenecks by the specified node type
+- `GetHighCostBottlenecks()` - Returns bottlenecks exceeding a cost threshold (typically > 10% of total cost)
+- `GetBottlenecksAtDepth(int depth)` - Returns bottlenecks occurring at the specified depth level
+- `ToSummaryString()` - Generates a formatted summary string describing the bottleneck analysis results
+
 ## QueryRewriteExtensionsValidation
 
 The `QueryRewriteExtensionsValidation` class provides validation extension methods for the `QueryRewriteExtensions` class. It validates `QueryRewriteSuggestion` collections and results from extension methods like `GetAutoApplicable()`, `GetNonBreaking()`, `OfType()`, `ForClause()`, `OrderByImpact()`, `GetTotalEstimatedImprovement()`, `GetAllIndexSuggestions()`, and `GetRewriteSummary()`. These validation methods ensure suggestions are properly structured, have valid values, and return expected results, helping to catch issues during query rewrite analysis and optimization workflows.
