@@ -49,10 +49,10 @@ public static class QueryAnalysisExtensionsJsonExtensions
     /// <summary>
     /// Deserializes a JSON string into a collection of <see cref="QueryAnalysisResult"/>.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="json">The JSON string to deserialize. Must be a valid JSON array string representing zero or more <see cref="QueryAnalysisResult"/> objects.</param>
     /// <returns>A collection of analysis results, or <see langword="null"/> if the JSON is empty or whitespace.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or consists only of whitespace.</exception>
-    /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is invalid, malformed, or cannot be deserialized into <see cref="IEnumerable{QueryAnalysisResult}"/>.</exception>
     public static IEnumerable<QueryAnalysisResult>? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
