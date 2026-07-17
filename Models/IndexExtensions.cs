@@ -10,15 +10,18 @@ namespace SqlQueryAnalyzer.Models
     /// <summary>
     /// Provides additional functionality for <see cref="Index"/> objects.
     /// </summary>
+    /// <remarks>
+    /// This static class cannot be inherited.
+    /// </remarks>
     public static class IndexExtensions
     {
         /// <summary>
         /// Returns the fully qualified name of the index in the form <c>SchemaName.TableName.IndexName</c>.
         /// </summary>
         /// <param name="index">The index to format.</param>
-        /// <returns>A string containing the qualified name.</returns>
+        /// <returns>A string containing the fully qualified name in the format <c>SchemaName.TableName.IndexName</c>.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="index"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Thrown when any of the name components are <c>null</c> or empty.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="index"/>'s <see cref="Index.SchemaName"/>, <see cref="Index.TableName"/>, or <see cref="Index.IndexName"/> is <c>null</c> or empty.</exception>
         public static string GetQualifiedName(this Index index)
         {
             ArgumentNullException.ThrowIfNull(index);
@@ -37,10 +40,11 @@ namespace SqlQueryAnalyzer.Models
         /// <returns>The sum of <see cref="Index.UserSeeks"/>, <see cref="Index.UserScans"/>,
         /// <see cref="Index.UserLookups"/> and <see cref="Index.UserUpdates"/>.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="index"/> is <c>null</c>.</exception>
+        /// <exception cref="OverflowException">Thrown when the sum exceeds <see cref="long.MaxValue"/>.</exception>
         public static long GetTotalUserOperations(this Index index)
         {
             ArgumentNullException.ThrowIfNull(index);
-            return index.UserSeeks + index.UserScans + index.UserLookups + index.UserUpdates;
+            return checked(index.UserSeeks + index.UserScans + index.UserLookups + index.UserUpdates);
         }
 
         /// <summary>
@@ -66,9 +70,7 @@ namespace SqlQueryAnalyzer.Models
         public static int GetEffectiveColumnCount(this Index index)
         {
             ArgumentNullException.ThrowIfNull(index);
-            int keyCount = index.Columns?.Count ?? 0;
-            int includeCount = index.IncludeColumns?.Count ?? 0;
-            return keyCount + includeCount;
+            return (index.Columns?.Count ?? 0) + (index.IncludeColumns?.Count ?? 0);
         }
     }
 }
