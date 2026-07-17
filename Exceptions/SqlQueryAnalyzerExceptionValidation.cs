@@ -4,6 +4,7 @@
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
 // =============================================================================
+// ReSharper disable LocalizableElement
 
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,9 @@ namespace SqlQueryAnalyzer.Exceptions;
 /// <summary>
 /// Provides validation helpers for <see cref="SqlQueryAnalyzerException"/> and its derived types.
 /// </summary>
+/// <remarks>
+/// This class cannot be inherited.
+/// </remarks>
 public static class SqlQueryAnalyzerExceptionValidation
 {
     /// <summary>
@@ -21,7 +25,7 @@ public static class SqlQueryAnalyzerExceptionValidation
     /// </summary>
     /// <param name="value">The exception to validate.</param>
     /// <returns>An enumerable of validation problems; empty if the exception is valid.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this SqlQueryAnalyzerException value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -75,7 +79,7 @@ public static class SqlQueryAnalyzerExceptionValidation
     /// </summary>
     /// <param name="value">The exception to check.</param>
     /// <returns>True if the exception is valid; otherwise, false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
     public static bool IsValid(this SqlQueryAnalyzerException value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -87,8 +91,8 @@ public static class SqlQueryAnalyzerExceptionValidation
     /// with a detailed message if it is not.
     /// </summary>
     /// <param name="value">The exception to validate.</param>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is invalid.</exception>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="value"/> is invalid.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
     public static void EnsureValid(this SqlQueryAnalyzerException value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -101,6 +105,12 @@ public static class SqlQueryAnalyzerExceptionValidation
         }
     }
 
+    /// <summary>
+    /// Validates the base <see cref="AnalysisException"/> properties.
+    /// </summary>
+    /// <param name="exception">The exception to validate.</param>
+    /// <param name="problems">The list to accumulate validation problems.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> or <paramref name="problems"/> is null.</exception>
     private static void ValidateAnalysisException(AnalysisException exception, List<string> problems)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -117,6 +127,12 @@ public static class SqlQueryAnalyzerExceptionValidation
         }
     }
 
+    /// <summary>
+    /// Validates the <see cref="InvalidQueryException"/> properties.
+    /// </summary>
+    /// <param name="exception">The exception to validate.</param>
+    /// <param name="problems">The list to accumulate validation problems.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> or <paramref name="problems"/> is null.</exception>
     private static void ValidateInvalidQueryException(InvalidQueryException exception, List<string> problems)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -140,6 +156,12 @@ public static class SqlQueryAnalyzerExceptionValidation
         }
     }
 
+    /// <summary>
+    /// Validates the <see cref="DatabaseConnectionException"/> properties.
+    /// </summary>
+    /// <param name="exception">The exception to validate.</param>
+    /// <param name="problems">The list to accumulate validation problems.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> or <paramref name="problems"/> is null.</exception>
     private static void ValidateDatabaseConnectionException(DatabaseConnectionException exception, List<string> problems)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -158,6 +180,12 @@ public static class SqlQueryAnalyzerExceptionValidation
         }
     }
 
+    /// <summary>
+    /// Validates the <see cref="QueryPlanException"/> properties.
+    /// </summary>
+    /// <param name="exception">The exception to validate.</param>
+    /// <param name="problems">The list to accumulate validation problems.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> or <paramref name="problems"/> is null.</exception>
     private static void ValidateQueryPlanException(QueryPlanException exception, List<string> problems)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -171,6 +199,12 @@ public static class SqlQueryAnalyzerExceptionValidation
         }
     }
 
+    /// <summary>
+    /// Validates the <see cref="IndexAnalysisException"/> properties.
+    /// </summary>
+    /// <param name="exception">The exception to validate.</param>
+    /// <param name="problems">The list to accumulate validation problems.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> or <paramref name="problems"/> is null.</exception>
     private static void ValidateIndexAnalysisException(IndexAnalysisException exception, List<string> problems)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -189,6 +223,12 @@ public static class SqlQueryAnalyzerExceptionValidation
         }
     }
 
+    /// <summary>
+    /// Validates the <see cref="ConfigurationException"/> properties.
+    /// </summary>
+    /// <param name="exception">The exception to validate.</param>
+    /// <param name="problems">The list to accumulate validation problems.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> or <paramref name="problems"/> is null.</exception>
     private static void ValidateConfigurationException(ConfigurationException exception, List<string> problems)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -202,6 +242,12 @@ public static class SqlQueryAnalyzerExceptionValidation
         }
     }
 
+    /// <summary>
+    /// Validates the <see cref="RepositoryException"/> properties.
+    /// </summary>
+    /// <param name="exception">The exception to validate.</param>
+    /// <param name="problems">The list to accumulate validation problems.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> or <paramref name="problems"/> is null.</exception>
     private static void ValidateRepositoryException(RepositoryException exception, List<string> problems)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -220,6 +266,12 @@ public static class SqlQueryAnalyzerExceptionValidation
         }
     }
 
+    /// <summary>
+    /// Validates the <see cref="ValidationException"/> properties.
+    /// </summary>
+    /// <param name="exception">The exception to validate.</param>
+    /// <param name="problems">The list to accumulate validation problems.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> or <paramref name="problems"/> is null.</exception>
     private static void ValidateValidationException(ValidationException exception, List<string> problems)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -238,6 +290,12 @@ public static class SqlQueryAnalyzerExceptionValidation
         }
     }
 
+    /// <summary>
+    /// Validates the <see cref="IntegrationException"/> properties.
+    /// </summary>
+    /// <param name="exception">The exception to validate.</param>
+    /// <param name="problems">The list to accumulate validation problems.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> or <paramref name="problems"/> is null.</exception>
     private static void ValidateIntegrationException(IntegrationException exception, List<string> problems)
     {
         ArgumentNullException.ThrowIfNull(exception);
