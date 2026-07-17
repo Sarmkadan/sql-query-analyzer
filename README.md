@@ -480,6 +480,120 @@ Console.WriteLine($"\nEngine status: {validationEngine}");
 
 ---
 
+## SqlQueryAnalyzerExceptionExtensions
+
+The `SqlQueryAnalyzerExceptionExtensions` class provides extension methods for exception handling, formatting, and analysis of SQL Query Analyzer exceptions. It includes methods for creating formatted error messages, checking exception types, extracting error information, and generating detailed reports. These utilities help with consistent error handling, logging, and user-friendly error messages across the application.
+
+### Usage Example
+
+```csharp
+// Example 1: Create a formatted error message for display
+try
+{
+    var analyzer = new QueryAnalyzerService();
+    await analyzer.AnalyzeQueryAsync("SELECT * FROM Users");
+}
+catch (SqlQueryAnalyzerException ex)
+{
+    // Format error message for user display
+    var errorMessage = ex.ToErrorMessage();
+    Console.WriteLine(errorMessage);
+    
+    // Check if it's a critical error
+    if (ex.IsCriticalError())
+    {
+        Console.WriteLine("Critical error detected - halting processing");
+    }
+}
+
+// Example 2: Extract error information for logging
+try
+{
+    var analyzer = new QueryAnalyzerService();
+    await analyzer.AnalyzeQueryAsync(invalidQuery);
+}
+catch (SqlQueryAnalyzerException ex)
+{
+    // Get error code for categorization
+    var errorCode = ex.GetErrorCode();
+    Console.WriteLine($"Error Code: {errorCode}");
+    
+    // Get error details
+    var errorDetails = ex.GetErrorDetails();
+    Console.WriteLine($"Details: {errorDetails}");
+    
+    // Check exception type
+    if (ex.IsQueryValidationError())
+    {
+        Console.WriteLine("Query validation error detected");
+    }
+    else if (ex.IsDatabaseConnectionError())
+    {
+        Console.WriteLine("Database connection error detected");
+    }
+    else if (ex.IsQueryPlanError())
+    {
+        Console.WriteLine("Query plan error detected");
+    }
+}
+
+// Example 3: Generate detailed exception report for debugging
+try
+{
+    var analyzer = new QueryAnalyzerService();
+    await analyzer.AnalyzeQueryAsync("SELECT * FROM LargeTable");
+}
+catch (SqlQueryAnalyzerException ex)
+{
+    // Generate comprehensive report for debugging
+    var report = ex.GenerateExceptionReport();
+    File.WriteAllText("exception_report.txt", report);
+    
+    // Create user-friendly summary for logging
+    var summary = ex.ToUserFriendlySummary();
+    _logger.LogError(summary);
+}
+
+// Example 4: Handle different exception types
+try
+{
+    var analyzer = new QueryAnalyzerService();
+    await analyzer.AnalyzeQueryAsync(query);
+}
+catch (InvalidQueryException ex) when (!string.IsNullOrEmpty(ex.Query))
+{
+    Console.WriteLine($"Invalid query at line {ex.LineNumber}: {ex.Query}");
+    Console.WriteLine(ex.ToUserFriendlySummary());
+}
+catch (DatabaseConnectionException ex)
+{
+    Console.WriteLine($"Database connection failed: {ex.DatabaseName}");
+    if (ex.IsCriticalError())
+    {
+        Environment.Exit(1);
+    }
+}
+catch (SqlQueryAnalyzerException ex)
+{
+    Console.WriteLine(ex.ToErrorMessage());
+}
+```
+
+### Public Members
+
+- `ToErrorMessage(this SqlQueryAnalyzerException exception)` - Creates a formatted error message from the exception, including error code and details
+- `IsQueryValidationError(this SqlQueryAnalyzerException exception)` - Determines if the exception represents a query validation error
+- `IsDatabaseConnectionError(this SqlQueryAnalyzerException exception)` - Determines if the exception represents a database connection error
+- `IsQueryPlanError(this SqlQueryAnalyzerException exception)` - Determines if the exception represents a query plan analysis error
+- `GetErrorCode(this SqlQueryAnalyzerException exception)` - Safely extracts the error code from the exception if available
+- `GetErrorDetails(this SqlQueryAnalyzerException exception)` - Safely extracts the error details from the exception if available
+- `ToUserFriendlySummary(this SqlQueryAnalyzerException exception, bool includeStackTrace = false)` - Creates a user-friendly error summary suitable for logging or display
+- `IsCriticalError(this SqlQueryAnalyzerException exception)` - Determines if the exception is a critical error that should halt processing
+- `GenerateExceptionReport(this SqlQueryAnalyzerException exception)` - Creates a detailed exception report with all available information
+
+---
+
+
 ---
 
 ## AnalysisControllerValidation
