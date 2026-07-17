@@ -10,8 +10,8 @@ using System.Globalization;
 namespace SqlQueryAnalyzer.Middleware;
 
 /// <summary>
-/// Extension methods for <see cref="RateLimitingMiddleware"/> to provide fluent APIs
-/// for common rate limiting scenarios and monitoring operations.
+/// Provides extension methods for <see cref="RateLimitingMiddleware"/> that enable fluent APIs
+/// for common rate limiting scenarios, monitoring, and system state inspection.
 /// </summary>
 public static class RateLimitingMiddlewareExtensions
 {
@@ -49,26 +49,17 @@ public static class RateLimitingMiddlewareExtensions
     {
         ArgumentNullException.ThrowIfNull(middleware);
 
-        // Use reflection to access the internal _perQueryLimits dictionary
-        var field = typeof(RateLimitingMiddleware).GetField("_perQueryLimits",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-        if (field?.GetValue(middleware) is Dictionary<string, QueryRateLimit> limits)
-        {
-            return limits.Values
-                .Select(limit => new QueryRateLimitStats
-                {
-                    QueryHash = limit.QueryHash,
-                    TotalRequests = limit.RequestCount,
-                    LastRequestTime = limit.LastRequestTime,
-                    AverageIntervalMs = limit.GetAverageInterval(),
-                    IsThrottled = limit.RequestCount > 100
-                })
-                .ToList()
-                .AsReadOnly();
-        }
-
-        return Array.Empty<QueryRateLimitStats>();
+        return middleware.GetPerQueryLimits()
+            .Select(limit => new QueryRateLimitStats
+            {
+                QueryHash = limit.QueryHash,
+                TotalRequests = limit.RequestCount,
+                LastRequestTime = limit.LastRequestTime,
+                AverageIntervalMs = limit.GetAverageInterval(),
+                IsThrottled = limit.RequestCount > 100
+            })
+            .ToList()
+            .AsReadOnly();
     }
 
     /// <summary>
@@ -164,7 +155,13 @@ public static class RateLimitingMiddlewareExtensions
             return 0;
 
         var totalRequests = allStats.Sum(stats => stats.TotalRequests);
-        var timeSpan = DateTime.UtcNow - allStats.Min(stats => stats.LastRequestTime);
+        if (totalRequests == 0)
+        {
+            return 0;
+        }
+
+        var oldestRequestTime = allStats.Min(stats => stats.LastRequestTime);
+        var timeSpan = DateTime.UtcNow - oldestRequestTime;
 
         return timeSpan.TotalSeconds > 0
             ? totalRequests / timeSpan.TotalSeconds

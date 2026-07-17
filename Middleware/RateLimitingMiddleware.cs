@@ -121,6 +121,12 @@ public class RateLimitingMiddleware
         };
     }
 
+/// <summary>
+/// Gets all per-query rate limit tracking dictionaries.
+/// </summary>
+/// <returns>Collection of query rate limits.</returns>
+internal IReadOnlyCollection<QueryRateLimit> GetPerQueryLimits() => _perQueryLimits.Values;
+
     /// <summary>
     /// Resets rate limit window after 1 second has elapsed.
     /// Called internally to track moving window.
