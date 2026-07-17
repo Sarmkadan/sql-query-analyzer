@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace SqlQueryAnalyzer.CLI;
@@ -43,16 +44,18 @@ public static class CommandLineArgumentsValidation
         // Validate QueryFile
         if (!string.IsNullOrWhiteSpace(value.QueryFile))
         {
-            if (string.IsNullOrWhiteSpace(value.QueryFile.Trim()))
+            var queryFile = value.QueryFile.Trim();
+            if (string.IsNullOrWhiteSpace(queryFile))
             {
                 problems.Add("Query file path cannot be empty or whitespace");
             }
-            else if (!Path.IsPathRooted(value.QueryFile) && !Path.Exists(value.QueryFile))
+            else if (!Path.IsPathRooted(queryFile))
             {
-                // Note: We don't validate file existence here as it's checked later
-                // Just ensure the path format is reasonable
-                var path = value.QueryFile.Trim();
-                if (path.Contains("..") || path.StartsWith("/") || path.StartsWith("\\"))
+                // For relative paths, check for path traversal sequences without attempting to validate existence
+                // Path.Exists requires an absolute path, so we only check format for relative paths
+                if (queryFile.Contains("..", StringComparison.Ordinal) ||
+                    queryFile.StartsWith("/", StringComparison.Ordinal) ||
+                    queryFile.StartsWith("\\", StringComparison.Ordinal))
                 {
                     problems.Add("Query file path contains invalid characters or path traversal sequences");
                 }
@@ -77,7 +80,9 @@ public static class CommandLineArgumentsValidation
             {
                 problems.Add("Output path cannot be empty or whitespace");
             }
-            else if (path.Contains("..") || path.StartsWith("/") || path.StartsWith("\\"))
+            else if (path.Contains("..", StringComparison.Ordinal) ||
+                     path.StartsWith("/", StringComparison.Ordinal) ||
+                     path.StartsWith("\\", StringComparison.Ordinal))
             {
                 problems.Add("Output path contains invalid characters or path traversal sequences");
             }
@@ -105,7 +110,9 @@ public static class CommandLineArgumentsValidation
             {
                 problems.Add("Config file path cannot be empty or whitespace");
             }
-            else if (configPath.Contains("..") || configPath.StartsWith("/") || configPath.StartsWith("\\"))
+            else if (configPath.Contains("..", StringComparison.Ordinal) ||
+                     configPath.StartsWith("/", StringComparison.Ordinal) ||
+                     configPath.StartsWith("\\", StringComparison.Ordinal))
             {
                 problems.Add("Config file path contains invalid characters or path traversal sequences");
             }
@@ -166,7 +173,9 @@ public static class CommandLineArgumentsValidation
             {
                 problems.Add("Cache path cannot be empty or whitespace");
             }
-            else if (cachePath.Contains("..") || cachePath.StartsWith("/") || cachePath.StartsWith("\\"))
+            else if (cachePath.Contains("..", StringComparison.Ordinal) ||
+                     cachePath.StartsWith("/", StringComparison.Ordinal) ||
+                     cachePath.StartsWith("\\", StringComparison.Ordinal))
             {
                 problems.Add("Cache path contains invalid characters or path traversal sequences");
             }
@@ -180,7 +189,9 @@ public static class CommandLineArgumentsValidation
             {
                 problems.Add("Slow log file path cannot be empty or whitespace");
             }
-            else if (logPath.Contains("..") || logPath.StartsWith("/") || logPath.StartsWith("\\"))
+            else if (logPath.Contains("..", StringComparison.Ordinal) ||
+                     logPath.StartsWith("/", StringComparison.Ordinal) ||
+                     logPath.StartsWith("\\", StringComparison.Ordinal))
             {
                 problems.Add("Slow log file path contains invalid characters or path traversal sequences");
             }
@@ -192,7 +203,7 @@ public static class CommandLineArgumentsValidation
             var format = value.SlowLogFormat.Trim().ToLowerInvariant();
             if (!new[] { "mysql", "postgres", "sqlserver", "oracle" }.Contains(format))
             {
-                problems.Add(string.Format(CultureInfo.InvariantCulture, "Invalid slow log format '{0}'. Supported: mysql, postgres, sqlserver, oracle", value.SlowLogFormat));
+                problems.Add($"Invalid slow log format '{value.SlowLogFormat}'. Supported: mysql, postgres, sqlserver, oracle");
             }
         }
 
@@ -205,11 +216,14 @@ public static class CommandLineArgumentsValidation
     /// <param name="value">The command-line arguments to check.</param>
     /// <returns><see langword="true"/> if the instance is valid; otherwise, <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+    /// <remarks>
+    /// This method returns <see langword="false"/> if validation fails, but does not throw exceptions.
+    /// Use <see cref="EnsureValid"/> to throw an exception on validation failure.
+    /// </remarks>
     public static bool IsValid(this CommandLineArguments value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        var validationResult = CommandLineArgumentsValidation.Validate(value);
-        return !validationResult.Any();
+        return !Validate(value).Any();
     }
 
     /// <summary>
@@ -218,16 +232,19 @@ public static class CommandLineArgumentsValidation
     /// <param name="value">The command-line arguments to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown if validation fails, containing a list of all validation problems.</exception>
+    /// <remarks>
+    /// This method calls <see cref="Validate"/> and throws an <see cref="ArgumentException"/> with a formatted message
+    /// containing all validation problems if any are found.
+    /// </remarks>
     public static void EnsureValid(this CommandLineArguments value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var problems = CommandLineArgumentsValidation.Validate(value);
-        if (problems.Any())
+        var problems = Validate(value);
+        if (problems.Count > 0)
         {
             var message = string.Join("\n- ", problems);
-            throw new ArgumentException(
-                $"Command line arguments validation failed:\n- {message}");
+            throw new ArgumentException($"Command line arguments validation failed:\n- {message}");
         }
     }
 }
