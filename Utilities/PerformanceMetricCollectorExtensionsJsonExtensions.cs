@@ -12,7 +12,8 @@ using System.Text.Json.Serialization;
 namespace SqlQueryAnalyzer.Utilities;
 
 /// <summary>
-/// Provides System.Text.Json serialization helpers for <see cref="PerformanceMetricCollector"/> extension methods.
+/// Provides System.Text.Json serialization helpers for <see cref="PerformanceMetricCollector"/> instances.
+/// Includes methods for converting performance metric collectors to and from JSON strings.
 /// </summary>
 public static class PerformanceMetricCollectorExtensionsJsonExtensions
 {
@@ -26,12 +27,12 @@ public static class PerformanceMetricCollectorExtensionsJsonExtensions
     };
 
     /// <summary>
-    /// Serializes a <see cref="PerformanceMetricCollector"/> instance to JSON.
+    /// Serializes a <see cref="PerformanceMetricCollector"/> instance to a JSON string.
     /// </summary>
     /// <param name="value">The performance metric collector to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation.</param>
     /// <returns>JSON string representation of the performance metric collector.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
     public static string ToJson(this PerformanceMetricCollector value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -47,8 +48,8 @@ public static class PerformanceMetricCollectorExtensionsJsonExtensions
     /// Deserializes a JSON string to a <see cref="PerformanceMetricCollector"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized performance metric collector, or null if input is empty.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <returns>The deserialized performance metric collector, or <see langword="null"/> if input is empty.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/> or empty.</exception>
     /// <exception cref="JsonException">Thrown when JSON is invalid.</exception>
     public static PerformanceMetricCollector? FromJson(string json)
     {
@@ -60,8 +61,8 @@ public static class PerformanceMetricCollectorExtensionsJsonExtensions
     /// Tries to deserialize a JSON string to a <see cref="PerformanceMetricCollector"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">The deserialized performance metric collector, or null on failure.</param>
-    /// <returns>True if deserialization succeeded, false otherwise.</returns>
+    /// <param name="value">The deserialized performance metric collector, or <see langword="null"/> on failure.</param>
+    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
     public static bool TryFromJson(string json, out PerformanceMetricCollector? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
