@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SqlQueryAnalyzer.Models;
 
@@ -31,32 +30,27 @@ public static class ProfilerOptionsValidation
         // Validate MaxDurationMs
         if (value.MaxDurationMs <= 0)
         {
-            errors.Add(
-                $"MaxDurationMs must be positive, but was {value.MaxDurationMs}.");
+            errors.Add($"MaxDurationMs must be positive, but was {value.MaxDurationMs}.");
         }
         else if (value.MaxDurationMs > 3_600_000) // 1 hour in milliseconds
         {
-            errors.Add(
-                $"MaxDurationMs ({value.MaxDurationMs}) exceeds maximum allowed value of 3,600,000 ms (1 hour).");
+            errors.Add($"MaxDurationMs ({value.MaxDurationMs}) exceeds maximum allowed value of 3,600,000 ms (1 hour).");
         }
 
         // Validate WarmUpIterations
         if (value.WarmUpIterations < 0)
         {
-            errors.Add(
-                $"WarmUpIterations cannot be negative, but was {value.WarmUpIterations}.");
+            errors.Add($"WarmUpIterations cannot be negative, but was {value.WarmUpIterations}.");
         }
 
         // Validate MeasurementIterations
         if (value.MeasurementIterations <= 0)
         {
-            errors.Add(
-                $"MeasurementIterations must be positive, but was {value.MeasurementIterations}.");
+            errors.Add($"MeasurementIterations must be positive, but was {value.MeasurementIterations}.");
         }
         else if (value.MeasurementIterations > 1_000)
         {
-            errors.Add(
-                $"MeasurementIterations ({value.MeasurementIterations}) exceeds reasonable maximum of 1,000.");
+            errors.Add($"MeasurementIterations ({value.MeasurementIterations}) exceeds reasonable maximum of 1,000.");
         }
 
         return errors;
@@ -67,10 +61,7 @@ public static class ProfilerOptionsValidation
     /// </summary>
     /// <param name="value">The options instance to check.</param>
     /// <returns><see langword="true"/> if the instance is valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValid(this ProfilerOptions value)
-    {
-        return value.Validate().Count == 0;
-    }
+    public static bool IsValid(this ProfilerOptions value) => value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="ProfilerOptions"/> instance is valid, throwing an <see cref="ArgumentException"/>
