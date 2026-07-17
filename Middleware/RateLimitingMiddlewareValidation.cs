@@ -25,12 +25,6 @@ public static class RateLimitingMiddlewareValidation
 
         var problems = new List<string>();
 
-        // Validate maxQueriesPerSecond (default is 100)
-        // No validation needed as constructor has sensible defaults
-
-        // Validate maxConcurrentAnalysis (default is 10)
-        // No validation needed as constructor has sensible defaults
-
         // Validate internal state consistency
         var load = value.GetSystemLoad();
         if (load < 0 || load > 100)
@@ -39,7 +33,6 @@ public static class RateLimitingMiddlewareValidation
         }
 
         // Validate query statistics if available
-        // Note: These properties are not directly accessible, but we can check the stats returned by GetQueryStats
         try
         {
             var stats = value.GetQueryStats("test");
@@ -58,9 +51,10 @@ public static class RateLimitingMiddlewareValidation
                 problems.Add("QueryHash must not be null or whitespace.");
             }
         }
-        catch
+        catch (Exception ex) when (ex is not ArgumentException and not InvalidOperationException)
         {
             // GetQueryStats might throw if queryHash is invalid, but that's handled by the method itself
+            // Only catch exceptions that aren't already expected validation exceptions
         }
 
         return problems.AsReadOnly();
@@ -71,11 +65,7 @@ public static class RateLimitingMiddlewareValidation
     /// </summary>
     /// <param name="value">The middleware instance to check.</param>
     /// <returns>True if valid; otherwise, false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
-    public static bool IsValid(this RateLimitingMiddleware? value)
-    {
-        return value?.Validate().Count == 0;
-    }
+    public static bool IsValid(this RateLimitingMiddleware? value) => value?.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that a <see cref="RateLimitingMiddleware"/> instance is valid, throwing an exception if not.
