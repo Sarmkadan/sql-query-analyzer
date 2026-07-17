@@ -3,7 +3,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System;
 using System.Text.Json;
@@ -38,10 +38,7 @@ public static class PerformanceMetricsCalculatorJsonExtensions
         ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions)
-            {
-                WriteIndented = true
-            }
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
             : _jsonOptions;
 
         return JsonSerializer.Serialize(value, options);
@@ -53,15 +50,15 @@ public static class PerformanceMetricsCalculatorJsonExtensions
     /// <typeparam name="T">The type of the object to deserialize.</typeparam>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized object instance, or null if the JSON is null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
     public static T? FromJson<T>(string json) where T : class
     {
-        if (string.IsNullOrEmpty(json))
-        {
-            return null;
-        }
+        ArgumentNullException.ThrowIfNull(json);
 
-        return JsonSerializer.Deserialize<T>(json, _jsonOptions);
+        return string.IsNullOrEmpty(json)
+            ? null
+            : JsonSerializer.Deserialize<T>(json, _jsonOptions);
     }
 
     /// <summary>
