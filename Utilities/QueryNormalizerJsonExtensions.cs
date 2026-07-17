@@ -50,20 +50,15 @@ public static class QueryNormalizerJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>Always null, as QueryNormalizer is a utility class and cannot be instantiated.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty or whitespace.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is malformed.</exception>
     public static QueryNormalizer? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
 
-        try
-        {
-            // Attempt to deserialize to verify JSON is valid
-            JsonSerializer.Deserialize<object>(json, _jsonOptions);
-        }
-        catch (JsonException)
-        {
-            throw;
-        }
+        // Attempt to deserialize to verify JSON is valid
+        JsonSerializer.Deserialize<object>(json, _jsonOptions);
 
         // QueryNormalizer is a utility class with no state to deserialize
         return null;
@@ -76,6 +71,8 @@ public static class QueryNormalizerJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives null, as QueryNormalizer cannot be deserialized.</param>
     /// <returns>Always false, as QueryNormalizer is a utility class and cannot be instantiated.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty or whitespace.</exception>
     public static bool TryFromJson(string json, out QueryNormalizer? value)
     {
         value = null;
