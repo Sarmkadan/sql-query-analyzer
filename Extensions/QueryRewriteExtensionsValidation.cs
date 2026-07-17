@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using SqlQueryAnalyzer.Models;
 
@@ -45,7 +44,7 @@ namespace SqlQueryAnalyzer.Extensions
                     problems.Add($"Suggestion at index {i} has null or empty Rationale");
                 }
 
-                if (suggestion.RewriteType == default(RewriteType))
+                if (suggestion.RewriteType == default)
                 {
                     problems.Add($"Suggestion at index {i} has default RewriteType");
                 }
@@ -83,22 +82,18 @@ namespace SqlQueryAnalyzer.Extensions
                 return problems.AsReadOnly();
             }
 
-            if (result.Count > 0)
+            for (int i = 0; i < result.Count; i++)
             {
-                // Validate each auto-applicable suggestion
-                for (int i = 0; i < result.Count; i++)
+                var suggestion = result[i];
+                if (suggestion == null)
                 {
-                    var suggestion = result[i];
-                    if (suggestion == null)
-                    {
-                        problems.Add($"Auto-applicable suggestion at index {i} is null");
-                        continue;
-                    }
+                    problems.Add($"Auto-applicable suggestion at index {i} is null");
+                    continue;
+                }
 
-                    if (!suggestion.IsAutoApplicable)
-                    {
-                        problems.Add($"Suggestion at index {i} is in GetAutoApplicable() result but IsAutoApplicable is false");
-                    }
+                if (!suggestion.IsAutoApplicable)
+                {
+                    problems.Add($"Suggestion at index {i} is in GetAutoApplicable() result but IsAutoApplicable is false");
                 }
             }
 
@@ -124,22 +119,18 @@ namespace SqlQueryAnalyzer.Extensions
                 return problems.AsReadOnly();
             }
 
-            if (result.Count > 0)
+            for (int i = 0; i < result.Count; i++)
             {
-                // Validate each non-breaking suggestion
-                for (int i = 0; i < result.Count; i++)
+                var suggestion = result[i];
+                if (suggestion == null)
                 {
-                    var suggestion = result[i];
-                    if (suggestion == null)
-                    {
-                        problems.Add($"Non-breaking suggestion at index {i} is null");
-                        continue;
-                    }
+                    problems.Add($"Non-breaking suggestion at index {i} is null");
+                    continue;
+                }
 
-                    if (suggestion.IsBreakingChange)
-                    {
-                        problems.Add($"Suggestion at index {i} is in GetNonBreaking() result but IsBreakingChange is true");
-                    }
+                if (suggestion.IsBreakingChange)
+                {
+                    problems.Add($"Suggestion at index {i} is in GetNonBreaking() result but IsBreakingChange is true");
                 }
             }
 
@@ -250,25 +241,22 @@ namespace SqlQueryAnalyzer.Extensions
             }
 
             var orderedList = result.ToList();
-            if (orderedList.Count > 0)
+            // Validate ordering is correct (descending by EstimatedImprovementPercent)
+            double prevImprovement = double.MaxValue;
+            for (int i = 0; i < orderedList.Count; i++)
             {
-                // Validate ordering is correct (descending by EstimatedImprovementPercent)
-                double prevImprovement = double.MaxValue;
-                for (int i = 0; i < orderedList.Count; i++)
+                var suggestion = orderedList[i];
+                if (suggestion == null)
                 {
-                    var suggestion = orderedList[i];
-                    if (suggestion == null)
-                    {
-                        problems.Add($"Ordered suggestion at index {i} is null");
-                        continue;
-                    }
-
-                    if (suggestion.EstimatedImprovementPercent > prevImprovement)
-                    {
-                        problems.Add($"Suggestion at index {i} has EstimatedImprovementPercent {suggestion.EstimatedImprovementPercent} which is greater than previous {prevImprovement} - ordering is incorrect");
-                    }
-                    prevImprovement = suggestion.EstimatedImprovementPercent;
+                    problems.Add($"Ordered suggestion at index {i} is null");
+                    continue;
                 }
+
+                if (suggestion.EstimatedImprovementPercent > prevImprovement)
+                {
+                    problems.Add($"Suggestion at index {i} has EstimatedImprovementPercent {suggestion.EstimatedImprovementPercent} which is greater than previous {prevImprovement} - ordering is incorrect");
+                }
+                prevImprovement = suggestion.EstimatedImprovementPercent;
             }
 
             return problems.AsReadOnly();
