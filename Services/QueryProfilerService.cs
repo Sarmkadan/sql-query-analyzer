@@ -28,11 +28,11 @@ namespace SqlQueryAnalyzer.Services;
 /// </summary>
 public sealed class QueryProfilerService : IQueryProfilerService
 {
-    private readonly IQueryAnalyzerService _queryAnalyzer;
-    private readonly IQueryPlanAnalyzerService _planAnalyzer;
-    private readonly IPerformanceIssueDetectorService _issueDetector;
-    private readonly IExecutionPlanVisualizer _planVisualizer;
-    private readonly ProfilerSettings _settings;
+    internal readonly IQueryAnalyzerService _queryAnalyzer;
+    internal readonly IQueryPlanAnalyzerService _planAnalyzer;
+    internal readonly IPerformanceIssueDetectorService _issueDetector;
+    internal readonly IExecutionPlanVisualizer _planVisualizer;
+    internal readonly ProfilerSettings _settings;
     private readonly ILogger<QueryProfilerService> _logger;
 
     public QueryProfilerService(

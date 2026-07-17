@@ -3,19 +3,17 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using SqlQueryAnalyzer.Configuration;
 
 namespace SqlQueryAnalyzer.Services;
 
 /// <summary>
 /// Provides validation helpers for <see cref="QueryProfilerService"/> to ensure service
-/// dependencies and configuration are valid before use.
+/// dependencies, configuration, and runtime state are valid before use.
 /// </summary>
 public static class QueryProfilerServiceValidation
 {
@@ -30,12 +28,25 @@ public static class QueryProfilerServiceValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        // QueryProfilerService has comprehensive null checks in its constructor
-        // and public methods. Since all fields are private, we can only validate
-        // that the instance itself is not null, which is already done by ArgumentNullException.
-        // The service's constructor ensures all dependencies are non-null.
+        var problems = new List<string>();
 
-        return Array.Empty<string>();
+        // Validate ProfilerSettings for runtime issues
+        if (value._settings == null)
+        {
+            problems.Add("ProfilerSettings instance is null");
+        }
+        else
+        {
+            ValidateProfilerSettings(value._settings, problems);
+        }
+
+        // Validate that all required services are properly initialized
+        ValidateServiceDependency(value._queryAnalyzer, nameof(QueryProfilerService._queryAnalyzer), problems);
+        ValidateServiceDependency(value._planAnalyzer, nameof(QueryProfilerService._planAnalyzer), problems);
+        ValidateServiceDependency(value._issueDetector, nameof(QueryProfilerService._issueDetector), problems);
+        ValidateServiceDependency(value._planVisualizer, nameof(QueryProfilerService._planVisualizer), problems);
+
+        return problems;
     }
 
     /// <summary>
@@ -72,6 +83,49 @@ public static class QueryProfilerServiceValidation
             nameof(value));
     }
 
-    // No additional private validation methods needed for behavioral validation approach
-    // The validation is based on the service's public interface and constructor guarantees
+    private static void ValidateProfilerSettings(ProfilerSettings settings, List<string> problems)
+    {
+        if (settings.MaxQueryLengthChars <= 0)
+        {
+            problems.Add($"ProfilerSettings.MaxQueryLengthChars must be positive, but was {settings.MaxQueryLengthChars}");
+        }
+
+        if (settings.MaxBatchSize <= 0)
+        {
+            problems.Add($"ProfilerSettings.MaxBatchSize must be positive, but was {settings.MaxBatchSize}");
+        }
+
+        if (settings.SlowStageThresholdMs <= 0)
+        {
+            problems.Add($"ProfilerSettings.SlowStageThresholdMs must be positive, but was {settings.SlowStageThresholdMs}");
+        }
+
+        if (settings.HighMemoryThresholdBytes <= 0)
+        {
+            problems.Add($"ProfilerSettings.HighMemoryThresholdBytes must be positive, but was {settings.HighMemoryThresholdBytes}");
+        }
+
+        if (settings.RegressionThreshold < 0)
+        {
+            problems.Add($"ProfilerSettings.RegressionThreshold must be non-negative, but was {settings.RegressionThreshold}");
+        }
+
+        if (settings.ImprovementThreshold < 0)
+        {
+            problems.Add($"ProfilerSettings.ImprovementThreshold must be non-negative, but was {settings.ImprovementThreshold}");
+        }
+
+        if (settings.DefaultMaxDurationMs <= 0)
+        {
+            problems.Add($"ProfilerSettings.DefaultMaxDurationMs must be positive, but was {settings.DefaultMaxDurationMs}");
+        }
+    }
+
+    private static void ValidateServiceDependency<T>(T dependency, string dependencyName, List<string> problems)
+    {
+        if (dependency is null)
+        {
+            problems.Add($"Service dependency {dependencyName} is null");
+        }
+    }
 }
