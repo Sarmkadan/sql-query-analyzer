@@ -22,12 +22,8 @@ public static class SqlPatternAnalyzerBenchmarksJsonExtensions
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>A JSON string representation of the benchmarks.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
-    public static string ToJson(this SqlPatternAnalyzerBenchmarks value, bool indented = false)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        return JsonSerializer.Serialize(value, indented ? GetIndentedOptions() : _jsonOptions);
-    }
+    public static string ToJson(this SqlPatternAnalyzerBenchmarks value, bool indented = false) =>
+        JsonSerializer.Serialize(value, indented ? GetIndentedOptions() : _jsonOptions);
 
     /// <summary>
     /// Deserializes a JSON string to a <see cref="SqlPatternAnalyzerBenchmarks"/> instance.
@@ -38,7 +34,6 @@ public static class SqlPatternAnalyzerBenchmarksJsonExtensions
     public static SqlPatternAnalyzerBenchmarks? FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
-
         return json.Length == 0 ? null : JsonSerializer.Deserialize<SqlPatternAnalyzerBenchmarks>(json, _jsonOptions);
     }
 
@@ -54,14 +49,14 @@ public static class SqlPatternAnalyzerBenchmarksJsonExtensions
         ArgumentNullException.ThrowIfNull(json);
 
         value = null;
+        if (json.Length == 0)
+        {
+            return false;
+        }
+
         try
         {
-            if (json.Length > 0)
-            {
-                value = JsonSerializer.Deserialize<SqlPatternAnalyzerBenchmarks>(json, _jsonOptions);
-                return true;
-            }
-
+            value = JsonSerializer.Deserialize<SqlPatternAnalyzerBenchmarks>(json, _jsonOptions);
             return true;
         }
         catch (JsonException)
