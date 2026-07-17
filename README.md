@@ -745,6 +745,124 @@ Console.WriteLine(formattedJoins);
 
 ---
 
+## HttpQueryAnalysisClientValidation
+
+The `HttpQueryAnalysisClientValidation` class provides validation helpers for the `HttpQueryAnalysisClient` HTTP client. It offers extension methods for validating constructor arguments, method parameters, and internal state of HTTP query analysis client instances. The validation covers client instances, individual queries, query arrays for batch operations, analysis options dictionaries, maximum degree of parallelism settings, and timeout values in seconds. Methods are provided for both validation with error collection and exception-throwing validation.
+
+### Usage Example
+
+```csharp
+// Create an HttpQueryAnalysisClient instance
+var client = new HttpQueryAnalysisClient(
+    baseUrl: "https://api.sqlqueryanalyzer.com",
+    apiKey: "your-api-key-here",
+    timeoutSeconds: 30);
+
+// Validate the client instance
+var clientErrors = client.Validate();
+if (clientErrors.Count > 0)
+{
+    Console.WriteLine("Client validation errors:");
+    foreach (var error in clientErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("HttpQueryAnalysisClient is valid!");
+}
+
+// Check validity with IsValid extension
+bool isValid = client.IsValid();
+Console.WriteLine($"Is valid: {isValid}");
+
+// Validate a SQL query before analysis
+var query = "SELECT * FROM Users WHERE Status = 'active'";
+var queryErrors = query.ValidateQuery();
+if (queryErrors.Count > 0)
+{
+    Console.WriteLine("Query validation errors:");
+    foreach (var error in queryErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("Query is valid for analysis!");
+}
+
+// Validate batch queries
+var queries = new string[]
+{
+    "SELECT * FROM Users",
+    "SELECT Name FROM Products WHERE Price > 100",
+    "SELECT COUNT(*) FROM Orders WHERE Date > '2024-01-01'"
+};
+var batchErrors = queries.ValidateQueries();
+Console.WriteLine($"Batch validation errors: {batchErrors.Count}");
+
+// Validate analysis options
+var options = new Dictionary<string, string>
+{
+    { "format", "json" },
+    { "includeExecutionPlan", "true" },
+    { "maxDegreeOfParallelism", "4" }
+};
+var optionsErrors = options.ValidateOptions();
+Console.WriteLine($"Options validation errors: {optionsErrors.Count}");
+
+// Validate max degree of parallelism
+int? maxDegree = 4;
+var maxDegreeErrors = maxDegree.ValidateMaxDegreeOfParallelism();
+Console.WriteLine($"Max degree validation errors: {maxDegreeErrors.Count}");
+
+// Validate timeout
+int timeout = 30;
+var timeoutErrors = timeout.ValidateTimeoutSeconds();
+Console.WriteLine($"Timeout validation errors: {timeoutErrors.Count}");
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+    client.EnsureValid();
+    query.EnsureValidQuery();
+    queries.EnsureValidQueries();
+    options.EnsureValidOptions();
+    maxDegree.EnsureValidMaxDegreeOfParallelism();
+    timeout.EnsureValidTimeoutSeconds();
+    Console.WriteLine("All validations passed - no exceptions thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `Validate(this HttpQueryAnalysisClient? value)` - Validates an HttpQueryAnalysisClient instance and returns a list of validation errors; empty if valid
+- `IsValid(this HttpQueryAnalysisClient? value)` - Determines whether the specified HttpQueryAnalysisClient instance is valid
+- `EnsureValid(this HttpQueryAnalysisClient? value)` - Ensures that the specified HttpQueryAnalysisClient instance is valid, throwing an exception if not
+- `ValidateQuery(this string? query)` - Validates a SQL query string and returns a list of validation errors; empty if valid
+- `IsValidQuery(this string? query)` - Determines whether the specified query is valid
+- `EnsureValidQuery(this string? query)` - Ensures that the specified query is valid, throwing an exception if not
+- `ValidateQueries(this string[]? queries)` - Validates an array of SQL queries and returns a list of validation errors; empty if valid
+- `IsValidQueries(this string[]? queries)` - Determines whether the specified queries array is valid
+- `EnsureValidQueries(this string[]? queries)` - Ensures that the specified queries array is valid, throwing an exception if not
+- `ValidateOptions(this Dictionary<string, string>? options)` - Validates an options dictionary and returns a list of validation errors; empty if valid
+- `IsValidOptions(this Dictionary<string, string>? options)` - Determines whether the specified options dictionary is valid
+- `EnsureValidOptions(this Dictionary<string, string>? options)` - Ensures that the specified options dictionary is valid, throwing an exception if not
+- `ValidateMaxDegreeOfParallelism(this int? maxDegreeOfParallelism)` - Validates the maximum degree of parallelism and returns a list of validation errors; empty if valid
+- `IsValidMaxDegreeOfParallelism(this int? maxDegreeOfParallelism)` - Determines whether the specified max degree of parallelism is valid
+- `EnsureValidMaxDegreeOfParallelism(this int? maxDegreeOfParallelism)` - Ensures that the specified max degree of parallelism is valid, throwing an exception if not
+- `ValidateTimeoutSeconds(this int timeoutSeconds)` - Validates the timeout in seconds and returns a list of validation errors; empty if valid
+- `IsValidTimeoutSeconds(this int timeoutSeconds)` - Determines whether the specified timeout in seconds is valid
+- `EnsureValidTimeoutSeconds(this int timeoutSeconds)` - Ensures that the specified timeout in seconds is valid, throwing an exception if not
+
+---
+
 ## AnalysisControllerValidation
 
 The `AnalysisControllerValidation` class provides validation helpers for API request/response types used by the AnalysisController. It offers extension methods for validating `AnalysisRequest`, `BatchAnalysisRequest`, `ApiResponse<T>`, and `HealthStatus` instances, returning lists of validation errors or boolean validation status. Methods are provided for both validation with error collection and exception-throwing validation.
