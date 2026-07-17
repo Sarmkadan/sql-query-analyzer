@@ -3,7 +3,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Globalization;
 using SqlQueryAnalyzer.Models;
@@ -53,6 +53,7 @@ public static class CliApplicationHostExtensions
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="host"/> is null.
     /// Thrown when <paramref name="key"/> is null or empty.
+    /// Thrown when <paramref name="value"/> is null.
     /// </exception>
     public static void SetMetadata(this CliApplicationHost host, string key, object value)
     {
@@ -70,8 +71,10 @@ public static class CliApplicationHostExtensions
     /// <param name="host">The CLI application host instance.</param>
     /// <param name="key">The metadata key.</param>
     /// <returns>The metadata value if found; otherwise the default value for type T.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="host"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="key"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="host"/> is null.
+    /// Thrown when <paramref name="key"/> is null.
+    /// </exception>
     public static T? GetMetadata<T>(this CliApplicationHost host, string key)
     {
         ArgumentNullException.ThrowIfNull(host);
@@ -106,7 +109,7 @@ public static class CliApplicationHostExtensions
     /// Gets the total number of issues grouped by severity level.
     /// </summary>
     /// <param name="host">The CLI application host instance.</param>
-    /// <returns>A dictionary mapping severity levels to issue counts.</returns>
+    /// <returns>A read-only dictionary mapping severity levels to issue counts.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="host"/> is null.</exception>
     public static IReadOnlyDictionary<IssueSeverity, int> GetIssueCountsBySeverity(this CliApplicationHost host)
     {
@@ -133,7 +136,7 @@ public static class CliApplicationHostExtensions
     /// Gets the query text from the host's Query property.
     /// </summary>
     /// <param name="host">The CLI application host instance.</param>
-    /// <returns>The query text; empty string if null.</returns>
+    /// <returns>The query text; <see cref="string.Empty"/> if null.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="host"/> is null.</exception>
     public static string GetQueryText(this CliApplicationHost host)
     {
