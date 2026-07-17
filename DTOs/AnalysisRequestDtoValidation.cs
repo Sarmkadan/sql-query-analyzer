@@ -33,7 +33,7 @@ public static class AnalysisRequestDtoValidation
         {
             errors.Add("QueryText is required and cannot be empty or whitespace.");
         }
-        else if (value.QueryText.Length > 1000000)
+        else if (value.QueryText.Length > 1_000_000)
         {
             errors.Add("QueryText exceeds maximum length of 1,000,000 characters.");
         }
@@ -57,19 +57,10 @@ public static class AnalysisRequestDtoValidation
         }
 
         // Validate ExecutionPlanXml (optional but if provided, has constraints)
-        if (!string.IsNullOrEmpty(value.ExecutionPlanXml) && value.ExecutionPlanXml.Length > 10000000)
+        if (!string.IsNullOrEmpty(value.ExecutionPlanXml) && value.ExecutionPlanXml.Length > 10_000_000)
         {
             errors.Add("ExecutionPlanXml exceeds maximum length of 10,000,000 characters.");
         }
-
-        // Validate IncludeIndexSuggestions (should be a valid boolean value)
-        // No specific validation needed beyond being a boolean
-
-        // Validate AnalyzeFragmentation (should be a valid boolean value)
-        // No specific validation needed beyond being a boolean
-
-        // Validate AnalyzePlan (should be a valid boolean value)
-        // No specific validation needed beyond being a boolean
 
         return errors.AsReadOnly();
     }
@@ -82,7 +73,7 @@ public static class AnalysisRequestDtoValidation
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static bool IsValid(this AnalysisRequestDto? value)
     {
-        return value?.Validate().Count == 0;
+        return value is not null && value.Validate().Count == 0;
     }
 
     /// <summary>
