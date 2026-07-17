@@ -22,11 +22,13 @@ public static class QueryAnalysisCacheJsonExtensions
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
-        IgnoreNullValues = true
+        IgnoreNullValues = true,
+        DefaultBufferSize = 16384,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
     /// <summary>
-    /// Serializes a <see cref="QueryAnalysisCache"/> instance to a JSON string.
+    /// Serializes a <see cref="QueryAnalysisCache"/> instance to a JSON string using camelCase property naming.
     /// </summary>
     /// <param name="value">The query analysis cache to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
@@ -48,11 +50,17 @@ public static class QueryAnalysisCacheJsonExtensions
     /// Deserializes a <see cref="QueryAnalysisCache"/> instance from a JSON string.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized query analysis cache, or null if the JSON is invalid.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <returns>The deserialized query analysis cache, or null if the JSON is invalid or whitespace-only.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty.</exception>
     public static QueryAnalysisCache? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
 
         try
         {
@@ -70,10 +78,17 @@ public static class QueryAnalysisCacheJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">The deserialized query analysis cache, or null if deserialization failed.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty.</exception>
     public static bool TryFromJson(string json, out QueryAnalysisCache? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            value = null;
+            return false;
+        }
 
         try
         {
