@@ -7,11 +7,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Xunit;
 
 namespace SqlQueryAnalyzer.Tests
 {
     /// <summary>
     /// Provides validation helpers for <see cref="QueryValidatorTests"/> instances.
+    /// Validates that the test fixture contains properly structured test methods.
     /// </summary>
     public static class QueryValidatorTestsValidation
     {
@@ -27,9 +31,39 @@ namespace SqlQueryAnalyzer.Tests
 
             var problems = new List<string>();
 
-            // QueryValidatorTests is a test fixture class with only parameterless test methods
-            // There are no members to validate beyond the instance itself
-            // All validation is performed by invoking the test methods
+            var testMethods = value.GetType()
+                .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+                .Where(m => m.GetCustomAttribute<FactAttribute>() != null)
+                .ToList();
+
+            if (testMethods.Count == 0)
+            {
+                problems.Add("QueryValidatorTests fixture contains no test methods with [Fact] attribute.");
+            }
+
+            foreach (var method in testMethods)
+            {
+                if (method.GetParameters().Length > 0)
+                {
+                    problems.Add($"Test method '{method.Name}' has parameters. Test methods should be parameterless.");
+                }
+
+                if (method.ReturnType != typeof(void))
+                {
+                    problems.Add($"Test method '{method.Name}' returns {method.ReturnType.Name}. Test methods should return void.");
+                }
+
+                if (!method.IsPublic)
+                {
+                    problems.Add($"Test method '{method.Name}' is not public. Test methods should be public.");
+                }
+
+                if (method.Name.StartsWith("ctor", StringComparison.Ordinal) ||
+                    method.Name.StartsWith("Finalize", StringComparison.Ordinal))
+                {
+                    problems.Add($"Test method '{method.Name}' appears to be a special method. Test methods should follow naming conventions.");
+                }
+            }
 
             return problems.AsReadOnly();
         }
@@ -43,7 +77,6 @@ namespace SqlQueryAnalyzer.Tests
         public static bool IsValid(this QueryValidatorTests value)
         {
             ArgumentNullException.ThrowIfNull(value);
-
             return value.Validate().Count == 0;
         }
 
