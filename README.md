@@ -1166,6 +1166,138 @@ SqlPatternAnalyzerTestsExtensions.ExecuteOptimizationRecommendationsTest(tests);
 
 ---
 
+## QueryProfilerExtensionsValidation
+
+The `QueryProfilerExtensionsValidation` class provides validation extension methods for query profiler-related data types (`ProfilerSettings`, `QueryProfilerReport`, `ExecutionStage`, `ProfilerMetric`, `ProfilerSuggestion`, `ProfileComparison`, and `MetricDelta`). These methods validate null references, required fields, value ranges, and internal consistency, returning validation errors or boolean validation status. The `EnsureValid` methods throw exceptions when validation fails, making it easy to enforce data integrity before using profiler results.
+
+### Usage Example
+
+```csharp
+// Create profiler settings with validation
+var settings = new ProfilerSettings
+{
+    QueryText = "SELECT * FROM Users WHERE Status = 'active'",
+    MaxExecutionTimeMs = 1000,
+    SampleRate = 1.0
+};
+
+// Validate settings before using them
+var validationErrors = settings.Validate();
+if (validationErrors.Count > 0)
+{
+    Console.WriteLine("Validation errors found:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("ProfilerSettings are valid!");
+}
+
+// Check validity with IsValid extension
+bool isValid = settings.IsValid();
+Console.WriteLine($"Is valid: {isValid}");
+
+// Validate a QueryProfilerReport
+var report = new QueryProfilerReport
+{
+    QueryId = "query-123",
+    QueryText = "SELECT * FROM Users WHERE Status = 'active'",
+    ProfiledAt = DateTime.UtcNow,
+    PerformanceScore = 85.5,
+    TotalProfilingDurationMs = 45.2,
+    ExecutionStages = new List<ExecutionStage>
+    {
+        new ExecutionStage { Name = "Parse", DurationMs = 2.1 },
+        new ExecutionStage { Name = "Execute", DurationMs = 40.5 }
+    },
+    Metrics = new List<ProfilerMetric>
+    {
+        new ProfilerMetric { Name = "CPU Time", Value = 15.3, Unit = "ms" },
+        new ProfilerMetric { Name = "Reads", Value = 1250, Unit = "pages" }
+    },
+    Suggestions = new List<ProfilerSuggestion>
+    {
+        new ProfilerSuggestion
+        {
+            Priority = 1,
+            Title = "Add index on Status column",
+            Description = "The Status column is frequently filtered but has no index",
+            Recommendation = "CREATE INDEX IX_Users_Status ON Users(Status)",
+            EstimatedImpactPercent = 45.0,
+            Severity = SuggestionSeverity.High,
+            Category = SuggestionCategory.Indexing
+        }
+    }
+};
+
+// Validate the report
+var reportErrors = report.Validate();
+if (reportErrors.Count > 0)
+{
+    Console.WriteLine("Report validation errors:");
+    foreach (var error in reportErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("QueryProfilerReport is valid!");
+}
+
+// Ensure the report is valid (throws exception if not)
+try
+{
+    report.EnsureValid();
+    Console.WriteLine("Report validation passed - no exception thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+
+// Validate a collection of profiler reports
+var reports = new List<QueryProfilerReport> { report };
+var collectionErrors = reports.Validate();
+Console.WriteLine($"Collection validation errors: {collectionErrors.Count}");
+
+// Validate an ExecutionStage
+var stage = new ExecutionStage { Name = "Parse", DurationMs = 2.1 };
+var stageErrors = stage.Validate();
+Console.WriteLine($"Stage validation errors: {stageErrors.Count}");
+```
+
+### Public Members
+
+- `Validate(this ProfilerSettings? settings)` - Validates profiler settings and returns a list of validation errors; empty if valid
+- `IsValid(this ProfilerSettings? settings)` - Determines whether the specified profiler settings are valid
+- `EnsureValid(this ProfilerSettings? settings)` - Ensures that the specified profiler settings are valid, throwing an exception if not
+- `Validate(this QueryProfilerReport? report)` - Validates a query profiler report and returns a list of validation errors; empty if valid
+- `IsValid(this QueryProfilerReport? report)` - Determines whether the specified query profiler report is valid
+- `EnsureValid(this QueryProfilerReport? report)` - Ensures that the specified query profiler report is valid, throwing an exception if not
+- `Validate(this ExecutionStage? stage)` - Validates an execution stage and returns a list of validation errors; empty if valid
+- `IsValid(this ExecutionStage? stage)` - Determines whether the specified execution stage is valid
+- `EnsureValid(this ExecutionStage? stage)` - Ensures that the specified execution stage is valid, throwing an exception if not
+- `Validate(this ProfilerMetric? metric)` - Validates a profiler metric and returns a list of validation errors; empty if valid
+- `IsValid(this ProfilerMetric? metric)` - Determines whether the specified profiler metric is valid
+- `EnsureValid(this ProfilerMetric? metric)` - Ensures that the specified profiler metric is valid, throwing an exception if not
+- `Validate(this ProfilerSuggestion? suggestion)` - Validates a profiler suggestion and returns a list of validation errors; empty if valid
+- `IsValid(this ProfilerSuggestion? suggestion)` - Determines whether the specified profiler suggestion is valid
+- `EnsureValid(this ProfilerSuggestion? suggestion)` - Ensures that the specified profiler suggestion is valid, throwing an exception if not
+- `Validate(this ProfileComparison? comparison)` - Validates a profile comparison and returns a list of validation errors; empty if valid
+- `IsValid(this ProfileComparison? comparison)` - Determines whether the specified profile comparison is valid
+- `EnsureValid(this ProfileComparison? comparison)` - Ensures that the specified profile comparison is valid, throwing an exception if not
+- `Validate(this MetricDelta? delta)` - Validates a metric delta and returns a list of validation errors; empty if valid
+- `IsValid(this MetricDelta? delta)` - Determines whether the specified metric delta is valid
+- `EnsureValid(this MetricDelta? delta)` - Ensures that the specified metric delta is valid, throwing an exception if not
+- `Validate(this IEnumerable<QueryProfilerReport> values)` - Validates a collection of query profiler reports and returns a list of validation problems; empty if all results are valid
+- `IsValid(this IEnumerable<QueryProfilerReport> values)` - Checks if all query profiler reports in a collection are valid
+- `EnsureValid(this IEnumerable<QueryProfilerReport> values)` - Ensures all query profiler reports in a collection are valid, throwing an exception if not
+
+
 ## QueryProfilerExtensionsJsonExtensions
 
 The `QueryProfilerExtensionsJsonExtensions` class provides static methods for serializing and deserializing query profiler-related data types to and from JSON. It supports conversion of `QueryProfilerReport`, `ProfileComparison`, `ProfilerBatchSummary`, and collections of `QueryProfilerReport` objects, enabling easy storage and transmission of profiling data.
