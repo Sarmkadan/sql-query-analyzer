@@ -21,7 +21,7 @@ public static class QueryNormalizerBenchmarksJsonExtensions
     /// <param name="value">The value to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>The JSON string representation.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public static string ToJson(this QueryNormalizerBenchmarks value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -34,8 +34,8 @@ public static class QueryNormalizerBenchmarksJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized instance, or <see langword="null"/> if the JSON represents a null value.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
-    /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="JsonException">The JSON is invalid or cannot be deserialized.</exception>
     public static QueryNormalizerBenchmarks? FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
@@ -49,7 +49,7 @@ public static class QueryNormalizerBenchmarksJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized instance if successful.</param>
     /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
     public static bool TryFromJson(string json, out QueryNormalizerBenchmarks? value)
     {
         ArgumentNullException.ThrowIfNull(json);
@@ -66,12 +66,10 @@ public static class QueryNormalizerBenchmarksJsonExtensions
         }
     }
 
-    private static JsonSerializerOptions GetIndentedOptions()
-    {
-        var options = new JsonSerializerOptions(_jsonOptions)
-        {
-            WriteIndented = true,
-        };
-        return options;
-    }
+    /// <summary>
+    /// Gets JSON serialization options with indentation enabled for human-readable output.
+    /// </summary>
+    /// <returns>A new <see cref="JsonSerializerOptions"/> instance with <see cref="JsonSerializerOptions.WriteIndented"/> set to <see langword="true"/>.</returns>
+    private static JsonSerializerOptions GetIndentedOptions() =>
+        new(_jsonOptions) { WriteIndented = true };
 }
