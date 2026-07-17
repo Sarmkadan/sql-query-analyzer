@@ -565,6 +565,73 @@ Console.WriteLine(`Summary: {summary}`);
 
 ---
 
+## ReportGeneratorValidation
+
+The `ReportGeneratorValidation` class provides validation helpers for `ReportGenerator` method parameters. It validates `QueryAnalysisResult` objects and collections of analysis results to ensure they meet requirements before generating reports, checking for null references, valid values, and internal consistency. The class includes methods for both validation with error collection and exception-throwing validation.
+
+### Usage Example
+
+```csharp
+// Analyze a SQL query using the analyzer service
+var analyzer = new QueryAnalyzerService();
+var result = await analyzer.AnalyzeQueryAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId WHERE u.Status = 'active' GROUP BY u.Name HAVING COUNT(o.Id) > 5 ORDER BY OrderCount DESC");
+
+// Validate a single analysis result
+var validationErrors = ReportGeneratorValidation.Validate(result);
+if (validationErrors.Count > 0)
+{
+    Console.WriteLine("Validation errors found:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("Analysis result is valid for reporting!");
+}
+
+// Check if result is valid
+bool isValid = ReportGeneratorValidation.IsValid(result);
+Console.WriteLine($"Is valid: {isValid}");
+
+// Validate a collection of analysis results for CSV reporting
+var results = new List<QueryAnalysisResult> { result };
+var collectionErrors = ReportGeneratorValidation.Validate(results);
+if (collectionErrors.Count > 0)
+{
+    Console.WriteLine("Collection validation errors found:");
+    foreach (var error in collectionErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+    ReportGeneratorValidation.EnsureValid(result);
+    ReportGeneratorValidation.EnsureValid(results);
+    Console.WriteLine("All validations passed - no exceptions thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `Validate(QueryAnalysisResult analysis)` - Validates a `QueryAnalysisResult` for report generation and returns a list of validation problems; empty if valid
+- `Validate(List<QueryAnalysisResult> analyses)` - Validates a list of `QueryAnalysisResult` objects for CSV report generation and returns a list of validation problems; empty if valid
+- `IsValid(QueryAnalysisResult analysis)` - Determines whether a `QueryAnalysisResult` is valid for report generation
+- `IsValid(List<QueryAnalysisResult> analyses)` - Determines whether a list of `QueryAnalysisResult` objects is valid for CSV report generation
+- `EnsureValid(QueryAnalysisResult analysis)` - Ensures a `QueryAnalysisResult` is valid for report generation, throwing an exception if not
+- `EnsureValid(List<QueryAnalysisResult> analyses)` - Ensures a list of `QueryAnalysisResult` objects is valid for CSV report generation, throwing an exception if not
+
+---
+
 ## SqlPatternAnalyzer
 
 The `SqlPatternAnalyzer` class provides static utility methods for detecting common SQL performance anti-patterns and analyzing query structure. It uses source-generated regular expressions for optimal performance and frozen collections for fast keyword lookups. The analyzer can identify issues like SELECT *, missing WHERE/LIMIT clauses, implicit joins, non-sargable predicates, N+1 patterns, and provides optimization recommendations with a readability score.
