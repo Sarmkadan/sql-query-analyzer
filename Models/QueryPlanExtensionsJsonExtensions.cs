@@ -17,74 +17,75 @@ namespace SqlQueryAnalyzer.Models;
 /// </summary>
 public static class QueryPlanExtensionsJsonExtensions
 {
-    /// <summary>
-    /// Shared JSON serialization options with camelCase property naming.
-    /// </summary>
-    private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
+	/// <summary>
+	/// Shared JSON serialization options with camelCase property naming.
+	/// </summary>
+	private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
+	{
+		PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+		WriteIndented = false,
+		DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+	};
 
-    /// <summary>
-    /// Serializes a type marker representing QueryPlanExtensions to a JSON string.
-    /// </summary>
-    /// <param name="value">This parameter is ignored; only the type context is used.</param>
-    /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
-    /// <returns>A JSON string representation of the QueryPlanExtensions type marker.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
-    public static string ToJson(this object value, bool indented = false)
-    {
-        ArgumentNullException.ThrowIfNull(value);
+	/// <summary>
+	/// Serializes a type marker representing QueryPlanExtensions to a JSON string.
+	/// </summary>
+	/// <param name="value">The value to serialize (type context).</param>
+	/// <param name="indented">Whether to format the JSON with indentation for readability.</param>
+	/// <returns>A JSON string representation of the QueryPlanExtensions type marker.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+	public static string ToJson(this object value, bool indented = false) =>
+		JsonSerializer.Serialize(
+			new { Type = nameof(QueryPlanExtensions) },
+			indented
+				? new JsonSerializerOptions(_jsonSerializerOptions) { WriteIndented = true }
+				: _jsonSerializerOptions
+		);
 
-        var options = indented
-            ? new JsonSerializerOptions(_jsonSerializerOptions) { WriteIndented = true }
-            : _jsonSerializerOptions;
+	/// <summary>
+	/// Deserializes a JSON string into a type marker representing QueryPlanExtensions.
+	/// </summary>
+	/// <param name="json">The JSON string to deserialize.</param>
+	/// <returns>A type marker object, or <see langword="null"/> if the JSON is empty or invalid.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="json"/> is empty.</exception>
+	public static object? FromJson(string json)
+	{
+		ArgumentNullException.ThrowIfNull(json);
+		ArgumentException.ThrowIfNullOrEmpty(json);
 
-        return JsonSerializer.Serialize(new { Type = nameof(QueryPlanExtensions) }, options);
-    }
+		try
+		{
+			return JsonSerializer.Deserialize<object>(json, _jsonSerializerOptions);
+		}
+		catch (JsonException)
+		{
+			return null;
+		}
+	}
 
-    /// <summary>
-    /// Deserializes a JSON string into a type marker representing QueryPlanExtensions.
-    /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>A type marker object, or <see langword="null"/> if the JSON is empty or invalid.</returns>
-    /// <exception cref="ArgumentException"><paramref name="json"/> is null or empty.</exception>
-    public static object? FromJson(string json)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+	/// <summary>
+	/// Attempts to deserialize a JSON string into a type marker representing QueryPlanExtensions.
+	/// </summary>
+	/// <param name="json">The JSON string to deserialize.</param>
+	/// <param name="value">Receives the deserialized type marker if successful.</param>
+	/// <returns><see langword="true"/> if deserialization succeeds; otherwise, <see langword="false"/>.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="json"/> is empty.</exception>
+	public static bool TryFromJson(string json, out object? value)
+	{
+		ArgumentNullException.ThrowIfNull(json);
+		ArgumentException.ThrowIfNullOrEmpty(json);
 
-        try
-        {
-            return JsonSerializer.Deserialize<object>(json, _jsonSerializerOptions);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Attempts to deserialize a JSON string into a type marker representing QueryPlanExtensions.
-    /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized type marker if successful.</param>
-    /// <returns><see langword="true"/> if deserialization succeeds; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="ArgumentException"><paramref name="json"/> is null or empty.</exception>
-    public static bool TryFromJson(string json, out object? value)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(json);
-
-        try
-        {
-            value = JsonSerializer.Deserialize<object>(json, _jsonSerializerOptions);
-            return true;
-        }
-        catch (JsonException)
-        {
-            value = null;
-            return false;
-        }
-    }
+		try
+		{
+			value = JsonSerializer.Deserialize<object>(json, _jsonSerializerOptions);
+			return true;
+		}
+		catch (JsonException)
+		{
+			value = null;
+			return false;
+		}
+	}
 }
