@@ -19,8 +19,8 @@ public static class ReportGeneratorValidation
     /// Validates parameters for <see cref="ReportGenerator.GenerateTextReport(QueryAnalysisResult)"/>,
     /// <see cref="ReportGenerator.GenerateCsvReport(List{QueryAnalysisResult})"/>,
     /// <see cref="ReportGenerator.GenerateJsonReport(QueryAnalysisResult)"/>,
-    /// <see cref="ReportGenerator.GenerateHtmlReport(QueryAnalysisResult)"/>, and
-    /// <see cref="ReportGenerator.GenerateSummary(QueryAnalysisResult)"/>.
+    /// <see cref="ReportGenerator.GenerateHtmlReport(QueryAnalysisResult)"/>,
+    /// and <see cref="ReportGenerator.GenerateSummary(QueryAnalysisResult)"/>.
     /// </summary>
     /// <param name="analysis">The query analysis result to validate.</param>
     /// <returns>A list of human-readable validation problems; empty if valid.</returns>
@@ -123,8 +123,8 @@ public static class ReportGeneratorValidation
     /// Determines whether the parameters for <see cref="ReportGenerator.GenerateTextReport(QueryAnalysisResult)"/>,
     /// <see cref="ReportGenerator.GenerateCsvReport(List{QueryAnalysisResult})"/>,
     /// <see cref="ReportGenerator.GenerateJsonReport(QueryAnalysisResult)"/>,
-    /// <see cref="ReportGenerator.GenerateHtmlReport(QueryAnalysisResult)"/>, and
-    /// <see cref="ReportGenerator.GenerateSummary(QueryAnalysisResult)"/> are valid.
+    /// <see cref="ReportGenerator.GenerateHtmlReport(QueryAnalysisResult)"/>,
+    /// and <see cref="ReportGenerator.GenerateSummary(QueryAnalysisResult)"/> are valid.
     /// </summary>
     /// <param name="analysis">The query analysis result to check.</param>
     /// <returns>True if the parameters are valid; otherwise, false.</returns>
@@ -149,14 +149,16 @@ public static class ReportGeneratorValidation
     /// Ensures that the parameters for <see cref="ReportGenerator.GenerateTextReport(QueryAnalysisResult)"/>,
     /// <see cref="ReportGenerator.GenerateCsvReport(List{QueryAnalysisResult})"/>,
     /// <see cref="ReportGenerator.GenerateJsonReport(QueryAnalysisResult)"/>,
-    /// <see cref="ReportGenerator.GenerateHtmlReport(QueryAnalysisResult)"/>, and
-    /// <see cref="ReportGenerator.GenerateSummary(QueryAnalysisResult)"/> are valid, throwing an <see cref="ArgumentException"/> if not.
+    /// <see cref="ReportGenerator.GenerateHtmlReport(QueryAnalysisResult)"/>,
+    /// and <see cref="ReportGenerator.GenerateSummary(QueryAnalysisResult)"/> are valid, throwing an <see cref="ArgumentException"/> if not.
     /// </summary>
     /// <param name="analysis">The query analysis result to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="analysis"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown if the parameters are not valid, containing a list of validation problems.</exception>
     public static void EnsureValid(QueryAnalysisResult analysis)
     {
+        ArgumentNullException.ThrowIfNull(analysis);
+
         var errors = Validate(analysis);
         if (errors.Count > 0)
         {
@@ -174,6 +176,8 @@ public static class ReportGeneratorValidation
     /// <exception cref="ArgumentException">Thrown if the parameters are not valid, containing a list of validation problems.</exception>
     public static void EnsureValid(List<QueryAnalysisResult> analyses)
     {
+        ArgumentNullException.ThrowIfNull(analyses);
+
         var errors = Validate(analyses);
         if (errors.Count > 0)
         {
