@@ -40,6 +40,7 @@ public static class AnalysisPipelineValidation
     /// </summary>
     /// <param name="value">The AnalysisPipeline instance to check</param>
     /// <returns>True if valid, false otherwise</returns>
+    /// <exception cref="ArgumentNullException">Thrown if value is null</exception>
     public static bool IsValid(this AnalysisPipeline value) => Validate(value).Count == 0;
 
     /// <summary>
