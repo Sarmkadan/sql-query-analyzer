@@ -55,37 +55,33 @@ public static class WebhookNotificationServiceValidation
             errors.Add($"Webhook type must be a valid value between {WebhookType.Slack} and {WebhookType.Custom}.");
         }
 
-        if (config.CustomHeaders != null)
+        if (config.CustomHeaders is { Count: > 50 })
         {
-            if (config.CustomHeaders.Count > 50)
-            {
-                errors.Add("Custom headers cannot exceed 50 entries.");
-            }
+            errors.Add("Custom headers cannot exceed 50 entries.");
+        }
 
+        if (config.CustomHeaders?.Count > 0)
+        {
             foreach (var header in config.CustomHeaders)
             {
                 if (string.IsNullOrWhiteSpace(header.Key))
                 {
                     errors.Add("Custom header key cannot be null or whitespace.");
-                    break;
                 }
 
                 if (string.IsNullOrWhiteSpace(header.Value))
                 {
                     errors.Add("Custom header value cannot be null or whitespace.");
-                    break;
                 }
 
-                if (header.Key.Length > 100)
+                if (header.Key?.Length > 100)
                 {
                     errors.Add("Custom header key cannot exceed 100 characters.");
-                    break;
                 }
 
-                if (header.Value.Length > 500)
+                if (header.Value?.Length > 500)
                 {
                     errors.Add("Custom header value cannot exceed 500 characters.");
-                    break;
                 }
             }
         }
@@ -116,6 +112,6 @@ public static class WebhookNotificationServiceValidation
         }
 
         throw new ArgumentException(
-            $"Webhook configuration is invalid. Details:\n{string.Join("\n", errors)}");
+            $"Webhook configuration is invalid:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}");
     }
 }
