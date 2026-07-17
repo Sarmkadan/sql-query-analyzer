@@ -40,7 +40,7 @@ public static class ExplainPlanParserTestsJsonExtensions
     /// <summary>
     /// Deserializes a JSON string to a <see cref="ExplainPlanParserTests"/> instance.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="json">The JSON string to deserialize. Must not be null or empty.</param>
     /// <returns>The deserialized test instance, or null if the JSON is empty or whitespace.</returns>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static ExplainPlanParserTests? FromJson(string json)
@@ -53,8 +53,8 @@ public static class ExplainPlanParserTestsJsonExtensions
     /// <summary>
     /// Attempts to deserialize a JSON string to a <see cref="ExplainPlanParserTests"/> instance.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized test instance if successful, otherwise null.</param>
+    /// <param name="json">The JSON string to deserialize. Must not be null or empty.</param>
+    /// <param name="value">Receives the deserialized test instance if successful; otherwise, null.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
     public static bool TryFromJson(string json, out ExplainPlanParserTests? value)
     {
