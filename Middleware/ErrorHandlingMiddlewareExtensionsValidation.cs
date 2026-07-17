@@ -16,34 +16,6 @@ namespace SqlQueryAnalyzer.Middleware;
 public static class ErrorHandlingMiddlewareExtensionsValidation
 {
     /// <summary>
-    /// Validates the parameters passed to <see cref="ErrorHandlingMiddlewareExtensions.ExecuteWithErrorHandlingAsync"/>.
-    /// </summary>
-    /// <returns>List of validation problems; empty if valid</returns>
-    public static IReadOnlyList<string> Validate()
-    {
-        return Array.Empty<string>();
-    }
-
-    /// <summary>
-    /// Checks if the parameters passed to <see cref="ErrorHandlingMiddlewareExtensions.ExecuteWithErrorHandlingAsync"/> are valid.
-    /// </summary>
-    /// <returns>True if valid; false otherwise</returns>
-    public static bool IsValid()
-    {
-        return true;
-    }
-
-    /// <summary>
-    /// Ensures the parameters passed to <see cref="ErrorHandlingMiddlewareExtensions.ExecuteWithErrorHandlingAsync"/> are valid.
-    /// Throws <see cref="ArgumentException"/> if validation fails.
-    /// </summary>
-    /// <exception cref="ArgumentException">Validation failed with specific error messages</exception>
-    public static void EnsureValid()
-    {
-        // No validation needed for this method
-    }
-
-    /// <summary>
     /// Validates the parameters passed to <see cref="ErrorHandlingMiddlewareExtensions.CreateErrorReport"/>.
     /// </summary>
     /// <param name="errorMessage">The error message to validate</param>
@@ -83,10 +55,7 @@ public static class ErrorHandlingMiddlewareExtensionsValidation
     /// <exception cref="ArgumentException"><paramref name="context"/> is null or empty</exception>
     public static bool IsValid(
         string? errorMessage,
-        string? context)
-    {
-        return Validate(errorMessage, context).Count == 0;
-    }
+        string? context) => Validate(errorMessage, context).Count == 0;
 
     /// <summary>
     /// Ensures the parameters passed to <see cref="ErrorHandlingMiddlewareExtensions.CreateErrorReport"/> are valid.
@@ -154,10 +123,7 @@ public static class ErrorHandlingMiddlewareExtensionsValidation
     public static bool IsValid<T>(
         Func<Task<T>>? operation,
         string? operationName,
-        int maxRetries)
-    {
-        return Validate(operation, operationName, maxRetries).Count == 0;
-    }
+        int maxRetries) => Validate(operation, operationName, maxRetries).Count == 0;
 
     /// <summary>
     /// Ensures the parameters passed to <see cref="ErrorHandlingMiddlewareExtensions.ExecuteWithRetryAsync{T}"/> are valid.
@@ -218,10 +184,7 @@ public static class ErrorHandlingMiddlewareExtensionsValidation
     /// <exception cref="ArgumentException"><paramref name="context"/> is null or empty</exception>
     public static bool IsValid(
         Exception? ex,
-        string? context)
-    {
-        return Validate(ex, context).Count == 0;
-    }
+        string? context) => Validate(ex, context).Count == 0;
 
     /// <summary>
     /// Ensures the parameters passed to <see cref="ErrorHandlingMiddlewareExtensions.FormatErrorMessage"/> are valid.
@@ -287,10 +250,7 @@ public static class ErrorHandlingMiddlewareExtensionsValidation
     public static bool IsValid<T>(
         Func<Task<T>>? operation,
         Func<T>? cachedResultProvider,
-        string? operationName)
-    {
-        return Validate(operation, cachedResultProvider, operationName).Count == 0;
-    }
+        string? operationName) => Validate(operation, cachedResultProvider, operationName).Count == 0;
 
     /// <summary>
     /// Ensures the parameters passed to <see cref="ErrorHandlingMiddlewareExtensions.ExecuteWithCacheFallbackAsync{T}"/> are valid.
