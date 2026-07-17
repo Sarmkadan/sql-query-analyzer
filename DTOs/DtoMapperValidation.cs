@@ -100,6 +100,7 @@ public static class DtoMapperValidation
     /// </summary>
     /// <param name="value">The QueryDetailDto instance to check</param>
     /// <returns>True if valid, false otherwise</returns>
+    /// <exception cref="ArgumentNullException">Thrown if value is null</exception>
     public static bool IsValid(this QueryDetailDto value) => Validate(value).Count == 0;
 
     /// <summary>
@@ -117,7 +118,7 @@ public static class DtoMapperValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"QueryDetailDto validation failed:{Environment.NewLine}  - {string.Join($"{Environment.NewLine}  - ", problems)}");
+                $"QueryDetailDto validation failed:{Environment.NewLine} - {string.Join($"{Environment.NewLine} - ", problems)}");
         }
     }
 
@@ -126,8 +127,11 @@ public static class DtoMapperValidation
     /// </summary>
     /// <param name="queryType">The query type to validate</param>
     /// <returns>True if valid, false otherwise</returns>
+    /// <exception cref="ArgumentNullException">Thrown if queryType is null</exception>
     private static bool IsValidQueryType(string queryType)
     {
+        ArgumentNullException.ThrowIfNull(queryType);
+
         return queryType.Equals("SELECT", StringComparison.OrdinalIgnoreCase) ||
                queryType.Equals("INSERT", StringComparison.OrdinalIgnoreCase) ||
                queryType.Equals("UPDATE", StringComparison.OrdinalIgnoreCase) ||
