@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SqlQueryAnalyzer.Models;
 
@@ -16,7 +15,7 @@ public static class DatabaseQueryValidation
     /// </summary>
     /// <param name="value">The query to validate.</param>
     /// <returns>A read-only list of validation problems; empty if the query is valid.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate(this DatabaseQuery value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -28,7 +27,7 @@ public static class DatabaseQueryValidation
         {
             problems.Add("QueryId cannot be null or whitespace.");
         }
-        else if (value.QueryId == Guid.Empty.ToString())
+        else if (Guid.TryParse(value.QueryId, out var queryIdGuid) && queryIdGuid == Guid.Empty)
         {
             problems.Add("QueryId should not be an empty GUID.");
         }
@@ -38,19 +37,15 @@ public static class DatabaseQueryValidation
         {
             problems.Add("QueryText cannot be null or whitespace.");
         }
-        else if (value.QueryText.Trim().Length == 0)
-        {
-            problems.Add("QueryText cannot be empty after trimming.");
-        }
 
         // Validate QueryType
-        if (value.QueryType == QueryType.Unknown)
+        if (value.QueryType is QueryType.Unknown)
         {
             problems.Add("QueryType must be set to a valid value (cannot be Unknown).");
         }
 
         // Validate DatabaseType
-        if (value.DatabaseType == DatabaseType.Unknown)
+        if (value.DatabaseType is DatabaseType.Unknown)
         {
             problems.Add("DatabaseType must be set to a valid value (cannot be Unknown).");
         }
@@ -82,7 +77,7 @@ public static class DatabaseQueryValidation
         }
 
         // Validate optional ModifiedBy
-        if (value.ModifiedBy is null && value.ModifiedDate.HasValue)
+        if (string.IsNullOrWhiteSpace(value.ModifiedBy) && value.ModifiedDate.HasValue)
         {
             problems.Add("ModifiedBy must be set when ModifiedDate is set.");
         }
@@ -279,17 +274,14 @@ public static class DatabaseQueryValidation
     /// </summary>
     /// <param name="value">The query to check.</param>
     /// <returns><see langword="true"/> if the query is valid; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static bool IsValid(this DatabaseQuery value)
-    {
-        return value.Validate().Count == 0;
-    }
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
+    public static bool IsValid(this DatabaseQuery value) => value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="DatabaseQuery"/> is valid, throwing an <see cref="ArgumentException"/> if it is not.
     /// </summary>
     /// <param name="value">The query to validate.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">Thrown when the query is invalid, containing a list of validation problems.</exception>
     public static void EnsureValid(this DatabaseQuery value)
     {
@@ -299,7 +291,8 @@ public static class DatabaseQueryValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"DatabaseQuery is invalid. Problems:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}");
+                $"DatabaseQuery is invalid. Problems:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}",
+                nameof(value));
         }
     }
 }
