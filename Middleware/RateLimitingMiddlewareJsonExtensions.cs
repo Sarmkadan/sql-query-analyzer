@@ -34,14 +34,12 @@ public static class RateLimitingMiddlewareJsonExtensions
     /// Deserializes a JSON string to a <see cref="RateLimitingMiddleware"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized middleware instance, or null if the JSON is null or empty.</returns>
+    /// <returns>The deserialized middleware instance, or null if the JSON is malformed or cannot be deserialized.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
     public static RateLimitingMiddleware? FromJson(string json)
     {
-        if (string.IsNullOrEmpty(json))
-        {
-            return null;
-        }
+        ArgumentException.ThrowIfNullOrEmpty(json);
 
         return JsonSerializer.Deserialize<RateLimitingMiddleware>(json, _jsonOptions);
     }
@@ -51,15 +49,11 @@ public static class RateLimitingMiddlewareJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized middleware instance if successful.</param>
-    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <returns>True if deserialization succeeded; otherwise, false. When true, <paramref name="value"/> contains the deserialized pipeline.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static bool TryFromJson(string json, out RateLimitingMiddleware? value)
     {
-        value = null;
-
-        if (string.IsNullOrEmpty(json))
-        {
-            return false;
-        }
+        ArgumentException.ThrowIfNullOrEmpty(json);
 
         try
         {
@@ -68,6 +62,7 @@ public static class RateLimitingMiddlewareJsonExtensions
         }
         catch (JsonException)
         {
+            value = null;
             return false;
         }
     }
