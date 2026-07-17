@@ -1825,6 +1825,107 @@ catch (ArgumentException ex)
 
 ---
 
+## SqlQueryAnalyzerOptionsValidation
+
+The `SqlQueryAnalyzerOptionsValidation` class provides validation helpers for `SqlQueryAnalyzerOptions` configuration objects. It offers extension methods for validating SQL query analyzer options, checking validity, and ensuring configuration correctness with detailed error messages covering database, analysis, cache, performance, and logging settings validation.
+
+### Usage Example
+
+```csharp
+// Create SQL query analyzer options with database configuration
+var options = new SqlQueryAnalyzerOptions
+{
+    Database = new DatabaseOptions
+    {
+        Provider = "SqlServer",
+        ConnectionString = "Server=localhost;Database=Analytics;User Id=sa;Password=your_password;",
+        ConnectionPoolSize = 10,
+        ConnectionTimeoutSeconds = 30
+    },
+    Analysis = new AnalysisOptions
+    {
+        MaxThreads = 4,
+        CriticalIssueSensitivity = 0.8,
+        IndexSeverity = new IndexSeverityThresholdsOptions
+        {
+            InfoMaxRows = 1000,
+            WarningMaxRows = 10000,
+            InfoMaxCost = 100,
+            WarningMaxCost = 1000
+        },
+        IgnorePatterns = new List<string> { "temp_*", "audit_*" }
+    },
+    Cache = new CacheOptions
+    {
+        Provider = "Redis",
+        MaxEntries = 1000,
+        MaxSizeBytes = 10485760, // 10 MB
+        ExpirationSeconds = 3600,
+        RedisConnectionString = "localhost:6379"
+    },
+    Performance = new PerformanceOptions
+    {
+        TimeoutSeconds = 60,
+        MaxQueryLength = 10000,
+        RateLimitQueriesPerSecond = 100,
+        MaxConcurrentAnalysis = 8,
+        BatchSize = 50
+    },
+    Logging = new LoggingOptions
+    {
+        MinimumLevel = "Information",
+        LogMaxFileSizeBytes = 10485760, // 10 MB
+        LogMaxBackupFiles = 5,
+        FileLogging = true,
+        LogFilePath = "/var/log/sql-query-analyzer/analyzer.log"
+    }
+};
+
+// Validate the options
+var validationErrors = options.Validate();
+if (validationErrors.Count > 0)
+{
+    Console.WriteLine("Validation errors found:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("SqlQueryAnalyzerOptions are valid!");
+}
+
+// Check if options are valid
+bool isValid = options.IsValid();
+Console.WriteLine($"Is valid: {isValid}");
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+    options.EnsureValid();
+    Console.WriteLine("SqlQueryAnalyzerOptions validation passed - no exception thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `Validate(this SqlQueryAnalyzerOptions value)` - Validates the SqlQueryAnalyzerOptions instance and returns a list of human-readable validation errors; empty if valid
+- `Validate(this DatabaseOptions value)` - Validates DatabaseOptions and returns validation errors for database configuration
+- `Validate(this AnalysisOptions value)` - Validates AnalysisOptions and returns validation errors for analysis configuration
+- `Validate(this CacheOptions value)` - Validates CacheOptions and returns validation errors for cache configuration
+- `Validate(this PerformanceOptions value)` - Validates PerformanceOptions and returns validation errors for performance configuration
+- `Validate(this LoggingOptions value)` - Validates LoggingOptions and returns validation errors for logging configuration
+- `Validate(this IndexSeverityThresholdsOptions value)` - Validates IndexSeverityThresholdsOptions and returns validation errors for index severity thresholds
+- `IsValid(this SqlQueryAnalyzerOptions value)` - Determines whether the specified SqlQueryAnalyzerOptions are valid
+- `EnsureValid(this SqlQueryAnalyzerOptions value)` - Ensures that the specified SqlQueryAnalyzerOptions are valid, throwing an exception if not
+
+---
+
 ## PerformanceIssueDetectorServiceExtensions
 
 The `PerformanceIssueDetectorServiceExtensions` class provides extension methods for the `PerformanceIssueDetectorService` type that enhance performance issue detection capabilities. It includes methods for detecting common SQL performance anti-patterns such as N+1 queries, join issues, and index opportunities, along with utility methods for filtering, grouping, and prioritizing detected issues.
