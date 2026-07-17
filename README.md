@@ -75,6 +75,63 @@ foreach (var statement in statements) {
 
 ---
 
+## QueryStatisticsExtensions
+
+The `QueryStatisticsExtensions` class provides extension methods for the `QueryStatistics` type, enhancing its capability to analyze and present query execution performance. It includes methods for calculating formatted metrics, detecting potential performance issues like parameter sniffing, identifying bottlenecks, and generating performance trend indicators.
+
+### Usage Example
+
+```csharp
+// Assuming you have a QueryStatistics object 'stats'
+// var stats = ...;
+
+// Get formatted average logical reads
+var formattedReads = stats.GetAverageLogicalReadsFormatted();
+Console.WriteLine($"Average Logical Reads: {formattedReads}");
+
+// Calculate logical reads per second
+var readsPerSec = stats.GetLogicalReadsPerSecond();
+Console.WriteLine($"Reads per Second: {readsPerSec:F2}");
+
+// Calculate CPU time per logical read ratio
+var cpuPerRead = stats.GetCpuTimePerLogicalRead();
+Console.WriteLine($"CPU Time per Logical Read: {cpuPerRead:F2}ms");
+
+// Get a collection of all performance metrics
+var metrics = stats.GetPerformanceMetrics();
+
+// Detect potential parameter sniffing issues
+bool isParameterSniffing = stats.HasPotentialParameterSniffing();
+if (isParameterSniffing) {
+    Console.WriteLine("Potential parameter sniffing detected!");
+}
+
+// Get performance trend indicator
+string trend = stats.GetPerformanceTrendIndicator(previousEfficiencyRating: 85.0);
+Console.WriteLine($"Trend: {trend}");
+
+// Calculate total I/O cost
+double ioCost = stats.GetTotalIoCost();
+Console.WriteLine($"Total I/O Cost: {ioCost:F2}");
+
+// Get a summary of the most significant bottlenecks
+string bottleneck = stats.GetBottleneckSummary();
+Console.WriteLine($"Bottleneck Summary: {bottleneck}");
+```
+
+### Public Members
+
+- `GetAverageLogicalReadsFormatted` - Calculates the average logical reads per execution as a formatted string with thousands separator
+- `GetLogicalReadsPerSecond` - Calculates the total logical reads per second across all executions
+- `GetCpuTimePerLogicalRead` - Calculates the total CPU time per logical read ratio
+- `GetPerformanceMetrics` - Gets a collection of performance metrics as key-value pairs for easy display or serialization
+- `HasPotentialParameterSniffing` - Determines if the query execution pattern indicates a potential parameter sniffing issue
+- `GetPerformanceTrendIndicator` - Gets a formatted performance trend indicator based on efficiency rating changes over time
+- `GetTotalIoCost` - Calculates the total I/O cost as a weighted sum of logical reads, physical reads, and writes
+- `GetBottleneckSummary` - Gets a summary of the most expensive execution metrics for bottleneck identification
+
+---
+
 ## ReportGenerator
 
 The `ReportGenerator` class provides static methods for generating various report formats from SQL query analysis results. It supports text, CSV, JSON, and HTML output formats, making it easy to integrate analysis results into different reporting workflows and tools. Reports include performance metrics, detected issues, and index suggestions with severity assessments and optimization potential.
