@@ -180,6 +180,89 @@ Console.WriteLine($"Bottleneck Summary: {bottleneck}");
 
 ---
 
+## DtoMapperJsonExtensions
+
+The `DtoMapperJsonExtensions` class provides static extension methods for serializing and deserializing DTO types to and from JSON. It includes methods for converting AnalysisRequestDto, AnalysisResponseDto, PerformanceIssueDto, IndexSuggestionDto, BatchAnalysisRequestDto, BatchAnalysisResponseDto, IndexAnalysisRequestDto, and IndexAnalysisResponseDto objects to JSON strings and parsing them back from JSON, enabling easy storage and transmission of DTO data.
+
+### Usage Example
+
+```csharp
+// Create an analysis request DTO
+var request = new AnalysisRequestDto
+{
+    Query = "SELECT * FROM Users WHERE Status = 'active'",
+    Options = new Dictionary<string, string> { { "format", "json" } }
+};
+
+// Serialize to JSON
+string json = request.ToJson();
+Console.WriteLine(json);
+
+// Serialize with pretty printing for readability
+string prettyJson = request.ToJson(indented: true);
+File.WriteAllText("analysis_request.json", prettyJson);
+
+// Deserialize from JSON
+string jsonData = File.ReadAllText("analysis_request.json");
+var deserializedRequest = DtoMapperJsonExtensions.FromJsonToAnalysisRequest(jsonData);
+
+// Try to deserialize with error handling
+if (DtoMapperJsonExtensions.TryFromJsonToAnalysisRequest(jsonData, out var result))
+{
+    Console.WriteLine("Successfully deserialized AnalysisRequestDto");
+}
+
+// Serialize an analysis response DTO
+var response = new AnalysisResponseDto
+{
+    PerformanceScore = 85.5,
+    Issues = new List<PerformanceIssueDto>(),
+    IndexSuggestions = new List<IndexSuggestionDto>()
+};
+
+string responseJson = response.ToJson();
+Console.WriteLine(responseJson);
+
+// Deserialize response
+var deserializedResponse = DtoMapperJsonExtensions.FromJsonToAnalysisResponse(responseJson);
+
+// Serialize a batch analysis request
+var batchRequest = new BatchAnalysisRequestDto
+{
+    Queries = new[] { "SELECT * FROM Users", "SELECT Name FROM Products" },
+    MaxDegreeOfParallelism = 4
+};
+
+string batchJson = batchRequest.ToJson();
+var batchDeserialized = DtoMapperJsonExtensions.FromJsonToBatchAnalysisRequest(batchJson);
+```
+
+### Public Members
+
+- `ToJson(this AnalysisRequestDto value, bool indented = false)` - Serializes an AnalysisRequestDto to a JSON string, optionally formatted with indentation
+- `FromJsonToAnalysisRequest(string json)` - Deserializes an AnalysisRequestDto from a JSON string
+- `TryFromJsonToAnalysisRequest(string json, out AnalysisRequestDto? value)` - Attempts to deserialize an AnalysisRequestDto from a JSON string with error handling
+- `ToJson(this AnalysisResponseDto value, bool indented = false)` - Serializes an AnalysisResponseDto to a JSON string, optionally formatted with indentation
+- `FromJsonToAnalysisResponse(string json)` - Deserializes an AnalysisResponseDto from a JSON string
+- `TryFromJsonToAnalysisResponse(string json, out AnalysisResponseDto? value)` - Attempts to deserialize an AnalysisResponseDto from a JSON string with error handling
+- `ToJson(this PerformanceIssueDto value, bool indented = false)` - Serializes a PerformanceIssueDto to a JSON string, optionally formatted with indentation
+- `FromJsonToPerformanceIssue(string json)` - Deserializes a PerformanceIssueDto from a JSON string
+- `TryFromJsonToPerformanceIssue(string json, out PerformanceIssueDto? value)` - Attempts to deserialize a PerformanceIssueDto from a JSON string with error handling
+- `ToJson(this IndexSuggestionDto value, bool indented = false)` - Serializes an IndexSuggestionDto to a JSON string, optionally formatted with indentation
+- `FromJsonToIndexSuggestion(string json)` - Deserializes an IndexSuggestionDto from a JSON string
+- `TryFromJsonToIndexSuggestion(string json, out IndexSuggestionDto? value)` - Attempts to deserialize an IndexSuggestionDto from a JSON string with error handling
+- `ToJson(this BatchAnalysisRequestDto value, bool indented = false)` - Serializes a BatchAnalysisRequestDto to a JSON string, optionally formatted with indentation
+- `FromJsonToBatchAnalysisRequest(string json)` - Deserializes a BatchAnalysisRequestDto from a JSON string
+- `TryFromJsonToBatchAnalysisRequest(string json, out BatchAnalysisRequestDto? value)` - Attempts to deserialize a BatchAnalysisRequestDto from a JSON string with error handling
+- `ToJson(this BatchAnalysisResponseDto value, bool indented = false)` - Serializes a BatchAnalysisResponseDto to a JSON string, optionally formatted with indentation
+- `FromJsonToBatchAnalysisResponse(string json)` - Deserializes a BatchAnalysisResponseDto from a JSON string
+- `TryFromJsonToBatchAnalysisResponse(string json, out BatchAnalysisResponseDto? value)` - Attempts to deserialize a BatchAnalysisResponseDto from a JSON string with error handling
+- `ToJson(this IndexAnalysisRequestDto value, bool indented = false)` - Serializes an IndexAnalysisRequestDto to a JSON string, optionally formatted with indentation
+- `FromJsonToIndexAnalysisRequest(string json)` - Deserializes an IndexAnalysisRequestDto from a JSON string
+- `TryFromJsonToIndexAnalysisRequest(string json, out IndexAnalysisRequestDto? value)` - Attempts to deserialize an IndexAnalysisRequestDto from a JSON string with error handling
+
+---
+
 ## ReportGenerator
 
 The `ReportGenerator` class provides static methods for generating various report formats from SQL query analysis results. It supports text, CSV, JSON, and HTML output formats, making it easy to integrate analysis results into different reporting workflows and tools. Reports include performance metrics, detected issues, and index suggestions with severity assessments and optimization potential.
