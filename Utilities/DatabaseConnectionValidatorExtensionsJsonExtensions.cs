@@ -25,11 +25,11 @@ public static class DatabaseConnectionValidatorExtensionsJsonExtensions
     };
 
     /// <summary>
-    /// Serializes a type marker representing <see cref="DatabaseConnectionValidatorExtensions"/> to a JSON string.
+    /// Serializes a value to a JSON string.
     /// </summary>
-    /// <param name="value">This parameter is ignored; only the type context is used.</param>
+    /// <param name="value">The value to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
-    /// <returns>A JSON string representation of the <see cref="DatabaseConnectionValidatorExtensions"/> type marker.</returns>
+    /// <returns>A JSON string representation of the value.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
     public static string ToJson(this object value, bool indented = false)
     {
@@ -39,14 +39,14 @@ public static class DatabaseConnectionValidatorExtensionsJsonExtensions
             ? new JsonSerializerOptions(_jsonSerializerOptions) { WriteIndented = true }
             : _jsonSerializerOptions;
 
-        return JsonSerializer.Serialize(new { Type = nameof(DatabaseConnectionValidatorExtensions) }, options);
+        return JsonSerializer.Serialize(value, options);
     }
 
     /// <summary>
-    /// Deserializes a JSON string into a type marker representing <see cref="DatabaseConnectionValidatorExtensions"/>.
+    /// Deserializes a JSON string into an object.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>A type marker object, or <see langword="null"/> if the JSON is empty.</returns>
+    /// <returns>An object representing the deserialized JSON, or <see langword="null"/> if the JSON is empty.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static object? FromJson(string json)
@@ -57,11 +57,12 @@ public static class DatabaseConnectionValidatorExtensionsJsonExtensions
     }
 
     /// <summary>
-    /// Attempts to deserialize a JSON string into a type marker representing <see cref="DatabaseConnectionValidatorExtensions"/>.
+    /// Attempts to deserialize a JSON string into an object.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized type marker if successful.</param>
+    /// <param name="value">Receives the deserialized object if successful.</param>
     /// <returns><see langword="true"/> if deserialization succeeds; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static bool TryFromJson(string json, out object? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
