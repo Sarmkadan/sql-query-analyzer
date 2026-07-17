@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SqlQueryAnalyzer.Configuration;
 
@@ -8,7 +7,11 @@ namespace SqlQueryAnalyzer.Configuration;
 /// Provides validation helpers for <see cref="SqlQueryAnalyzerOptionsExtensions"/> extension methods.
 /// Validates that extension methods return expected values based on configuration.
 /// </summary>
-public static class SqlQueryAnalyzerOptionsExtensionsValidation
+/// <remarks>
+/// All validation methods follow the same pattern: they call the extension method under test,
+/// compare the result against expected behavior, and collect any discrepancies as problems.
+/// </remarks>
+public static partial class SqlQueryAnalyzerOptionsExtensionsValidation
 {
     /// <summary>
     /// Validates that <see cref="SqlQueryAnalyzerOptionsExtensions.IsValid"/> extension method works correctly.
@@ -16,6 +19,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
     /// <param name="value">The SQL query analyzer options to validate.</param>
     /// <returns>List of validation problems; empty if IsValid works correctly.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+/// <exception cref="InvalidOperationException">Thrown when validation logic fails unexpectedly.</exception>
     public static IReadOnlyList<string> ValidateExtensionMethodIsValid(this SqlQueryAnalyzerOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -54,6 +58,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
     /// <param name="value">The SQL query analyzer options to validate.</param>
     /// <returns>List of validation problems; empty if IsAnalyzerEnabled works correctly.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+/// <exception cref="InvalidOperationException">Thrown when validation logic fails unexpectedly.</exception>
     public static IReadOnlyList<string> ValidateIsAnalyzerEnabled(this SqlQueryAnalyzerOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -85,6 +90,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
     /// </summary>
     /// <param name="value">The SQL query analyzer options to validate.</param>
     /// <returns>List of validation problems; empty if GetNormalizedProvider works correctly.</returns>
+/// <exception cref="InvalidOperationException">Thrown when validation logic fails unexpectedly.</exception>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> ValidateGetNormalizedProvider(this SqlQueryAnalyzerOptions value)
     {
@@ -97,7 +103,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
             var result = value.GetNormalizedProvider();
 
             // GetNormalizedProvider should return lowercase normalized provider name
-            var expectedProvider = string.IsNullOrWhiteSpace(value.Database?.Provider)
+            var expectedProvider = value.Database is null || string.IsNullOrWhiteSpace(value.Database.Provider)
                 ? "sqlserver" // Default provider
                 : value.Database.Provider.Trim().ToLowerInvariant();
 
@@ -124,6 +130,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
     /// Validates that <see cref="SqlQueryAnalyzerOptionsExtensions.HasCriticalAnalysisEnabled"/> extension method works correctly.
     /// </summary>
     /// <param name="value">The SQL query analyzer options to validate.</param>
+/// <exception cref="InvalidOperationException">Thrown when validation logic fails unexpectedly.</exception>
     /// <returns>List of validation problems; empty if HasCriticalAnalysisEnabled works correctly.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> ValidateHasCriticalAnalysisEnabled(this SqlQueryAnalyzerOptions value)
@@ -158,6 +165,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
     /// <summary>
     /// Validates that <see cref="SqlQueryAnalyzerOptionsExtensions.GetConnectionTimeoutMs"/> extension method works correctly.
     /// </summary>
+/// <exception cref="InvalidOperationException">Thrown when validation logic fails unexpectedly.</exception>
     /// <param name="value">The SQL query analyzer options to validate.</param>
     /// <returns>List of validation problems; empty if GetConnectionTimeoutMs works correctly.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
@@ -172,7 +180,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
             var result = value.GetConnectionTimeoutMs();
 
             // GetConnectionTimeoutMs should return ConnectionTimeoutSeconds * 1000
-            var expectedTimeout = value.Database?.ConnectionTimeoutSeconds * 1000 ?? 0;
+            var expectedTimeout = (long)(value.Database?.ConnectionTimeoutSeconds ?? 0) * 1000;
 
             if (result != expectedTimeout)
             {
@@ -193,6 +201,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
     /// <param name="value">The SQL query analyzer options to validate.</param>
     /// <returns>List of validation problems; empty if GetMaxConcurrentThreads works correctly.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+/// <exception cref="InvalidOperationException">Thrown when validation logic fails unexpectedly.</exception>
     public static IReadOnlyList<string> ValidateGetMaxConcurrentThreads(this SqlQueryAnalyzerOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -226,6 +235,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
     }
 
     /// <summary>
+/// <exception cref="InvalidOperationException">Thrown when validation logic fails unexpectedly.</exception>
     /// Validates that <see cref="SqlQueryAnalyzerOptionsExtensions.ShouldEnableDetailedLogging"/> extension method works correctly.
     /// </summary>
     /// <param name="value">The SQL query analyzer options to validate.</param>
@@ -257,6 +267,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
         return problems.AsReadOnly();
     }
 
+/// <exception cref="InvalidOperationException">Thrown when validation logic fails unexpectedly.</exception>
     /// <summary>
     /// Validates that <see cref="SqlQueryAnalyzerOptionsExtensions.GetIgnorePatterns"/> extension method works correctly.
     /// </summary>
@@ -297,6 +308,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
 
         return problems.AsReadOnly();
     }
+/// <exception cref="InvalidOperationException">Thrown when validation logic fails unexpectedly.</exception>
 
     /// <summary>
     /// Validates that <see cref="SqlQueryAnalyzerOptionsExtensions.ShouldAnalyzeExecutionPlans"/> extension method works correctly.
@@ -328,6 +340,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
         }
 
         return problems.AsReadOnly();
+/// <exception cref="InvalidOperationException">Thrown when validation logic fails unexpectedly.</exception>
     }
 
     /// <summary>
@@ -366,6 +379,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
         }
 
         return problems.AsReadOnly();
+/// <exception cref="InvalidOperationException">Thrown when validation logic fails unexpectedly.</exception>
     }
 
     /// <summary>
@@ -392,6 +406,7 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
         problems.AddRange(value.ValidateShouldAnalyzeExecutionPlans());
         problems.AddRange(value.ValidateGetMaxQueryLength());
 
+/// <exception cref="InvalidOperationException">Thrown when validation logic fails unexpectedly.</exception>
         return problems.AsReadOnly();
     }
 
@@ -402,19 +417,11 @@ public static class SqlQueryAnalyzerOptionsExtensionsValidation
     /// <param name="value">The SQL query analyzer options to check.</param>
     /// <returns>True if all extension methods work correctly; otherwise false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static bool AreSqlQueryAnalyzerOptionsExtensionsValid(this SqlQueryAnalyzerOptions value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-        return value.ValidateSqlQueryAnalyzerOptionsExtensions().Count == 0;
-    }
-
-    /// <summary>
-    /// Ensures that all <see cref="SqlQueryAnalyzerOptionsExtensions"/> extension methods work correctly.
-    /// Throws an <see cref="ArgumentException"/> with a detailed message listing all validation problems.
-    /// </summary>
-    /// <param name="value">The SQL query analyzer options to validate.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when extension methods produce unexpected results.</exception>
+public static bool AreSqlQueryAnalyzerOptionsExtensionsValid(this SqlQueryAnalyzerOptions value)
+{
+    ArgumentNullException.ThrowIfNull(value);
+    return value.ValidateSqlQueryAnalyzerOptionsExtensions().Count == 0;
+}
     public static void EnsureSqlQueryAnalyzerOptionsExtensionsAreValid(this SqlQueryAnalyzerOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);
