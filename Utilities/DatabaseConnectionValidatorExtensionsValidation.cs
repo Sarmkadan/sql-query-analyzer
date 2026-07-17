@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SqlQueryAnalyzer.Utilities;
 
@@ -79,7 +78,7 @@ public static class DatabaseConnectionValidatorExtensionsValidation
         // ConnectionValidationResult validation
         if (validationResult.Errors is null)
         {
-            problems.Add("ConnectionValidationResult.Errors cannot be null.");
+            problems.Add("ConnectionValidationResult.Errors collection cannot be null.");
         }
 
         return problems.AsReadOnly();
@@ -97,10 +96,8 @@ public static class DatabaseConnectionValidatorExtensionsValidation
     public static bool IsValid(
         this DatabaseConnectionValidator? validator,
         string? connectionString,
-        string? databaseType = null)
-    {
-        return validator.Validate(connectionString, databaseType).Count == 0;
-    }
+        string? databaseType = null) =>
+        validator.Validate(connectionString, databaseType).Count == 0;
 
     /// <summary>
     /// Checks if the parameters passed to extension methods are valid.
@@ -112,10 +109,8 @@ public static class DatabaseConnectionValidatorExtensionsValidation
     /// <exception cref="ArgumentNullException">Thrown when validationResult is null.</exception>
     public static bool IsValid(
         this DatabaseConnectionValidator? validator,
-        ConnectionValidationResult? validationResult)
-    {
-        return validator.Validate(validationResult).Count == 0;
-    }
+        ConnectionValidationResult? validationResult) =>
+        validator.Validate(validationResult).Count == 0;
 
     /// <summary>
     /// Ensures the parameters passed to extension methods are valid.
@@ -126,6 +121,7 @@ public static class DatabaseConnectionValidatorExtensionsValidation
     /// <param name="databaseType">The database type (SqlServer, PostgreSQL, MySQL).</param>
     /// <exception cref="ArgumentNullException">Thrown when validator is null.</exception>
     /// <exception cref="ArgumentException">Thrown when connectionString is null or empty, or when validation fails.</exception>
+    /// <exception cref="ArgumentException">Thrown when validation fails.</exception>
     public static void EnsureValid(
         this DatabaseConnectionValidator? validator,
         string? connectionString,
@@ -136,7 +132,7 @@ public static class DatabaseConnectionValidatorExtensionsValidation
         {
             throw new ArgumentException(
                 $"Validation failed for DatabaseConnectionValidatorExtensions extension method parameters:\n- {
-                    string.Join("\n- ", problems)
+                string.Join("\n- ", problems)
                 }");
         }
     }
@@ -159,7 +155,7 @@ public static class DatabaseConnectionValidatorExtensionsValidation
         {
             throw new ArgumentException(
                 $"Validation failed for DatabaseConnectionValidatorExtensions extension method parameters:\n- {
-                    string.Join("\n- ", problems)
+                string.Join("\n- ", problems)
                 }");
         }
     }
