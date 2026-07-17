@@ -945,6 +945,87 @@ catch (ArgumentException ex)
 
 ---
 
+## QueryAnalysisExtensionsValidation
+
+The `QueryAnalysisExtensionsValidation` class provides validation helpers for `QueryAnalysisResult` objects used by query analysis extension methods. It validates analysis results for null references, invalid values, and internal consistency issues, ensuring extension methods can be safely invoked and results are meaningful.
+
+### Usage Example
+
+```csharp
+// Analyze a SQL query using the analyzer service
+var analyzer = new QueryAnalyzerService();
+var result = await analyzer.AnalyzeQueryAsync(
+    "SELECT u.Name, COUNT(o.Id) as OrderCount FROM Users u LEFT JOIN Orders o ON u.Id = o.UserId WHERE u.Status = 'active' GROUP BY u.Name HAVING COUNT(o.Id) > 5 ORDER BY OrderCount DESC");
+
+// Validate the analysis result
+var validationErrors = result.Validate();
+if (validationErrors.Count > 0)
+{
+    Console.WriteLine("Validation errors found:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("Analysis result is valid!");
+}
+
+// Check if the result is valid
+bool isValid = result.IsValid();
+Console.WriteLine($"Is valid: {isValid}");
+
+// Ensure the result is valid (throws exception if not)
+try
+{
+    result.EnsureValid();
+    Console.WriteLine("Analysis result is valid - no exception thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+
+// Validate a collection of analysis results
+var results = new List<QueryAnalysisResult> { result, /* additional results */ };
+var collectionErrors = results.Validate();
+if (collectionErrors.Count > 0)
+{
+    Console.WriteLine("Collection validation errors found:");
+    foreach (var error in collectionErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("All analysis results in collection are valid!");
+}
+
+// Ensure all results in collection are valid
+try
+{
+    results.EnsureValid();
+    Console.WriteLine("All analysis results are valid - no exceptions thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Collection validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `Validate(this QueryAnalysisResult value)` - Validates a query analysis result and returns a list of validation problems; empty if all validations pass
+- `IsValid(this QueryAnalysisResult value)` - Checks if the query analysis result is valid (no validation problems)
+- `EnsureValid(this QueryAnalysisResult value)` - Ensures the query analysis result is valid, throwing an exception if not
+- `Validate(this IEnumerable<QueryAnalysisResult> values)` - Validates a collection of query analysis results and returns a list of validation problems; empty if all results are valid
+- `IsValid(this IEnumerable<QueryAnalysisResult> values)` - Checks if all query analysis results in a collection are valid
+- `EnsureValid(this IEnumerable<QueryAnalysisResult> values)` - Ensures all query analysis results in a collection are valid, throwing an exception if not
+
+---
+
 ## AnalysisControllerValidation
 
 The `AnalysisControllerValidation` class provides validation helpers for API request/response types used by the AnalysisController. It offers extension methods for validating `AnalysisRequest`, `BatchAnalysisRequest`, `ApiResponse<T>`, and `HealthStatus` instances, returning lists of validation errors or boolean validation status. Methods are provided for both validation with error collection and exception-throwing validation.
