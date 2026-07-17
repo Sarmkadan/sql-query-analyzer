@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using SqlQueryAnalyzer.Configuration;
 
 namespace SqlQueryAnalyzer.Configuration;
 
@@ -35,27 +34,37 @@ public static class AnalyzerSettingsExtensions
     /// <param name="settings">The settings instance.</param>
     /// <returns>True if the connection string is not null or whitespace; otherwise false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="settings"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="settings.Database"/> is null.</exception>
     public static bool IsConnectionValid(this AnalyzerSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(settings.Database);
 
         return !string.IsNullOrWhiteSpace(settings.Database.ConnectionString);
     }
 
     /// <summary>
-    /// Provides a summary string of the key settings in the current configuration.
+    /// Provides a comprehensive summary string of the key settings in the current configuration.
+    /// Includes database provider, analysis settings, and cache configuration.
     /// </summary>
     /// <param name="settings">The settings instance.</param>
-    /// <returns>A formatted summary string.</returns>
+    /// <returns>A formatted summary string with invariant culture formatting.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="settings"/> is null.</exception>
     public static string GetSummary(this AnalyzerSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        return string.Format(CultureInfo.InvariantCulture,
-            "Provider: {0}, MaxThreads: {1}, DetectNPlusOne: {2}",
+        return string.Format(
+            CultureInfo.InvariantCulture,
+            "Database: {0}, ConnectionPool: {1}, MaxThreads: {2}, Cache: {3} ({4}), Analysis: NPlusOne={5}, MissingIndexes={6}, JoinIssues={7}, ExecutionPlans={8}",
             settings.Database.Provider,
+            settings.Database.ConnectionPoolSize,
             settings.Analysis.MaxThreads,
-            settings.Analysis.DetectNPlusOne);
+            settings.Cache.Enabled ? "Enabled" : "Disabled",
+            settings.Cache.Provider,
+            settings.Analysis.DetectNPlusOne,
+            settings.Analysis.DetectMissingIndexes,
+            settings.Analysis.DetectJoinIssues,
+            settings.Analysis.AnalyzeExecutionPlans);
     }
 }
