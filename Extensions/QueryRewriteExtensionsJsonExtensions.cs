@@ -73,8 +73,9 @@ public static class QueryRewriteExtensionsJsonExtensions
     /// Deserializes a JSON string to a <see cref="QueryRewriteSuggestion"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized instance, or null if the JSON is invalid.</returns>
+    /// <returns>The deserialized instance, or null if the JSON is invalid or malformed.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+/// <exception cref="JsonException">Thrown when the JSON is malformed.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
     public static QueryRewriteSuggestion? FromJson(string json)
     {
@@ -90,6 +91,7 @@ public static class QueryRewriteExtensionsJsonExtensions
     /// <param name="value">Receives the deserialized instance if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+/// <exception cref="JsonException">Thrown when the JSON is malformed.</exception>
     public static bool TryFromJson(string json, out QueryRewriteSuggestion? value)
     {
         ArgumentNullException.ThrowIfNull(json);
@@ -97,7 +99,7 @@ public static class QueryRewriteExtensionsJsonExtensions
         try
         {
             value = JsonSerializer.Deserialize<QueryRewriteSuggestion>(json, _jsonOptions);
-            return true;
+            return value is not null;
         }
         catch (JsonException)
         {
