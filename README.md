@@ -994,6 +994,92 @@ catch (ArgumentException ex)
 
 ---
 
+## AnalyzerHealthCheckValidation
+
+The `AnalyzerHealthCheckValidation` class provides validation helpers for `AnalyzerHealthCheck` related types. It validates health check results, component health status, and self-healing results to ensure they meet requirements before being used in the application. The class includes methods for both validation with error collection and exception-throwing validation.
+
+### Usage Example
+
+```csharp
+// Create an AnalyzerHealthCheck instance
+var healthCheck = new AnalyzerHealthCheck("SqlQueryAnalyzer");
+
+// Check health status
+var healthResult = await healthCheck.CheckHealthAsync(CancellationToken.None);
+Console.WriteLine($"Health Status: {healthResult.Status}");
+Console.WriteLine($"Check Time: {healthResult.CheckTime}");
+
+// Validate health check result
+var validationErrors = AnalyzerHealthCheckValidation.Validate(healthResult);
+if (validationErrors.Count > 0)
+{
+  Console.WriteLine("Validation errors found:");
+  foreach (var error in validationErrors)
+  {
+    Console.WriteLine($"- {error}");
+  }
+}
+else
+{
+  Console.WriteLine("Health check result is valid!");
+}
+
+// Check if result is valid
+bool isValid = AnalyzerHealthCheckValidation.IsValid(healthResult);
+Console.WriteLine($"Is valid: {isValid}");
+
+// Validate component health
+var cacheHealth = healthResult.CacheHealth;
+var componentErrors = AnalyzerHealthCheckValidation.Validate(cacheHealth);
+if (componentErrors.Count > 0)
+{
+  Console.WriteLine("Component health validation errors found:");
+  foreach (var error in componentErrors)
+  {
+    Console.WriteLine($"- {error}");
+  }
+}
+
+// Validate self-heal result
+var selfHealResult = await healthCheck.AttemptSelfHealAsync(CancellationToken.None);
+var selfHealErrors = AnalyzerHealthCheckValidation.Validate(selfHealResult);
+if (selfHealErrors.Count > 0)
+{
+  Console.WriteLine("Self-heal result validation errors found:");
+  foreach (var error in selfHealErrors)
+  {
+    Console.WriteLine($"- {error}");
+  }
+}
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+  AnalyzerHealthCheckValidation.EnsureValid(healthResult);
+  AnalyzerHealthCheckValidation.EnsureValid(cacheHealth);
+  AnalyzerHealthCheckValidation.EnsureValid(selfHealResult);
+  Console.WriteLine("All validations passed - no exceptions thrown");
+}
+catch (ArgumentException ex)
+{
+  Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `Validate(HealthCheckResult value)` - Validates a `HealthCheckResult` instance and returns a list of validation problems; empty if valid
+- `Validate(ComponentHealth value)` - Validates a `ComponentHealth` instance and returns a list of validation problems; empty if valid
+- `Validate(SelfHealResult value)` - Validates a `SelfHealResult` instance and returns a list of validation problems; empty if valid
+- `IsValid(HealthCheckResult value)` - Determines whether a `HealthCheckResult` instance is valid
+- `IsValid(ComponentHealth value)` - Determines whether a `ComponentHealth` instance is valid
+- `IsValid(SelfHealResult value)` - Determines whether a `SelfHealResult` instance is valid
+- `EnsureValid(HealthCheckResult value)` - Ensures a `HealthCheckResult` instance is valid, throwing an exception if not
+- `EnsureValid(ComponentHealth value)` - Ensures a `ComponentHealth` instance is valid, throwing an exception if not
+- `EnsureValid(SelfHealResult value)` - Ensures a `SelfHealResult` instance is valid, throwing an exception if not
+
+---
+
 ## AnalyzerHealthCheck
 
 The `AnalyzerHealthCheck` type performs health checks and self-healing attempts on components. It provides a `CheckHealthAsync` method to run a health check, an `AttemptSelfHealAsync` method to attempt self-healing, and exposes properties for the check time, status, cache health, rate limiter health, metrics health, database health, errors, and actions performed.
