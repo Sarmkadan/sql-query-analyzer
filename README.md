@@ -1412,6 +1412,76 @@ catch (ArgumentException ex)
 
 ---
 
+## CommandLineArgumentsExtensions
+
+The `CommandLineArgumentsExtensions` class provides extension methods for the `CommandLineArguments` type, enhancing type safety and simplifying common operations when working with command-line arguments. It includes methods for determining output behavior, resolving file paths with appropriate extensions, checking feature flags, normalizing configuration values, and filtering analysis parameters. These utilities help ensure consistent behavior across the CLI while reducing boilerplate code.
+
+### Usage Example
+
+```csharp
+// Parse command line arguments
+var args = new CommandLineArguments(new[] { "--output", "analysis_results", "--format", "json", "--verbose" });
+
+// Determine if output should be written to a file
+bool shouldWriteToFile = args.ShouldWriteToFile();
+Console.WriteLine($"Should write to file: {shouldWriteToFile}");
+
+// Get output file path with appropriate extension
+string? outputPath = args.GetOutputFilePathWithExtension();
+if (outputPath != null)
+{
+    Console.WriteLine($"Output will be written to: {outputPath}");
+}
+
+// Check if verbose logging is enabled
+bool isVerbose = args.IsVerboseEnabled();
+Console.WriteLine($"Verbose logging enabled: {isVerbose}");
+
+// Get effective database connection string
+string? connectionString = args.GetEffectiveConnectionString();
+Console.WriteLine($"Effective connection string: {connectionString ?? "Not specified"}");
+
+// Check if caching is enabled
+bool cacheEnabled = args.IsCacheEnabled();
+Console.WriteLine($"Cache enabled: {cacheEnabled}");
+
+// Get normalized SQL Server version
+string sqlVersion = args.GetNormalizedSqlServerVersion();
+Console.WriteLine($"SQL Server version: {sqlVersion}");
+
+// Get normalized severity filter
+var severityFilter = args.GetNormalizedSeverityFilter();
+Console.WriteLine($"Severity filter: {string.Join(", ", severityFilter)}");
+
+// Check if execution plan analysis should be performed
+bool analyzePlan = args.ShouldAnalyzeExecutionPlan();
+Console.WriteLine($"Analyze execution plan: {analyzePlan}");
+
+// Get effective maximum results limit
+int? maxResults = args.GetEffectiveMaxResults();
+Console.WriteLine($"Max results: {maxResults?.ToString() ?? "Unlimited"}");
+
+// Check if suggestions should be exported
+bool exportSuggestions = args.ShouldExportSuggestions();
+Console.WriteLine($"Export suggestions: {exportSuggestions}");
+```
+
+### Public Members
+
+- `ShouldWriteToFile(this CommandLineArguments args)` - Determines if output should be written to a file based on the provided arguments
+- `GetOutputFilePathWithExtension(this CommandLineArguments args)` - Gets the effective output file path with appropriate extension based on the output format
+- `IsVerboseEnabled(this CommandLineArguments args)` - Determines if verbose logging should be enabled
+- `GetEffectiveConnectionString(this CommandLineArguments args)` - Gets the effective database connection string, prioritizing explicit connection over config file
+- `IsCacheEnabled(this CommandLineArguments args)` - Determines if caching should be enabled
+- `GetNormalizedSqlServerVersion(this CommandLineArguments args)` - Gets the effective SQL Server version as a normalized version string
+- `GetNormalizedSeverityFilter(this CommandLineArguments args)` - Gets the effective severity filter as a normalized collection of severity levels
+- `ShouldAnalyzeExecutionPlan(this CommandLineArguments args)` - Determines if execution plan analysis should be performed
+- `GetEffectiveMaxResults(this CommandLineArguments args)` - Gets the effective maximum results limit, ensuring it's within valid bounds
+- `ShouldExportSuggestions(this CommandLineArguments args)` - Determines if suggestions should be exported based on the arguments
+
+---
+
+
 ## AnalysisControllerValidation
 
 The `AnalysisControllerValidation` class provides validation helpers for API request/response types used by the AnalysisController. It offers extension methods for validating `AnalysisRequest`, `BatchAnalysisRequest`, `ApiResponse<T>`, and `HealthStatus` instances, returning lists of validation errors or boolean validation status. Methods are provided for both validation with error collection and exception-throwing validation.
