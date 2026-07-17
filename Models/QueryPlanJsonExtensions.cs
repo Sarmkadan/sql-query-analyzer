@@ -5,9 +5,7 @@
 // ===================================================================
 
 using System;
-using System.Collections.Generic;
 using System.Text.Json;
-using SqlQueryAnalyzer.Models;
 
 namespace SqlQueryAnalyzer.Models;
 
@@ -51,7 +49,7 @@ public static class QueryPlanJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A query plan, or <see langword="null"/> if the JSON is empty or whitespace.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or consists only of whitespace.</exception>
-    /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized into a <see cref="QueryPlan"/>.</exception>
     public static QueryPlan? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
