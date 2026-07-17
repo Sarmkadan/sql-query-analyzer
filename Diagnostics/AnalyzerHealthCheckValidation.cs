@@ -13,7 +13,7 @@ namespace SqlQueryAnalyzer.Diagnostics;
 /// Provides validation helpers for <see cref="AnalyzerHealthCheck"/> related types.
 /// Validates health check results, component health status, and self-healing results.
 /// </summary>
-public static class AnalyzerHealthCheckValidation
+public static partial class AnalyzerHealthCheckValidation
 {
     /// <summary>
     /// Validates the provided <see cref="HealthCheckResult"/> instance.
@@ -39,8 +39,8 @@ public static class AnalyzerHealthCheckValidation
         }
 
         // Validate Status - should be a valid HealthStatus enum value
-        // HealthStatus is an enum, so any value is technically valid, but we can check for Unspecified
-        if (value.Status == (HealthStatus)(-1))
+        // All enum values are valid by definition, but we can check for Error which indicates problems
+        if (value.Status == (HealthStatus)999) // Invalid sentinel value
         {
             errors.Add($"{nameof(HealthCheckResult.Status)} has an invalid value.");
         }
@@ -114,7 +114,8 @@ public static class AnalyzerHealthCheckValidation
         }
 
         // Validate Status - should be a valid HealthStatus enum value
-        if (value.Status == (HealthStatus)(-1))
+        // All enum values are valid by definition
+        if ((int)value.Status < 0 || (int)value.Status > 3)
         {
             errors.Add($"{nameof(ComponentHealth.Status)} has an invalid value.");
         }
@@ -123,6 +124,10 @@ public static class AnalyzerHealthCheckValidation
         if (value.Message is null)
         {
             errors.Add($"{nameof(ComponentHealth.Message)} must not be null.");
+        }
+        else if (string.IsNullOrWhiteSpace(value.Message))
+        {
+            errors.Add($"{nameof(ComponentHealth.Message)} must not be empty or whitespace.");
         }
 
         return errors.AsReadOnly();
