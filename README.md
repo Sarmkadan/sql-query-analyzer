@@ -1166,6 +1166,83 @@ SqlPatternAnalyzerTestsExtensions.ExecuteOptimizationRecommendationsTest(tests);
 
 ---
 
+## QueryProfilerExtensionsJsonExtensions
+
+The `QueryProfilerExtensionsJsonExtensions` class provides static methods for serializing and deserializing query profiler-related data types to and from JSON. It supports conversion of `QueryProfilerReport`, `ProfileComparison`, `ProfilerBatchSummary`, and collections of `QueryProfilerReport` objects, enabling easy storage and transmission of profiling data.
+
+### Usage Example
+
+```csharp
+// Serialize a QueryProfilerReport to JSON
+var report = new QueryProfilerReport
+{
+    QueryText = "SELECT * FROM Users WHERE Status = 'active'",
+    ExecutionTimeMs = 15.2,
+    Reads = 1250,
+    Writes = 0,
+    CpuTimeMs = 8.7
+};
+
+string json = report.ToJson();
+File.WriteAllText("report.json", json);
+
+// Deserialize a QueryProfilerReport from JSON
+string jsonData = File.ReadAllText("report.json");
+QueryProfilerReport? deserializedReport = QueryProfilerReport.FromJson(jsonData);
+
+// Try to deserialize with error handling
+if (QueryProfilerReport.TryFromJson(jsonData, out var reportResult))
+{
+    Console.WriteLine($"Deserialized report: {reportResult.QueryText}");
+}
+
+// Serialize and deserialize a ProfileComparison
+var comparison = new ProfileComparison
+{
+    Baseline = new QueryProfilerReport { /* baseline data */ },
+    Comparison = new QueryProfilerReport { /* comparison data */ },
+    DifferencePercentage = 12.5
+};
+
+string comparisonJson = comparison.ToJson();
+ProfileComparison? comparisonResult = ProfileComparison.FromJsonToProfileComparison(comparisonJson);
+
+// Serialize and deserialize a ProfilerBatchSummary
+var batchSummary = new ProfilerBatchSummary
+{
+    TotalQueries = 100,
+    TotalExecutionTimeMs = 1520.5,
+    AverageExecutionTimeMs = 15.2,
+    MaxExecutionTimeMs = 45.8,
+    MinExecutionTimeMs = 2.1
+};
+
+string batchJson = batchSummary.ToJson();
+ProfilerBatchSummary? batchResult = ProfilerBatchSummary.FromJsonToBatchSummary(batchJson);
+
+// Serialize and deserialize a collection of QueryProfilerReport objects
+var reports = new List<QueryProfilerReport> { report, /* additional reports */ };
+string reportsJson = reports.ToJson();
+IEnumerable<QueryProfilerReport>? deserializedReports = QueryProfilerReport.FromJsonToReports(reportsJson);
+```
+
+### Public Members
+
+- `ToJson(this QueryProfilerReport report)` - Serializes a QueryProfilerReport to JSON
+- `FromJson(string json)` - Deserializes a JSON string to a QueryProfilerReport
+- `TryFromJson(string json, out QueryProfilerReport? report)` - Attempts to deserialize a JSON string to a QueryProfilerReport with error handling
+- `ToJson(this ProfileComparison comparison)` - Serializes a ProfileComparison to JSON
+- `FromJsonToProfileComparison(string json)` - Deserializes a JSON string to a ProfileComparison
+- `TryFromJsonToProfileComparison(string json, out ProfileComparison? comparison)` - Attempts to deserialize a JSON string to a ProfileComparison with error handling
+- `ToJson(this ProfilerBatchSummary summary)` - Serializes a ProfilerBatchSummary to JSON
+- `FromJsonToBatchSummary(string json)` - Deserializes a JSON string to a ProfilerBatchSummary
+- `TryFromJsonToBatchSummary(string json, out ProfilerBatchSummary? summary)` - Attempts to deserialize a JSON string to a ProfilerBatchSummary with error handling
+- `ToJson(this IEnumerable<QueryProfilerReport> reports)` - Serializes a collection of QueryProfilerReport objects to JSON
+- `FromJsonToReports(string json)` - Deserializes a JSON string to a collection of QueryProfilerReport objects
+- `TryFromJsonToReports(string json, out IEnumerable<QueryProfilerReport>? reports)` - Attempts to deserialize a JSON string to a collection of QueryProfilerReport objects with error handling
+
+---
+
 ## CommandLineArguments
 
 The `CommandLineArguments` class represents the parsed command-line arguments for the SQL Query Analyzer. It supports various analysis modes including single query analysis, batch processing, configuration overrides, and output formatting. This type serves as the primary configuration container for CLI operations and can be used programmatically for integration scenarios.
