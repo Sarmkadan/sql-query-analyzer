@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 
 namespace SqlQueryAnalyzer.Middleware;
 
@@ -12,7 +11,6 @@ public static class ErrorHandlingMiddlewareExtensionsJsonExtensions
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
         WriteIndented = false,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
@@ -75,10 +73,9 @@ public static class ErrorHandlingMiddlewareExtensionsJsonExtensions
 
     private static JsonSerializerOptions GetIndentedOptions()
     {
-        var options = new JsonSerializerOptions(_jsonOptions)
+        return new JsonSerializerOptions(_jsonOptions)
         {
             WriteIndented = true,
         };
-        return options;
     }
 }
