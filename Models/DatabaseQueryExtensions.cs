@@ -33,22 +33,15 @@ public static class DatabaseQueryExtensions
     /// <returns>An <see cref="IReadOnlyList{T}"/> containing parameter names.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="query"/> is null.</exception>
     public static IReadOnlyList<string> GetParameterNames(this DatabaseQuery query)
-    {
-        ArgumentNullException.ThrowIfNull(query);
-
-        return query.Parameters.Keys.ToList().AsReadOnly();
-    }
+        => query.Parameters.Keys.ToList().AsReadOnly();
 
     /// <summary>
-    /// Determines whether the query is a DDL operation (CREATE or DROP).
+    /// Determines whether the query is a DDL (Data Definition Language) operation.
+    /// DDL operations include CREATE and DROP statements.
     /// </summary>
     /// <param name="query">The <see cref="DatabaseQuery"/> instance.</param>
     /// <returns>True if the query is a DDL operation, otherwise false.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="query"/> is null.</exception>
     public static bool IsDdl(this DatabaseQuery query)
-    {
-        ArgumentNullException.ThrowIfNull(query);
-
-        return query.QueryType is QueryType.Create or QueryType.Drop;
-    }
+        => query.QueryType is QueryType.Create or QueryType.Drop;
 }
