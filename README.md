@@ -20,6 +20,49 @@ breakdown, data flow, design rationale, and known limitations, see
 
 ---
 
+## AnalysisRequestDtoExtensions
+
+The `AnalysisRequestDtoExtensions` class provides essential utility methods for managing and validating `AnalysisRequestDto` objects, facilitating tasks such as context identification, configuration summary generation, and object cloning. It simplifies the handling of request metadata, ensuring consistent behavior across the analysis pipeline.
+
+### Usage Example
+
+```csharp
+// Create a new analysis request
+var request = new AnalysisRequestDto 
+{ 
+    QueryText = "SELECT * FROM Users", 
+    AnalyzePlan = true,
+    ApplicationName = "UserPortal" 
+};
+
+// Clone the request for a modified analysis
+var clonedRequest = request.Clone();
+
+// Generate context identifier for caching
+string contextId = request.GetContextIdentifier();
+
+// Verify analysis configuration
+if (request.ShouldAnalyzePlan())
+{
+    Console.WriteLine("Plan analysis is enabled.");
+}
+
+// Display configuration summary
+Console.WriteLine(request.GetConfigurationSummary());
+```
+
+### Public Members
+
+- `GetContextIdentifier` - Creates a normalized identifier for the analysis context based on the request properties.
+- `ShouldAnalyzePlan` - Determines whether the request should include plan analysis.
+- `ShouldIncludeIndexSuggestions` - Determines whether index suggestions should be generated.
+- `ShouldAnalyzeFragmentation` - Determines whether fragmentation analysis should be performed.
+- `GetContextDisplayName` - Gets a display-friendly name for the analysis context.
+- `GetConfigurationSummary` - Gets a summary of the analysis configuration flags.
+- `Clone` - Creates a deep copy of the analysis request.
+
+---
+
 ## PerformanceIssueExtensions
 
 The `PerformanceIssueExtensions` class provides extension methods for the `PerformanceIssue` type, facilitating the manipulation, filtering, and presentation of SQL performance issues. It includes methods for creating deep copies, generating human-readable impact and location descriptions, determining actionability, and grouping issues by their type and priority.
