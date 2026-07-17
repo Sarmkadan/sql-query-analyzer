@@ -13,6 +13,9 @@ namespace SqlQueryAnalyzer.Middleware;
 /// <summary>
 /// Provides System.Text.Json serialization extensions for <see cref="ErrorHandlingMiddleware"/>.
 /// </summary>
+/// <remarks>
+/// This class is static and sealed to prevent inheritance.
+/// </remarks>
 public static class ErrorHandlingMiddlewareJsonExtensions
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
@@ -71,7 +74,7 @@ public static class ErrorHandlingMiddlewareJsonExtensions
     /// <param name="value">Receives the deserialized middleware instance if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
-    public static bool TryFromJson(string json, out ErrorHandlingMiddleware? value)
+    public static bool TryFromJson(string json, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out ErrorHandlingMiddleware? value)
     {
         ArgumentNullException.ThrowIfNull(json);
 
