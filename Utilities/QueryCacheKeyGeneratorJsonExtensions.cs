@@ -15,6 +15,10 @@ namespace SqlQueryAnalyzer.Utilities;
 /// </summary>
 public static class QueryCacheKeyGeneratorJsonExtensions
 {
+    /// <summary>
+    /// Gets the default JSON serialization options for <see cref="QueryCacheKeyGenerator"/>.
+    /// Uses camelCase property naming and excludes type information for compact serialization.
+    /// </summary>
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -46,10 +50,12 @@ public static class QueryCacheKeyGeneratorJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized cache key generator instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="json"/> is empty or whitespace.</exception>
     /// <exception cref="JsonException">Thrown if the JSON is invalid or cannot be deserialized.</exception>
     public static QueryCacheKeyGenerator? FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         return JsonSerializer.Deserialize<QueryCacheKeyGenerator>(json, s_jsonOptions);
     }
@@ -61,9 +67,11 @@ public static class QueryCacheKeyGeneratorJsonExtensions
     /// <param name="value">Receives the deserialized cache key generator if successful.</param>
     /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="json"/> is empty or whitespace.</exception>
     public static bool TryFromJson(string json, out QueryCacheKeyGenerator? value)
     {
         ArgumentNullException.ThrowIfNull(json);
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         try
         {
