@@ -6,6 +6,7 @@
 // =====================================================================
 
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace SqlQueryAnalyzer.Models;
 
@@ -15,12 +16,14 @@ namespace SqlQueryAnalyzer.Models;
 public static class PlanVisualizationJsonExtensions
 {
     /// <summary>
-    /// Configured JSON serializer options with camelCase naming policy.
+    /// Shared JSON serialization options with camelCase property naming.
     /// </summary>
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false
+        WriteIndented = false,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        ReferenceHandler = ReferenceHandler.IgnoreCycles
     };
 
     /// <summary>
@@ -33,9 +36,7 @@ public static class PlanVisualizationJsonExtensions
     public static string ToJson(this PlanVisualization value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
-
-        JsonOptions.WriteIndented = indented;
-        return JsonSerializer.Serialize(value, JsonOptions);
+        return JsonSerializer.Serialize(value, indented ? new JsonSerializerOptions(JsonOptions) { WriteIndented = true } : JsonOptions);
     }
 
     /// <summary>
@@ -58,6 +59,8 @@ public static class PlanVisualizationJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">The deserialized plan visualization, or null on failure.</param>
     /// <returns>True if deserialization succeeded, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty.</exception>
     public static bool TryFromJson(string json, out PlanVisualization? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
