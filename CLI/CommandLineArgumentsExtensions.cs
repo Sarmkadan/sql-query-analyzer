@@ -3,7 +3,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Globalization;
 
@@ -18,9 +18,9 @@ public static class CommandLineArgumentsExtensions
     /// <summary>
     /// Determines if the analysis should output to a file based on the provided arguments.
     /// </summary>
-    /// <param name="args">The command line arguments.</param>
-    /// <returns>True if output should be written to a file; otherwise, false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is null.</exception>
+    /// <param name="args">The command line arguments to check.</param>
+    /// <returns><see langword="true"/> if output should be written to a file; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is <see langword="null"/>.</exception>
     public static bool ShouldWriteToFile(this CommandLineArguments args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -32,8 +32,8 @@ public static class CommandLineArgumentsExtensions
     /// based on the output format if no extension is provided.
     /// </summary>
     /// <param name="args">The command line arguments.</param>
-    /// <returns>The resolved output file path with appropriate extension, or null if no output path is specified.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is null.</exception>
+    /// <returns>The resolved output file path with appropriate extension, or <see langword="null"/> if no output path is specified.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is <see langword="null"/>.</exception>
     public static string? GetOutputFilePathWithExtension(this CommandLineArguments args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -68,8 +68,8 @@ public static class CommandLineArgumentsExtensions
     /// Determines if verbose logging should be enabled based on the arguments.
     /// </summary>
     /// <param name="args">The command line arguments.</param>
-    /// <returns>True if verbose logging is enabled; otherwise, false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is null.</exception>
+    /// <returns><see langword="true"/> if verbose logging is enabled; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is <see langword="null"/>.</exception>
     public static bool IsVerboseEnabled(this CommandLineArguments args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -81,8 +81,8 @@ public static class CommandLineArgumentsExtensions
     /// over config file if both are specified.
     /// </summary>
     /// <param name="args">The command line arguments.</param>
-    /// <returns>The effective database connection string, or null if neither is specified.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is null.</exception>
+    /// <returns>The effective database connection string, or <see langword="null"/> if neither is specified.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is <see langword="null"/>.</exception>
     public static string? GetEffectiveConnectionString(this CommandLineArguments args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -93,8 +93,8 @@ public static class CommandLineArgumentsExtensions
     /// Determines if caching should be enabled based on the arguments.
     /// </summary>
     /// <param name="args">The command line arguments.</param>
-    /// <returns>True if caching is enabled; otherwise, false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is null.</exception>
+    /// <returns><see langword="true"/> if caching is enabled; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is <see langword="null"/>.</exception>
     public static bool IsCacheEnabled(this CommandLineArguments args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -106,7 +106,7 @@ public static class CommandLineArgumentsExtensions
     /// </summary>
     /// <param name="args">The command line arguments.</param>
     /// <returns>The normalized SQL Server version string.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is <see langword="null"/>.</exception>
     public static string GetNormalizedSqlServerVersion(this CommandLineArguments args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -135,7 +135,7 @@ public static class CommandLineArgumentsExtensions
     /// </summary>
     /// <param name="args">The command line arguments.</param>
     /// <returns>A read-only list of normalized severity levels to filter by.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> GetNormalizedSeverityFilter(this CommandLineArguments args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -159,8 +159,8 @@ public static class CommandLineArgumentsExtensions
     /// Determines if the analysis should include execution plan analysis.
     /// </summary>
     /// <param name="args">The command line arguments.</param>
-    /// <returns>True if execution plan analysis should be performed; otherwise, false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is null.</exception>
+    /// <returns><see langword="true"/> if execution plan analysis should be performed; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is <see langword="null"/>.</exception>
     public static bool ShouldAnalyzeExecutionPlan(this CommandLineArguments args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -171,8 +171,8 @@ public static class CommandLineArgumentsExtensions
     /// Gets the effective maximum results limit, ensuring it's within valid bounds.
     /// </summary>
     /// <param name="args">The command line arguments.</param>
-    /// <returns>The effective maximum results limit, or null if not specified or unlimited.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is null.</exception>
+    /// <returns>The effective maximum results limit, or <see langword="null"/> if not specified or unlimited.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is <see langword="null"/>.</exception>
     public static int? GetEffectiveMaxResults(this CommandLineArguments args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -191,8 +191,8 @@ public static class CommandLineArgumentsExtensions
     /// Determines if suggestions should be exported based on the arguments.
     /// </summary>
     /// <param name="args">The command line arguments.</param>
-    /// <returns>True if suggestions should be exported; otherwise, false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is null.</exception>
+    /// <returns><see langword="true"/> if suggestions should be exported; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is <see langword="null"/>.</exception>
     public static bool ShouldExportSuggestions(this CommandLineArguments args)
     {
         ArgumentNullException.ThrowIfNull(args);
