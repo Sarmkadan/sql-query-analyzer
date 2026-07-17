@@ -1666,6 +1666,90 @@ catch (ArgumentException ex)
 
 ---
 
+## PerformanceIssueDetectorServiceExtensions
+
+The `PerformanceIssueDetectorServiceExtensions` class provides extension methods for the `PerformanceIssueDetectorService` type that enhance performance issue detection capabilities. It includes methods for detecting common SQL performance anti-patterns such as N+1 queries, join issues, and index opportunities, along with utility methods for filtering, grouping, and prioritizing detected issues.
+
+### Usage Example
+
+```csharp
+// Create a performance issue detector service
+var detector = new PerformanceIssueDetectorService(logger: null);
+
+// Create sample database queries to analyze
+var queries = new List<DatabaseQuery>
+{
+    new DatabaseQuery
+    {
+        QueryText = "SELECT * FROM Users u WHERE u.Status = 'active'",
+        ReferencedTables = new HashSet<string> { "Users" }
+    },
+    new DatabaseQuery
+    {
+        QueryText = "SELECT o.OrderId, o.UserId FROM Orders o JOIN Users u ON o.UserId = u.UserId WHERE o.OrderDate > '2024-01-01'",
+        ReferencedTables = new HashSet<string> { "Orders", "Users" }
+    },
+    new DatabaseQuery
+    {
+        QueryText = "SELECT * FROM Products p WHERE p.Price > 100",
+        ReferencedTables = new HashSet<string> { "Products" }
+    }
+};
+
+// Detect all performance issues across multiple queries
+var allIssues = await detector.DetectIssuesAsync(queries);
+Console.WriteLine($"Detected {allIssues.Count} total issues");
+
+// Detect N+1 patterns specifically
+var nPlusOneIssues = await detector.DetectNPlusOneAsync(queries, "Users");
+Console.WriteLine($"N+1 issues for Users table: {nPlusOneIssues.Count}");
+
+// Detect join issues
+var joinIssues = await detector.DetectJoinIssuesAsync(queries);
+Console.WriteLine($"Join issues detected: {joinIssues.Count}");
+
+// Detect index opportunities
+var indexIssues = await detector.DetectIndexOpportunitiesAsync(queries);
+Console.WriteLine($"Index opportunities detected: {indexIssues.Count}");
+
+// Filter issues by severity
+var criticalIssues = nPlusOneIssues.FilterBySeverity(IssueSeverity.Critical);
+Console.WriteLine($"Critical issues: {criticalIssues.Count()}");
+
+// Group issues by type
+var groupedIssues = allIssues.GroupByIssueType();
+foreach (var group in groupedIssues)
+{
+    Console.WriteLine($"Issue Type: {group.Key} - {group.Value.Count} issues");
+}
+
+// Calculate total performance impact
+var totalImpact = allIssues.CalculateTotalImpact();
+Console.WriteLine($"Total estimated performance impact: {totalImpact:P}");
+
+// Get prioritized list of recommended fixes
+var prioritizedFixes = allIssues.GetPrioritizedFixes();
+Console.WriteLine("Prioritized fixes:");
+foreach (var fix in prioritizedFixes)
+{
+    Console.WriteLine($"- {fix}");
+}
+```
+
+### Public Members
+
+- `DetectIssuesAsync` - Detects performance issues across multiple queries and returns a combined report
+- `DetectNPlusOneAsync` - Detects N+1 query patterns specifically for queries referencing the same table
+- `DetectJoinIssuesAsync` - Detects join issues across multiple queries and returns a combined report
+- `DetectIndexOpportunitiesAsync` - Detects index opportunities across multiple queries and returns a combined report
+- `FilterBySeverity` - Filters detected issues by severity level
+- `GroupByIssueType` - Groups performance issues by their type for easier analysis
+- `CalculateTotalImpact` - Calculates total estimated performance impact across all issues
+- `GetPrioritizedFixes` - Creates a prioritized list of recommended fixes based on detected issues
+
+---
+
+
 ## SqlPatternAnalyzerTestsExtensions
 
 The `SqlPatternAnalyzerTestsExtensions` class provides extension methods for the `SqlPatternAnalyzerTests` class that simplify execution of related test groups. These methods combine multiple test invocations into convenient one-call methods, making it easier to run specific categories of tests without boilerplate code. The extensions cover SELECT * pattern detection, N+1 pattern detection, readability score calculation, and optimization recommendations.
