@@ -31,7 +31,6 @@ public static class ExplainPlanParserServiceJsonExtensions
     public static string ToJson(this ExplainPlanParserService value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
-
         return JsonSerializer.Serialize(value, indented ? GetIndentedOptions() : _jsonOptions);
     }
 
@@ -81,12 +80,8 @@ public static class ExplainPlanParserServiceJsonExtensions
     /// <summary>
     /// Gets a pre-configured JsonSerializerOptions with indentation enabled.
     /// </summary>
+    /// <returns>A new JsonSerializerOptions instance with indentation enabled.</returns>
     private static JsonSerializerOptions GetIndentedOptions()
-    {
-        var options = new JsonSerializerOptions(_jsonOptions)
-        {
-            WriteIndented = true
-        };
-        return options;
-    }
+        => new JsonSerializerOptions(_jsonOptions) { WriteIndented = true };
+
 }
