@@ -21,8 +21,11 @@ public static class SqlPatternAnalyzerValidation
     /// Validates the <see cref="SqlPatternAnalyzer"/> static class methods and returns a list of human-readable problems.
     /// </summary>
     /// <returns>An empty list if valid, otherwise a list of validation errors</returns>
-    public static IReadOnlyList<string> Validate()
+    /// <exception cref="ArgumentNullException"><paramref name="queries"/> is null</exception>
+    public static IReadOnlyList<string> Validate(List<string>? queries = null)
     {
+        ArgumentNullException.ThrowIfNull(queries);
+
         var errors = new List<string>();
 
         // Test queries for validation
