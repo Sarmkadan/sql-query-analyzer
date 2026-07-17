@@ -47,21 +47,24 @@ public static class QueryAnalysisCacheExtensions
     public static bool IsFull(this QueryAnalysisCache cache)
     {
         ArgumentNullException.ThrowIfNull(cache);
-
-        var stats = cache.GetStatistics();
-        return cache.Count >= stats.MaxEntries;
+        return cache.Count >= cache.GetStatistics().MaxEntries;
     }
 
     /// <summary>
-    /// Returns a string summary of the cache statistics.
+    /// Returns a detailed string summary of the cache statistics.
     /// </summary>
     /// <param name="cache">The cache instance.</param>
-    /// <returns>A formatted string summary.</returns>
+    /// <returns>A formatted string summary with detailed statistics.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="cache"/> is null.</exception>
     public static string GetSummary(this QueryAnalysisCache cache)
     {
         ArgumentNullException.ThrowIfNull(cache);
 
-        return cache.GetStatistics().ToString();
+        var stats = cache.GetStatistics();
+        return $"Cache Summary: {stats.TotalEntries}/{stats.MaxEntries} entries, " +
+               $"Hit Rate: {stats.HitRate:F1}%, " +
+               $"Hits: {stats.Hits}, Misses: {stats.Misses}, " +
+               $"Avg Accesses: {stats.AverageAccessCount:F1}, " +
+               $"Oldest Entry: {stats.OldestEntryAge:F0}s ago";
     }
 }
