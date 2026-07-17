@@ -5,6 +5,7 @@
 // =============================================================================
 
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using SqlQueryAnalyzer.Models;
 
 namespace SqlQueryAnalyzer.Models;
@@ -21,7 +22,19 @@ public static class QueryAnalysisResultJsonExtensions
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
-        IgnoreNullValues = true
+        IgnoreNullValues = true,
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver()
+    };
+
+    /// <summary>
+    /// Shared JSON serialization options with camelCase property naming and indentation.
+    /// </summary>
+    private static readonly JsonSerializerOptions _jsonOptionsIndented = new(JsonSerializerDefaults.Web)
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = true,
+        IgnoreNullValues = true,
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver()
     };
 
     /// <summary>
@@ -32,16 +45,7 @@ public static class QueryAnalysisResultJsonExtensions
     /// <returns>A JSON string representation of the query analysis result.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static string ToJson(this QueryAnalysisResult value, bool indented = false)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        var options = new JsonSerializerOptions(_jsonOptions)
-        {
-            WriteIndented = indented
-        };
-
-        return JsonSerializer.Serialize(value, options);
-    }
+        => JsonSerializer.Serialize(value, indented ? _jsonOptionsIndented : _jsonOptions);
 
     /// <summary>
     /// Deserializes a <see cref="QueryAnalysisResult"/> instance from a JSON string.
