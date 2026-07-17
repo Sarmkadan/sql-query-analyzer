@@ -1724,6 +1724,107 @@ catch (ArgumentException ex)
 
 ---
 
+## AnalyzerSettingsValidation
+
+The `AnalyzerSettingsValidation` class provides validation helpers for `AnalyzerSettings` configuration objects. It offers extension methods for validating analyzer settings, checking validity, and ensuring configuration correctness with detailed error messages covering database, analysis, cache, performance, and logging settings validation.
+
+### Usage Example
+
+```csharp
+// Create analyzer settings with database configuration
+var settings = new AnalyzerSettings
+{
+    Database = new DatabaseSettings
+    {
+        Provider = "SqlServer",
+        ConnectionString = "Server=localhost;Database=Analytics;User Id=sa;Password=your_password;",
+        ConnectionPoolSize = 10,
+        ConnectionTimeoutSeconds = 30
+    },
+    Analysis = new AnalysisSettings
+    {
+        MaxThreads = 4,
+        CriticalIssueSensitivity = 0.8,
+        IndexSeverity = new IndexSeverityThresholds
+        {
+            InfoMaxRows = 1000,
+            WarningMaxRows = 10000,
+            InfoMaxCost = 100,
+            WarningMaxCost = 1000
+        },
+        IgnorePatterns = new List<string> { "temp_*", "audit_*" }
+    },
+    Cache = new CacheSettings
+    {
+        Provider = "Redis",
+        MaxEntries = 1000,
+        MaxSizeBytes = 10485760, // 10 MB
+        ExpirationSeconds = 3600,
+        RedisConnectionString = "localhost:6379"
+    },
+    Performance = new PerformanceSettings
+    {
+        TimeoutSeconds = 60,
+        MaxQueryLength = 10000,
+        RateLimitQueriesPerSecond = 100,
+        MaxConcurrentAnalysis = 8,
+        BatchSize = 50
+    },
+    Logging = new LoggingSettings
+    {
+        MinimumLevel = "Information",
+        LogMaxFileSizeBytes = 10485760, // 10 MB
+        LogMaxBackupFiles = 5,
+        FileLogging = true,
+        LogFilePath = "/var/log/sql-query-analyzer/analyzer.log"
+    }
+};
+
+// Validate the settings
+var validationErrors = settings.Validate();
+if (validationErrors.Count > 0)
+{
+    Console.WriteLine("Validation errors found:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("AnalyzerSettings are valid!");
+}
+
+// Check if settings are valid
+bool isValid = settings.IsValid();
+Console.WriteLine($"Is valid: {isValid}");
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+    settings.EnsureValid();
+    Console.WriteLine("AnalyzerSettings validation passed - no exception thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `Validate(this AnalyzerSettings value)` - Validates the AnalyzerSettings instance and returns a list of human-readable validation errors; empty if valid
+- `Validate(this DatabaseSettings value)` - Validates DatabaseSettings and returns validation errors for database configuration
+- `Validate(this AnalysisSettings value)` - Validates AnalysisSettings and returns validation errors for analysis configuration
+- `Validate(this CacheSettings value)` - Validates CacheSettings and returns validation errors for cache configuration
+- `Validate(this PerformanceSettings value)` - Validates PerformanceSettings and returns validation errors for performance configuration
+- `Validate(this LoggingSettings value)` - Validates LoggingSettings and returns validation errors for logging configuration
+- `Validate(this IndexSeverityThresholds value)` - Validates IndexSeverityThresholds and returns validation errors for index severity thresholds
+- `IsValid(this AnalyzerSettings value)` - Determines whether the specified AnalyzerSettings are valid
+- `EnsureValid(this AnalyzerSettings value)` - Ensures that the specified AnalyzerSettings are valid, throwing an exception if not
+
+---
+
 ## PerformanceIssueDetectorServiceExtensions
 
 The `PerformanceIssueDetectorServiceExtensions` class provides extension methods for the `PerformanceIssueDetectorService` type that enhance performance issue detection capabilities. It includes methods for detecting common SQL performance anti-patterns such as N+1 queries, join issues, and index opportunities, along with utility methods for filtering, grouping, and prioritizing detected issues.
