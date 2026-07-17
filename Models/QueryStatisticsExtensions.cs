@@ -67,8 +67,7 @@ public static class QueryStatisticsExtensions
     /// <param name="statistics">The query statistics to analyze</param>
     /// <returns>Read-only collection of performance metrics</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="statistics"/> is null</exception>
-    public static IReadOnlyList<KeyValuePair<string, string>> GetPerformanceMetrics(
-        this QueryStatistics statistics)
+    public static IReadOnlyList<KeyValuePair<string, string>> GetPerformanceMetrics(this QueryStatistics statistics)
     {
         ArgumentNullException.ThrowIfNull(statistics);
 
@@ -88,7 +87,7 @@ public static class QueryStatisticsExtensions
             new KeyValuePair<string, string>("MaxRowsReturned", statistics.MaxRowsReturned.ToString(CultureInfo.InvariantCulture)),
             new KeyValuePair<string, string>("TotalCpuTimeMs", statistics.TotalCpuTime.TotalMilliseconds.ToString("F1", CultureInfo.InvariantCulture)),
             new KeyValuePair<string, string>("TotalWaitTimeMs", statistics.TotalWaitTime.TotalMilliseconds.ToString("F1", CultureInfo.InvariantCulture)),
-            new KeyValuePair<string, string>("MostCommonWaitType", statistics.MostCommonWaitType),
+            new KeyValuePair<string, string>("MostCommonWaitType", statistics.MostCommonWaitType ?? "none"),
             new KeyValuePair<string, string>("PeakMemoryUsageMB", statistics.PeakMemoryUsageMB.ToString(CultureInfo.InvariantCulture)),
             new KeyValuePair<string, string>("AverageMemoryUsageMB", statistics.AverageMemoryUsageMB.ToString(CultureInfo.InvariantCulture)),
             new KeyValuePair<string, string>("LastCompilationTime", statistics.LastCompilationTime.ToString("O", CultureInfo.InvariantCulture)),
@@ -130,7 +129,7 @@ public static class QueryStatisticsExtensions
         bool hasRowsVariance = rowsVariance > statistics.AverageRowsReturned * 5;
 
         // High physical reads with caching enabled
-        bool hasHighPhysicalReadsWithCache = statistics.IsCached && statistics.TotalPhysicalReads > 10000;
+        bool hasHighPhysicalReadsWithCache = statistics.IsCached && statistics.TotalPhysicalReads > 10_000;
 
         return hasTimeVariance || hasRowsVariance || hasHighPhysicalReadsWithCache;
     }
@@ -202,10 +201,16 @@ public static class QueryStatisticsExtensions
             ("Peak Memory", statistics.PeakMemoryUsageMB, "MB")
         };
 
-        // Sort by value descending
-        var sortedMetrics = metrics.OrderByDescending(m => m.Value).ToList();
+        // Sort by value descending and filter out zero values
+        var sortedMetrics = metrics
+            .Where(m => m.Value > 0)
+            .OrderByDescending(m => m.Value)
+            .ToList();
 
         var topMetrics = sortedMetrics.Take(3).ToList();
+
+        if (topMetrics.Count == 0)
+            return "No significant metrics";
 
         var summaryParts = new List<string>();
         foreach (var metric in topMetrics)
