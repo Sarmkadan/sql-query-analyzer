@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SqlQueryAnalyzer.Validation;
 
@@ -27,15 +26,7 @@ public static class ValidationRuleEngineValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var problems = new List<string>();
-
-        // Validate internal state
-        if (value.GetRuleCount() < 0)
-        {
-            problems.Add("Rule count is negative");
-        }
-
-        return problems.AsReadOnly();
+        return Array.Empty<string>();
     }
 
     /// <summary>
@@ -43,8 +34,10 @@ public static class ValidationRuleEngineValidation
     /// </summary>
     /// <param name="value">The validation rule engine to check.</param>
     /// <returns>True if the engine is valid; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when value is null.</exception>
     public static bool IsValid(this ValidationRuleEngine value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         return value.Validate().Count == 0;
     }
 
