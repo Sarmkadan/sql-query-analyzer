@@ -31,16 +31,8 @@ public static class PerformanceIssueDetectorServiceJsonExtensions
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>A JSON representation of the service instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static string ToJson(this PerformanceIssueDetectorService value, bool indented = false)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        var options = indented
-            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
-            : _jsonOptions;
-
-        return JsonSerializer.Serialize(value, options);
-    }
+    public static string ToJson(this PerformanceIssueDetectorService value, bool indented = false) =>
+        JsonSerializer.Serialize(value, indented ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true } : _jsonOptions);
 
     /// <summary>
     /// Deserializes a JSON string into a <see cref="PerformanceIssueDetectorService"/> instance.
@@ -68,19 +60,8 @@ public static class PerformanceIssueDetectorServiceJsonExtensions
     {
         value = default;
 
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return false;
-        }
-
-        try
-        {
-            value = JsonSerializer.Deserialize<PerformanceIssueDetectorService>(json, _jsonOptions);
-            return true;
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
+        return !string.IsNullOrWhiteSpace(json) &&
+               JsonSerializer.Deserialize<PerformanceIssueDetectorService>(json, _jsonOptions) is { } deserializedValue &&
+               (value = deserializedValue) is not null;
     }
 }
