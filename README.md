@@ -652,6 +652,149 @@ foreach (var issue in issues)
 
 ---
 
+## SqlInjectionDetectorExtensionsValidation 654
+
+The `SqlInjectionDetectorExtensionsValidation` class provides validation helpers for `SqlInjectionDetectorExtensions` extension methods. It validates null values and empty strings for extension method parameters, ensuring that extension methods can be safely invoked with meaningful results. The class includes validation for all public extension methods including filtering by severity, grouping by type, generating summary and detailed reports, and checking for critical issues.
+
+### Usage Example 659
+
+```csharp
+// Create a SqlInjectionDetector instance with dependency injection
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddSingleton<SqlInjectionDetector>();
+
+var serviceProvider = services.BuildServiceProvider();
+var detector = serviceProvider.GetRequiredService<SqlInjectionDetector>();
+
+// Analyze a query for SQL injection vulnerabilities
+var query = @"SELECT * FROM Users WHERE Username = '" + userInput + @"' AND Status = 'active'";
+var issues = detector.DetectVulnerabilities(query);
+
+// Validate parameters before using extension methods
+var validationErrors = SqlInjectionDetectorExtensionsValidation.Validate(
+    detector, 
+    issues, 
+    minSeverity: "High"
+);
+
+if (validationErrors.Count > 0)
+{
+    Console.WriteLine("Validation errors found:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("Parameters are valid!");
+}
+
+// Check if parameters are valid
+bool isValid = SqlInjectionDetectorExtensionsValidation.IsValid(
+    detector, 
+    issues, 
+    minSeverity: "Medium"
+);
+Console.WriteLine($"Is valid: {isValid}");
+
+// Use extension methods after validation
+var filteredIssues = issues.FilterBySeverity(detector, "High");
+var groupedIssues = issues.GroupByType(detector);
+var summaryReport = issues.GenerateSummaryReport(detector);
+var hasCritical = issues.HasCriticalIssues(detector);
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+    SqlInjectionDetectorExtensionsValidation.EnsureValid(
+        detector, 
+        issues, 
+        minSeverity: "Critical"
+    );
+    Console.WriteLine("Validation passed - no exception thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+
+// Validate parameters for GroupByType and GenerateSummaryReport
+var groupValidationErrors = SqlInjectionDetectorExtensionsValidation.ValidateGroupByTypeAndGenerateSummaryReport(
+    detector, 
+    issues
+);
+
+// Validate parameters for GenerateDetailedReport
+var detailedValidationErrors = SqlInjectionDetectorExtensionsValidation.ValidateDetailedReport(
+    detector, 
+    issues, 
+    query
+);
+
+// Validate parameters for HasCriticalIssues
+var criticalValidationErrors = SqlInjectionDetectorExtensionsValidation.ValidateHasCriticalIssues(
+    detector, 
+    issues
+);
+
+// Check validity of other validation methods
+bool isGroupValid = SqlInjectionDetectorExtensionsValidation.IsValidGroupByTypeAndGenerateSummaryReport(
+    detector, 
+    issues
+);
+bool isDetailedValid = SqlInjectionDetectorExtensionsValidation.IsValidDetailedReport(
+    detector, 
+    issues, 
+    query
+);
+bool isCriticalValid = SqlInjectionDetectorExtensionsValidation.IsValidHasCriticalIssues(
+    detector, 
+    issues
+);
+
+// Use EnsureValid for other validation methods
+try
+{
+    SqlInjectionDetectorExtensionsValidation.EnsureValidGroupByTypeAndGenerateSummaryReport(
+        detector, 
+        issues
+    );
+    SqlInjectionDetectorExtensionsValidation.EnsureValidDetailedReport(
+        detector, 
+        issues, 
+        query
+    );
+    SqlInjectionDetectorExtensionsValidation.EnsureValidHasCriticalIssues(
+        detector, 
+        issues
+    );
+    Console.WriteLine("All validations passed successfully!");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members 695
+
+- `Validate(SqlInjectionDetector?, List<SqlInjectionIssue>?, string?)` - Validates parameters for `FilterBySeverity` extension method and returns a list of human-readable validation problems; empty if valid
+- `ValidateGroupByTypeAndGenerateSummaryReport(SqlInjectionDetector?, List<SqlInjectionIssue>?)` - Validates parameters for `GroupByType` and `GenerateSummaryReport` extension methods and returns a list of validation problems; empty if valid
+- `ValidateDetailedReport(SqlInjectionDetector?, List<SqlInjectionIssue>?, string?)` - Validates parameters for `GenerateDetailedReport` extension method and returns a list of validation problems; empty if valid
+- `ValidateHasCriticalIssues(SqlInjectionDetector?, List<SqlInjectionIssue>?)` - Validates parameters for `HasCriticalIssues` extension method and returns a list of validation problems; empty if valid
+- `IsValid(SqlInjectionDetector?, List<SqlInjectionIssue>?, string?)` - Determines whether parameters for `FilterBySeverity` are valid
+- `IsValidGroupByTypeAndGenerateSummaryReport(SqlInjectionDetector?, List<SqlInjectionIssue>?)` - Determines whether parameters for `GroupByType` and `GenerateSummaryReport` are valid
+- `IsValidDetailedReport(SqlInjectionDetector?, List<SqlInjectionIssue>?, string?)` - Determines whether parameters for `GenerateDetailedReport` are valid
+- `IsValidHasCriticalIssues(SqlInjectionDetector?, List<SqlInjectionIssue>?)` - Determines whether parameters for `HasCriticalIssues` are valid
+- `EnsureValid(SqlInjectionDetector?, List<SqlInjectionIssue>?, string?)` - Ensures parameters for `FilterBySeverity` are valid, throwing an exception if not
+- `EnsureValidGroupByTypeAndGenerateSummaryReport(SqlInjectionDetector?, List<SqlInjectionIssue>?)` - Ensures parameters for `GroupByType` and `GenerateSummaryReport` are valid, throwing an exception if not
+- `EnsureValidDetailedReport(SqlInjectionDetector?, List<SqlInjectionIssue>?, string?)` - Ensures parameters for `GenerateDetailedReport` are valid, throwing an exception if not
+- `EnsureValidHasCriticalIssues(SqlInjectionDetector?, List<SqlInjectionIssue>?)` - Ensures parameters for `HasCriticalIssues` are valid, throwing an exception if not
+
+---
+
 ## AnalyzerHealthCheck
 
 The `AnalyzerHealthCheck` type performs health checks and self-healing attempts on components. It provides a `CheckHealthAsync` method to run a health check, an `AttemptSelfHealAsync` method to attempt self-healing, and exposes properties for the check time, status, cache health, rate limiter health, metrics health, database health, errors, and actions performed.
