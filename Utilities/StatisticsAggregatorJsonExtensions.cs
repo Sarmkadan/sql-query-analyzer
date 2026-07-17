@@ -26,7 +26,6 @@ public static class StatisticsAggregatorJsonExtensions
         ReferenceHandler = ReferenceHandler.IgnoreCycles
     };
 
-
     /// <summary>
     /// Serializes a <see cref="StatisticsAggregator"/> instance to a JSON string.
     /// </summary>
@@ -48,17 +47,18 @@ public static class StatisticsAggregatorJsonExtensions
     /// <summary>
     /// Deserializes a JSON string into a <see cref="StatisticsAggregator"/> instance.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>A deserialized <see cref="StatisticsAggregator"/> instance, or null if JSON is invalid.</returns>
+    /// <param name="json">The JSON string to deserialize. Must not be null or empty.</param>
+    /// <returns>A deserialized <see cref="StatisticsAggregator"/> instance.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
-    /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
-    public static StatisticsAggregator? FromJson(string json)
+    /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized into a <see cref="StatisticsAggregator"/> instance.</exception>
+    public static StatisticsAggregator FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
 
         try
         {
-            return JsonSerializer.Deserialize<StatisticsAggregator>(json, _jsonOptions);
+            return JsonSerializer.Deserialize<StatisticsAggregator>(json, _jsonOptions)
+                ?? throw new JsonException("Deserialization returned null - JSON may be invalid or incomplete");
         }
         catch (JsonException ex)
         {
@@ -66,27 +66,22 @@ public static class StatisticsAggregatorJsonExtensions
         }
     }
 
-
     /// <summary>
     /// Attempts to deserialize a JSON string into a <see cref="StatisticsAggregator"/> instance.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="json">The JSON string to deserialize. Must not be null or empty.</param>
     /// <param name="value">Receives the deserialized <see cref="StatisticsAggregator"/> instance if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static bool TryFromJson(string json, out StatisticsAggregator? value)
     {
+        ArgumentException.ThrowIfNullOrEmpty(json);
+
         value = null;
-
-        if (string.IsNullOrEmpty(json))
-        {
-            return false;
-        }
-
         try
         {
             value = JsonSerializer.Deserialize<StatisticsAggregator>(json, _jsonOptions);
-            return value != null;
+            return value is not null;
         }
         catch (JsonException)
         {
