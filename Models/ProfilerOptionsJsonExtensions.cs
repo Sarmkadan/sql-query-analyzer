@@ -18,17 +18,14 @@ public static class ProfilerOptionsJsonExtensions
 
     private static JsonSerializerOptions GetJsonOptions(bool indented)
     {
-        var options = _jsonOptions;
-        if (indented)
-        {
-            options = new JsonSerializerOptions(_jsonOptions)
+        return indented
+            ? new JsonSerializerOptions(_jsonOptions)
             {
                 PropertyNamingPolicy = _jsonOptions.PropertyNamingPolicy,
                 WriteIndented = true,
                 DefaultIgnoreCondition = _jsonOptions.DefaultIgnoreCondition,
-            };
-        }
-        return options;
+            }
+            : _jsonOptions;
     }
 
     /// <summary>
