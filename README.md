@@ -1724,6 +1724,161 @@ catch (ArgumentException ex)
 
 
 
+## PerformanceMetricsCalculatorValidation
+
+The `PerformanceMetricsCalculatorValidation` class provides validation helpers for `PerformanceMetricsCalculator` method parameters. It offers static methods for validating input parameters across various performance calculation methods, returning lists of human-readable validation problems or boolean validation status. The class includes validation for query analysis results, performance issues, index suggestions, database queries, indexes, query statistics, and various performance metrics calculations.
+
+### Usage Example
+
+```csharp
+// Create sample objects for validation
+var queryAnalysisResult = new QueryAnalysisResult
+{
+    QueryText = "SELECT * FROM Users WHERE Status = 'active'",
+    PerformanceScore = 75.5,
+    Issues = new List<PerformanceIssue>()
+};
+
+var performanceIssue = new PerformanceIssue
+{
+    Severity = IssueSeverity.Warning,
+    Type = "SelectStar",
+    Description = "Query uses SELECT * which retrieves all columns"
+};
+
+var indexSuggestion = new IndexSuggestion
+{
+    TableName = "Users",
+    ColumnName = "Status",
+    IndexType = "NonClustered",
+    Impact = 85.0
+};
+
+var databaseQuery = new DatabaseQuery
+{
+    QueryText = "SELECT * FROM Users WHERE Status = 'active'",
+    QueryType = QueryType.Select
+};
+
+var modelIndex = new ModelIndex
+{
+    TableName = "Users",
+    ColumnName = "Status",
+    IsUnique = false
+};
+
+var queryStatistics = new QueryStatistics
+{
+    LogicalReads = 1500,
+    PhysicalReads = 50,
+    CpuTimeMs = 250,
+    ExecutionCount = 100
+};
+
+var indexSuggestionForROI = new IndexSuggestion
+{
+    TableName = "Orders",
+    ColumnName = "CustomerId",
+    IndexType = "NonClustered",
+    Impact = 90.0
+};
+
+// Validate parameters for CalculateCombinedScore
+var combinedScoreErrors = PerformanceMetricsCalculatorValidation.Validate(queryAnalysisResult, weight: 2.5);
+if (combinedScoreErrors.Count > 0)
+{
+    Console.WriteLine("Combined score validation errors:");
+    foreach (var error in combinedScoreErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Validate parameters for EstimateTotalOptimization
+var optimizationErrors = PerformanceMetricsCalculatorValidation.Validate(
+    new List<PerformanceIssue> { performanceIssue },
+    new List<IndexSuggestion> { indexSuggestion }
+);
+
+// Validate parameters for CalculateComplexityScore
+var complexityErrors = PerformanceMetricsCalculatorValidation.Validate(databaseQuery);
+
+// Validate parameters for CalculateIndexUsageScore
+var indexUsageErrors = PerformanceMetricsCalculatorValidation.Validate(modelIndex);
+
+// Validate parameters for CalculateMaintenanceEffort
+var maintenanceErrors = PerformanceMetricsCalculatorValidation.Validate(
+    new List<ModelIndex> { modelIndex }
+);
+
+// Validate parameters for GetPerformanceTrend
+var trendErrors = PerformanceMetricsCalculatorValidation.Validate(
+    new List<QueryAnalysisResult> { queryAnalysisResult, queryAnalysisResult }
+);
+
+// Validate parameters for CalculateExecutionTimeDistribution
+var executionTimeErrors = PerformanceMetricsCalculatorValidation.Validate(queryStatistics);
+
+// Validate parameters for CalculateIndexROI
+var roiErrors = PerformanceMetricsCalculatorValidation.Validate(indexSuggestionForROI, tableSizeKB: 10240);
+
+// Validate parameters for PredictExecutionTime
+var predictErrors = PerformanceMetricsCalculatorValidation.Validate(queryStatistics, estimatedRows: 5000);
+
+// Use IsValid to check parameter validity
+bool isCombinedScoreValid = PerformanceMetricsCalculatorValidation.IsValid(queryAnalysisResult, weight: 1.0);
+bool isOptimizationValid = PerformanceMetricsCalculatorValidation.IsValid(
+    new List<PerformanceIssue> { performanceIssue },
+    new List<IndexSuggestion> { indexSuggestion }
+);
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+    PerformanceMetricsCalculatorValidation.EnsureValid(queryAnalysisResult, weight: 1.5);
+    PerformanceMetricsCalculatorValidation.EnsureValid(
+        new List<PerformanceIssue> { performanceIssue },
+        new List<IndexSuggestion> { indexSuggestion }
+    );
+    Console.WriteLine("All validations passed - no exceptions thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `Validate(QueryAnalysisResult analysis, double weight = 1.0)` - Validates parameters for `CalculateCombinedScore`, returning a list of validation problems; empty if valid
+- `Validate(List<PerformanceIssue>? issues, List<IndexSuggestion>? suggestions)` - Validates parameters for `EstimateTotalOptimization`, returning a list of validation problems; empty if valid
+- `Validate(DatabaseQuery query)` - Validates parameters for `CalculateComplexityScore`, returning a list of validation problems; empty if valid
+- `Validate(ModelIndex index)` - Validates parameters for `CalculateIndexUsageScore`, returning a list of validation problems; empty if valid
+- `Validate(List<ModelIndex>? indexes)` - Validates parameters for `CalculateMaintenanceEffort`, returning a list of validation problems; empty if valid
+- `Validate(List<QueryAnalysisResult> analysisHistory)` - Validates parameters for `GetPerformanceTrend`, returning a list of validation problems; empty if valid
+- `Validate(QueryStatistics stats)` - Validates parameters for `CalculateExecutionTimeDistribution`, returning a list of validation problems; empty if valid
+- `Validate(IndexSuggestion suggestion, long tableSizeKB)` - Validates parameters for `CalculateIndexROI`, returning a list of validation problems; empty if valid
+- `Validate(QueryStatistics stats, int estimatedRows)` - Validates parameters for `PredictExecutionTime`, returning a list of validation problems; empty if valid
+- `IsValid(QueryAnalysisResult analysis, double weight = 1.0)` - Determines whether parameters for `CalculateCombinedScore` are valid
+- `IsValid(List<PerformanceIssue>? issues, List<IndexSuggestion>? suggestions)` - Determines whether parameters for `EstimateTotalOptimization` are valid
+- `IsValid(DatabaseQuery query)` - Determines whether parameters for `CalculateComplexityScore` are valid
+- `IsValid(ModelIndex index)` - Determines whether parameters for `CalculateIndexUsageScore` are valid
+- `IsValid(List<ModelIndex>? indexes)` - Determines whether parameters for `CalculateMaintenanceEffort` are valid
+- `IsValid(List<QueryAnalysisResult> analysisHistory)` - Determines whether parameters for `GetPerformanceTrend` are valid
+- `IsValid(QueryStatistics stats)` - Determines whether parameters for `CalculateExecutionTimeDistribution` are valid
+- `IsValid(IndexSuggestion suggestion, long tableSizeKB)` - Determines whether parameters for `CalculateIndexROI` are valid
+- `IsValid(QueryStatistics stats, int estimatedRows)` - Determines whether parameters for `PredictExecutionTime` are valid
+- `EnsureValid(QueryAnalysisResult analysis, double weight = 1.0)` - Ensures parameters for `CalculateCombinedScore` are valid, throwing an exception if not
+- `EnsureValid(List<PerformanceIssue>? issues, List<IndexSuggestion>? suggestions)` - Ensures parameters for `EstimateTotalOptimization` are valid, throwing an exception if not
+- `EnsureValid(DatabaseQuery query)` - Ensures parameters for `CalculateComplexityScore` are valid, throwing an exception if not
+- `EnsureValid(ModelIndex index)` - Ensures parameters for `CalculateIndexUsageScore` are valid, throwing an exception if not
+- `EnsureValid(List<ModelIndex>? indexes)` - Ensures parameters for `CalculateMaintenanceEffort` are valid, throwing an exception if not
+- `EnsureValid(List<QueryAnalysisResult> analysisHistory)` - Ensures parameters for `GetPerformanceTrend` are valid, throwing an exception if not
+- `EnsureValid(QueryStatistics stats)` - Ensures parameters for `CalculateExecutionTimeDistribution` are valid, throwing an exception if not
+- `EnsureValid(IndexSuggestion suggestion, long tableSizeKB)` - Ensures parameters for `CalculateIndexROI` are valid, throwing an exception if not
+- `EnsureValid(QueryStatistics stats, int estimatedRows)` - Ensures parameters for `PredictExecutionTime` are valid, throwing an exception if not
+
+
 ## ErrorHandlingMiddlewareValidation
 
 The `ErrorHandlingMiddlewareValidation` class provides validation helpers for the `ErrorHandlingMiddleware` and related error handling types. It offers extension methods for validating middleware instances, error reports, and degradation strategies, returning validation errors or boolean validation status. Methods are provided for both validation with error collection and exception-throwing validation.
