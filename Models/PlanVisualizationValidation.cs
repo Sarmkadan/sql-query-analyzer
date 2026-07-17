@@ -88,6 +88,10 @@ public static class PlanVisualizationValidation
         {
             errors.Add("Stats dictionary cannot be null.");
         }
+        else if (value.Stats.Count == 0)
+        {
+            errors.Add("Stats dictionary cannot be empty.");
+        }
 
         // Validate RenderedAt (should not be default DateTime)
         if (value.RenderedAt == default)
@@ -105,9 +109,7 @@ public static class PlanVisualizationValidation
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static bool IsValid(this PlanVisualization? value)
-    {
-        return value is not null && Validate(value).Count == 0;
-    }
+        => value is not null && Validate(value).Count == 0;
 
     /// <summary>
     /// Ensures that a <see cref="PlanVisualization"/> instance is valid, throwing an <see cref="ArgumentException"/>
@@ -115,7 +117,8 @@ public static class PlanVisualizationValidation
     /// </summary>
     /// <param name="value">The plan visualization to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when the plan visualization is invalid, with a message listing all problems.</exception>
+    /// <exception cref="ArgumentException">Thrown when the plan visualization is invalid,
+    /// with a message listing all problems.</exception>
     public static void EnsureValid(this PlanVisualization? value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -127,6 +130,6 @@ public static class PlanVisualizationValidation
         }
 
         throw new ArgumentException(
-            $"PlanVisualization is invalid:{Environment.NewLine}  {string.Join($"{Environment.NewLine}  ", errors)}");
+            $"PlanVisualization is invalid:{Environment.NewLine} {string.Join($"{Environment.NewLine} ", errors)}");
     }
 }
