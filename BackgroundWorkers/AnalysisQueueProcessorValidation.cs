@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Globalization;
 
@@ -130,13 +130,14 @@ public static class AnalysisQueueProcessorValidation
     /// </summary>
     /// <param name="value">The instance to check.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValid(this AnalysisTask? value) => Validate(value).Count == 0;
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+    public static bool IsValid(this AnalysisTask? value) => value is not null && Validate(value).Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="AnalysisTask"/> is valid.
     /// </summary>
     /// <param name="value">The instance to validate.</param>
-    /// <exception cref="ArgumentException">Thrown if the instance is not valid.</exception>
+    /// <exception cref="ArgumentException">Thrown if the instance is not valid, containing details of all validation problems.</exception>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static void EnsureValid(this AnalysisTask? value)
     {
@@ -146,7 +147,7 @@ public static class AnalysisQueueProcessorValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"AnalysisTask is not valid. Problems:\n{string.Join("\n", errors)}");
+                $"AnalysisTask is not valid. Problems:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}");
         }
     }
 }
