@@ -52,7 +52,7 @@ public static class DatabaseConnectionValidatorValidation
             errors.Add($"{nameof(ConnectionValidationResult.DatabaseVersion)} must be provided when connection is alive.");
         }
 
-        // Validate Errors collection - should not be null
+        // Validate Errors collection - should not be null and should be empty when valid
         if (value.Errors is null)
         {
             errors.Add($"{nameof(ConnectionValidationResult.Errors)} collection must not be null.");
