@@ -184,41 +184,29 @@ public static class IndexValidation
             errors.Add($"PageCount must be non-negative, but was {value.PageCount}.");
         }
 
-        // Validate UserSeeks
-        if (value.UserSeeks < 0)
-        {
-            errors.Add($"UserSeeks must be non-negative, but was {value.UserSeeks}.");
-        }
+        // Validate usage statistics
+        ValidateNonNegativeLong(errors, nameof(Index.UserSeeks), value.UserSeeks);
 
-        // Validate UserScans
-        if (value.UserScans < 0)
-        {
-            errors.Add($"UserScans must be non-negative, but was {value.UserScans}.");
-        }
+        // Validate usage statistics
+        ValidateNonNegativeLong(errors, nameof(Index.UserScans), value.UserScans);
 
-        // Validate UserLookups
-        if (value.UserLookups < 0)
-        {
-            errors.Add($"UserLookups must be non-negative, but was {value.UserLookups}.");
-        }
+        // Validate usage statistics
+        ValidateNonNegativeLong(errors, nameof(Index.UserLookups), value.UserLookups);
 
-        // Validate UserUpdates
-        if (value.UserUpdates < 0)
-        {
-            errors.Add($"UserUpdates must be non-negative, but was {value.UserUpdates}.");
-        }
+        // Validate usage statistics
+        ValidateNonNegativeLong(errors, nameof(Index.UserUpdates), value.UserUpdates);
 
-        // Validate LastUserSeekTime
-        if (value.LastUserSeekTime < 0)
-        {
-            errors.Add($"LastUserSeekTime must be non-negative, but was {value.LastUserSeekTime}.");
-        }
+        // Validate usage statistics
+        ValidateNonNegativeLong(errors, nameof(Index.LastUserSeekTime), value.LastUserSeekTime);
 
         // Validate LastUserScanTime
         if (value.LastUserScanTime < 0)
         {
             errors.Add($"LastUserScanTime must be non-negative, but was {value.LastUserScanTime}.");
         }
+
+        // Validate usage statistics
+        ValidateNonNegativeLong(errors, nameof(Index.LastUserScanTime), value.LastUserScanTime);
 
         // Validate FragmentationPercentage
         if (value.FragmentationPercentage < 0 || value.FragmentationPercentage > 100)
@@ -280,6 +268,7 @@ public static class IndexValidation
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static bool IsValid(this Index value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         return value.Validate().Count == 0;
     }
 
@@ -301,8 +290,24 @@ public static class IndexValidation
         }
     }
 
+    /// <summary>
+    /// Validates that a long value is non-negative.
+    /// </summary>
+    /// <param name="errors">The error list to append to.</param>
+    /// <param name="propertyName">The name of the property being validated.</param>
+    /// <param name="value">The value to validate.</param>
+    private static void ValidateNonNegativeLong(List<string> errors, string propertyName, long value)
+    {
+        if (value < 0)
+        {
+            errors.Add($"{propertyName} must be non-negative, but was {value}.");
+        }
+    }
+
     private static bool IsValidGuid(string value)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(value);
+
         if (value.Length != 36 && value.Length != 32)
         {
             return false;
@@ -313,10 +318,7 @@ public static class IndexValidation
 
     private static bool IsValidSqlIdentifier(string value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return false;
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(value);
 
         // SQL identifiers can contain letters, digits, underscores, and dollar signs
         // Cannot start with a digit
