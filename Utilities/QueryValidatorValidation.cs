@@ -17,15 +17,17 @@ namespace SqlQueryAnalyzer.Utilities;
 /// Provides validation helpers for <see cref="QueryValidator"/> static methods.
 /// Validates all public members and ensures they meet expected constraints.
 /// </summary>
-public static class QueryValidatorValidation
+public sealed class QueryValidatorValidation
 {
     /// <summary>
     /// Validates the QueryValidator static class by testing its public methods.
     /// Returns a list of human-readable validation problems.
     /// </summary>
     /// <returns>An empty list if valid, otherwise a list of validation errors.</returns>
+	/// <exception cref="ArgumentNullException">Thrown if any validation method throws an unexpected exception.</exception>
     public static IReadOnlyList<string> Validate()
     {
+	ArgumentNullException.ThrowIfNull(typeof(QueryValidator));
         var errors = new List<string>();
 
         // Validate IsValidQuery behavior
@@ -650,25 +652,31 @@ public static class QueryValidatorValidation
     /// Determines whether the QueryValidator static class is valid.
     /// </summary>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValid()
+/// <summary>
+/// Determines whether the QueryValidator static class is valid.
+/// </summary>
+/// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
+/// <exception cref="ArgumentNullException">Thrown if the QueryValidator type cannot be validated.</exception>
+public static bool IsValid()
+{
+    ArgumentNullException.ThrowIfNull(typeof(QueryValidator));
+    return Validate().Count == 0;
+}
+
+/// <summary>
+/// Ensures the QueryValidator static class is valid.
+/// Throws an <see cref="ArgumentException"/> with a detailed message listing all validation problems.
+/// </summary>
+/// <exception cref="ArgumentException">Thrown if validation fails, containing all validation errors.</exception>
+public static void EnsureValid()
+{
+    var errors = Validate();
+    if (errors.Count == 0)
     {
-        return Validate().Count == 0;
+        return;
     }
 
-    /// <summary>
-    /// Ensures the QueryValidator static class is valid.
-    /// Throws an <see cref="ArgumentException"/> with a detailed message listing all validation problems.
-    /// </summary>
-    /// <exception cref="ArgumentException">Thrown if validation fails, containing all validation errors.</exception>
-    public static void EnsureValid()
-    {
-        var errors = Validate();
-        if (errors.Count == 0)
-        {
-            return;
-        }
-
-        throw new ArgumentException(
-            $"QueryValidator is invalid:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}");
-    }
+    throw new ArgumentException(
+        $"QueryValidator is invalid:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}");
+}
 }
