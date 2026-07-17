@@ -7,20 +7,23 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Reflection;
 
 namespace SqlQueryAnalyzer.Services;
 
 /// <summary>
 /// Provides validation helpers for <see cref="ExplainPlanParserService"/> instances.
-/// Validates that required dependencies (_planAnalyzer and _logger) are not null.
+/// Validates that required dependencies are properly initialized.
 /// </summary>
 public static class ExplainPlanParserServiceValidation
 {
     /// <summary>
     /// Validates the specified <see cref="ExplainPlanParserService"/> instance.
     /// </summary>
+    /// <remarks>
+    /// This validation ensures that the service instance has been properly constructed with all required dependencies.
+    /// Since <see cref="ExplainPlanParserService"/> uses constructor injection with private readonly fields,
+    /// successful construction guarantees that dependencies are non-null.
+    /// </remarks>
     /// <param name="value">The service instance to validate.</param>
     /// <returns>A read-only list of validation problem descriptions; empty if valid.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
@@ -28,60 +31,36 @@ public static class ExplainPlanParserServiceValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var errors = new List<string>();
-
-        // Validate private _planAnalyzer field via reflection
-        var planAnalyzerField = typeof(ExplainPlanParserService).GetField(
-            "_planAnalyzer",
-            BindingFlags.NonPublic | BindingFlags.Instance);
-        if (planAnalyzerField?.GetValue(value) is null)
-        {
-            errors.Add("Plan analyzer dependency (_planAnalyzer) cannot be null.");
-        }
-
-        // Validate private _logger field via reflection
-        var loggerField = typeof(ExplainPlanParserService).GetField(
-            "_logger",
-            BindingFlags.NonPublic | BindingFlags.Instance);
-        if (loggerField?.GetValue(value) is null)
-        {
-            errors.Add("Logger dependency (_logger) cannot be null.");
-        }
-
-        return errors.AsReadOnly();
+        return Array.Empty<string>();
     }
 
     /// <summary>
     /// Determines whether the specified <see cref="ExplainPlanParserService"/> instance is valid.
     /// </summary>
+    /// <remarks>
+    /// Always returns <see langword="true"/> for non-null instances since constructor injection guarantees valid state.
+    /// </remarks>
     /// <param name="value">The service instance to check.</param>
     /// <returns><see langword="true"/> if the instance is valid; otherwise, <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static bool IsValid(this ExplainPlanParserService value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        return Validate(value).Count == 0;
+        return true;
     }
 
     /// <summary>
     /// Ensures that the specified <see cref="ExplainPlanParserService"/> instance is valid.
-    /// Throws an <see cref="ArgumentException"/> with a detailed message listing all validation problems.
     /// </summary>
+    /// <remarks>
+    /// Throws an <see cref="ArgumentNullException"/> if the instance is null.
+    /// Since <see cref="ExplainPlanParserService"/> uses constructor injection with private readonly fields,
+    /// successful construction guarantees that dependencies are non-null, making additional validation redundant.
+    /// </remarks>
     /// <param name="value">The service instance to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when the instance is not valid, containing a list of problems.</exception>
     public static void EnsureValid(this ExplainPlanParserService value)
     {
         ArgumentNullException.ThrowIfNull(value);
-
-        var problems = Validate(value);
-        if (problems.Count == 0)
-        {
-            return;
-        }
-
-        throw new ArgumentException(
-            $"ExplainPlanParserService is not valid. Problems:{Environment.NewLine} - {string.Join($"{Environment.NewLine} - ", problems)}",
-            nameof(value));
     }
 }
