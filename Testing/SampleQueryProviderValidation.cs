@@ -11,6 +11,7 @@ public static class SampleQueryProviderValidation
     /// Validates the <see cref="SampleQueryProvider"/> class.
     /// </summary>
     /// <returns>A list of validation errors; empty if valid.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if <see cref="SampleQueryProvider"/> throws during validation.</exception>
     public static IReadOnlyList<string> Validate()
     {
         var errors = new List<string>();
@@ -159,6 +160,7 @@ public static class SampleQueryProviderValidation
     /// Ensures that the <see cref="SampleQueryProvider"/> is valid.
     /// </summary>
     /// <exception cref="ArgumentException">Thrown if <see cref="SampleQueryProvider"/> is not valid, containing the validation errors.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if <see cref="SampleQueryProvider"/> throws during validation.</exception>
     public static void EnsureValid()
     {
         var errors = Validate();
