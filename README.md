@@ -597,6 +597,47 @@ catch (SqlQueryAnalyzerException ex)
 
 ---
 
+## QueryNormalizerBenchmarksExtensions
+
+The `QueryNormalizerBenchmarksExtensions` class provides extension methods for the `QueryNormalizerBenchmarks` type that simplify common benchmark scenarios. These methods combine setup and normalization operations into convenient one-call methods, making it easier to write realistic benchmarks without boilerplate code.
+
+### Usage Example
+
+```csharp
+// Create a benchmarks instance
+var benchmarks = new QueryNormalizerBenchmarks();
+
+// Run setup and normalize a simple query
+var simpleNormalized = benchmarks.RunSetupAndNormalizeSimple();
+Console.WriteLine(simpleNormalized);
+
+// Run setup and normalize a complex query with multiple JOINs
+var complexNormalized = benchmarks.RunSetupAndNormalizeComplex();
+Console.WriteLine(complexNormalized);
+
+// Run setup and normalize a query while preserving string literals
+var literalNormalized = benchmarks.RunSetupAndNormalizeWithLiterals();
+Console.WriteLine(literalNormalized);
+
+// Extract table names from a complex query
+var tableNames = benchmarks.GetTableNames();
+Console.WriteLine($"Tables found: {string.Join(", ", tableNames)}");
+
+// Extract column names from a complex query
+var columnNames = benchmarks.GetColumnNames();
+Console.WriteLine($"Columns found: {string.Join(", ", columnNames)}");
+```
+
+### Public Members
+
+- `RunSetupAndNormalizeSimple(this QueryNormalizerBenchmarks benchmarks)` - Executes the benchmark Setup step and then runs the simple normalization routine, returning the normalized SQL string
+- `RunSetupAndNormalizeComplex(this QueryNormalizerBenchmarks benchmarks)` - Executes the benchmark Setup step and then runs the complex normalization routine with multiple JOINs, returning the normalized SQL string
+- `RunSetupAndNormalizeWithLiterals(this QueryNormalizerBenchmarks benchmarks)` - Executes the benchmark Setup step and then runs the normalization routine that preserves literals, returning the normalized SQL string
+- `GetTableNames(this QueryNormalizerBenchmarks benchmarks)` - Retrieves the table names extracted from a complex query as a read-only collection
+- `GetColumnNames(this QueryNormalizerBenchmarks benchmarks)` - Retrieves the column names extracted from a complex query as a read-only collection
+
+---
+
 ## QueryAnalysisPipelineBenchmarksExtensions
 
 The `QueryAnalysisPipelineBenchmarksExtensions` class provides extension methods for the `QueryAnalysisPipelineBenchmarks` type that generate realistic SQL queries and perform common analysis operations. These methods are designed for benchmarking various SQL query parsing and analysis scenarios including CTEs, window functions, parameterized queries, join conditions, subqueries, CASE expressions, and date/time functions.
