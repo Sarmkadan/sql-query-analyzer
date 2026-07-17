@@ -5,8 +5,6 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Globalization;
-
 namespace SqlQueryAnalyzer.API;
 
 /// <summary>
@@ -19,7 +17,7 @@ public static class AnalysisControllerValidation
     /// </summary>
     /// <param name="request">The request to validate</param>
     /// <returns>List of validation errors, empty if valid</returns>
-    /// <exception cref="ArgumentNullException">Thrown if request is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="request"/> is null</exception>
     public static IReadOnlyList<string> Validate(this AnalysisRequest? request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -31,7 +29,7 @@ public static class AnalysisControllerValidation
             errors.Add("Query cannot be null, empty, or whitespace");
         }
 
-        if (request.Options != null)
+        if (request.Options is { Count: > 0 })
         {
             foreach (var option in request.Options)
             {
@@ -42,7 +40,9 @@ public static class AnalysisControllerValidation
 
                 if (string.IsNullOrWhiteSpace(option.Value))
                 {
-                    errors.Add($"Option '{option.Key}' has a null or empty value");
+                    errors.Add(string.IsNullOrWhiteSpace(option.Key)
+                        ? "Option has a null or empty value"
+                        : $"Option '{option.Key}' has a null or empty value");
                 }
             }
         }
@@ -55,14 +55,14 @@ public static class AnalysisControllerValidation
     /// </summary>
     /// <param name="request">The request to validate</param>
     /// <returns>List of validation errors, empty if valid</returns>
-    /// <exception cref="ArgumentNullException">Thrown if request is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="request"/> is null</exception>
     public static IReadOnlyList<string> Validate(this BatchAnalysisRequest? request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         var errors = new List<string>();
 
-        if (request.Queries == null || request.Queries.Length == 0)
+        if (request.Queries is not { Length: > 0 })
         {
             errors.Add("Queries collection cannot be null or empty");
         }
@@ -97,14 +97,14 @@ public static class AnalysisControllerValidation
     /// </summary>
     /// <param name="response">The response to validate</param>
     /// <returns>List of validation errors, empty if valid</returns>
-    /// <exception cref="ArgumentNullException">Thrown if response is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="response"/> is null</exception>
     public static IReadOnlyList<string> Validate<T>(this ApiResponse<T>? response)
     {
         ArgumentNullException.ThrowIfNull(response);
 
         var errors = new List<string>();
 
-        if (response.StatusCode < 100 || response.StatusCode > 599)
+        if (response.StatusCode is < 100 or > 599)
         {
             errors.Add("StatusCode must be between 100 and 599");
         }
@@ -127,7 +127,7 @@ public static class AnalysisControllerValidation
             errors.Add("Timestamp cannot be in the future");
         }
 
-        if (response.Errors == null)
+        if (response.Errors is null)
         {
             errors.Add("Errors collection cannot be null");
         }
@@ -140,7 +140,7 @@ public static class AnalysisControllerValidation
     /// </summary>
     /// <param name="status">The health status to validate</param>
     /// <returns>List of validation errors, empty if valid</returns>
-    /// <exception cref="ArgumentNullException">Thrown if status is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="status"/> is null</exception>
     public static IReadOnlyList<string> Validate(this HealthStatus? status)
     {
         ArgumentNullException.ThrowIfNull(status);
@@ -183,53 +183,40 @@ public static class AnalysisControllerValidation
     /// </summary>
     /// <param name="request">The request to check</param>
     /// <returns>True if valid; otherwise, false</returns>
-    public static bool IsValid(this AnalysisRequest? request)
-    {
-        return Validate(request).Count == 0;
-    }
+    public static bool IsValid(this AnalysisRequest? request) => Validate(request).Count == 0;
 
     /// <summary>
     /// Determines whether the specified BatchAnalysisRequest is valid.
     /// </summary>
     /// <param name="request">The request to validate</param>
     /// <returns>True if valid; otherwise, false</returns>
-    public static bool IsValid(this BatchAnalysisRequest? request)
-    {
-        return Validate(request).Count == 0;
-    }
+    public static bool IsValid(this BatchAnalysisRequest? request) => Validate(request).Count == 0;
 
     /// <summary>
     /// Determines whether the specified ApiResponse is valid.
     /// </summary>
     /// <param name="response">The response to check</param>
     /// <returns>True if valid; otherwise, false</returns>
-    public static bool IsValid<T>(this ApiResponse<T>? response)
-    {
-        return Validate(response).Count == 0;
-    }
+    public static bool IsValid<T>(this ApiResponse<T>? response) => Validate(response).Count == 0;
 
     /// <summary>
     /// Determines whether the specified HealthStatus is valid.
     /// </summary>
     /// <param name="status">The health status to check</param>
     /// <returns>True if valid; otherwise, false</returns>
-    public static bool IsValid(this HealthStatus? status)
-    {
-        return Validate(status).Count == 0;
-    }
+    public static bool IsValid(this HealthStatus? status) => Validate(status).Count == 0;
 
     /// <summary>
     /// Ensures that the specified AnalysisRequest is valid, throwing an exception if not.
     /// </summary>
     /// <param name="request">The request to validate</param>
-    /// <exception cref="ArgumentException">Thrown if request is invalid</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="request"/> is invalid</exception>
     public static void EnsureValid(this AnalysisRequest? request)
     {
         var errors = Validate(request);
         if (errors.Count > 0)
         {
-            throw new ArgumentException(
-                $"AnalysisRequest is invalid. Errors: {string.Join("; ", errors)}");
+            throw new ArgumentException($"AnalysisRequest is invalid. Errors: {string.Join("; ", errors)}");
         }
     }
 
@@ -237,14 +224,13 @@ public static class AnalysisControllerValidation
     /// Ensures that the specified BatchAnalysisRequest is valid, throwing an exception if not.
     /// </summary>
     /// <param name="request">The request to validate</param>
-    /// <exception cref="ArgumentException">Thrown if request is invalid</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="request"/> is invalid</exception>
     public static void EnsureValid(this BatchAnalysisRequest? request)
     {
         var errors = Validate(request);
         if (errors.Count > 0)
         {
-            throw new ArgumentException(
-                $"BatchAnalysisRequest is invalid. Errors: {string.Join("; ", errors)}");
+            throw new ArgumentException($"BatchAnalysisRequest is invalid. Errors: {string.Join("; ", errors)}");
         }
     }
 
@@ -252,14 +238,13 @@ public static class AnalysisControllerValidation
     /// Ensures that the specified ApiResponse is valid, throwing an exception if not.
     /// </summary>
     /// <param name="response">The response to validate</param>
-    /// <exception cref="ArgumentException">Thrown if response is invalid</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="response"/> is invalid</exception>
     public static void EnsureValid<T>(this ApiResponse<T>? response)
     {
         var errors = Validate(response);
         if (errors.Count > 0)
         {
-            throw new ArgumentException(
-                $"ApiResponse is invalid. Errors: {string.Join("; ", errors)}");
+            throw new ArgumentException($"ApiResponse is invalid. Errors: {string.Join("; ", errors)}");
         }
     }
 
@@ -267,14 +252,13 @@ public static class AnalysisControllerValidation
     /// Ensures that the specified HealthStatus is valid, throwing an exception if not.
     /// </summary>
     /// <param name="status">The health status to validate</param>
-    /// <exception cref="ArgumentException">Thrown if status is invalid</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="status"/> is invalid</exception>
     public static void EnsureValid(this HealthStatus? status)
     {
         var errors = Validate(status);
         if (errors.Count > 0)
         {
-            throw new ArgumentException(
-                $"HealthStatus is invalid. Errors: {string.Join("; ", errors)}");
+            throw new ArgumentException($"HealthStatus is invalid. Errors: {string.Join("; ", errors)}");
         }
     }
 }
