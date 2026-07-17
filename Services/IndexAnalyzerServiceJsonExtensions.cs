@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 namespace SqlQueryAnalyzer.Services;
 
 /// <summary>
-/// Provides JSON serialization extensions for IndexAnalyzerService
+/// Provides JSON serialization extensions for <see cref="IndexAnalyzerService"/> instances.
 /// </summary>
 public static class IndexAnalyzerServiceJsonExtensions
 {
@@ -23,12 +23,12 @@ public static class IndexAnalyzerServiceJsonExtensions
     };
 
     /// <summary>
-    /// Serializes an IndexAnalyzerService instance to a JSON string
+    /// Serializes an <see cref="IndexAnalyzerService"/> instance to a JSON string.
     /// </summary>
-    /// <param name="value">The service instance to serialize</param>
-    /// <param name="indented">Whether to format the JSON with indentation</param>
-    /// <returns>A JSON string representation of the service</returns>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
+    /// <param name="value">The service instance to serialize.</param>
+    /// <param name="indented">Whether to format the JSON with indentation.</param>
+    /// <returns>A JSON string representation of the service.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static string ToJson(this IndexAnalyzerService value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -41,12 +41,12 @@ public static class IndexAnalyzerServiceJsonExtensions
     }
 
     /// <summary>
-    /// Deserializes an IndexAnalyzerService from a JSON string
+    /// Deserializes an <see cref="IndexAnalyzerService"/> from a JSON string.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize</param>
-    /// <returns>The deserialized service instance</returns>
-    /// <exception cref="ArgumentException">Thrown when json is null or empty</exception>
-    /// <exception cref="JsonException">Thrown when JSON is invalid</exception>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <returns>The deserialized service instance.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="JsonException">Thrown when JSON is invalid.</exception>
     public static IndexAnalyzerService? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -55,11 +55,12 @@ public static class IndexAnalyzerServiceJsonExtensions
     }
 
     /// <summary>
-    /// Attempts to deserialize an IndexAnalyzerService from a JSON string
+    /// Attempts to deserialize an <see cref="IndexAnalyzerService"/> from a JSON string.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize</param>
-    /// <param name="value">Receives the deserialized service if successful</param>
-    /// <returns>True if deserialization succeeded; otherwise false</returns>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="value">Receives the deserialized service if successful.</param>
+    /// <returns>True if deserialization succeeded; otherwise false.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static bool TryFromJson(string json, out IndexAnalyzerService? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
