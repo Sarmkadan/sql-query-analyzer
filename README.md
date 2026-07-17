@@ -1808,6 +1808,81 @@ foreach (var fix in prioritizedFixes)
 ---
 
 
+---
+
+## QueryPlanAnalyzerServiceExtensions
+
+The `QueryPlanAnalyzerServiceExtensions` class provides extension methods for the `QueryPlanAnalyzerService` type that add advanced query plan analysis capabilities. It includes methods for analyzing execution plans, identifying expensive operations, detecting table scans, calculating performance scores, and generating detailed analysis reports.
+
+### Usage Example
+
+```csharp
+// Create a query plan analyzer service
+var analyzer = new QueryPlanAnalyzerService();
+
+// Create a sample query plan (typically parsed from XML execution plan)
+var plan = new QueryPlan
+{
+    DatabaseName = "OrderProcessingDB",
+    CapturedAt = DateTime.UtcNow,
+    Format = "ShowPlanXML",
+    IsEstimated = true,
+    TotalEstimatedCost = 12.45,
+    TotalEstimatedRows = 5000,
+    TotalLogicalReads = 2500,
+    TotalPhysicalReads = 150
+};
+
+// Get the top 5 most expensive operations in the plan
+var expensiveOps = await analyzer.GetExpensiveOperationsAsync(plan, 5);
+Console.WriteLine($"Found {expensiveOps.Count} expensive operations");
+
+// Get all index operations (seeks, scans, lookups)
+var indexOps = await analyzer.GetIndexOperationsAsync(plan);
+Console.WriteLine($"Found {indexOps.Count} index operations");
+
+// Get a summary of the execution plan
+var planSummary = await analyzer.GetPlanSummaryAsync(plan);
+Console.WriteLine($"Plan summary: {planSummary.Count} metrics");
+
+// Get a performance score for the query plan (0-100, lower is better)
+var score = await analyzer.GetPerformanceScoreAsync(plan);
+Console.WriteLine($"Performance score: {score}/100");
+
+// Get all high-impact table scans (scans with large row estimates)
+var highImpactScans = await analyzer.GetHighImpactTableScansAsync(plan, minRowThreshold: 1000);
+Console.WriteLine($"Found {highImpactScans.Count} high-impact table scans");
+
+// Group performance issues by their type (requires issues collection)
+var issues = new List<PerformanceIssue>(); // Populate with actual issues
+var groupedIssues = analyzer.GroupByIssueType(issues);
+foreach (var group in groupedIssues)
+{
+    Console.WriteLine($"Issue type {group.Key}: {group.Value.Count} issues");
+}
+
+// Calculate performance score (0-100, lower is better)
+var finalScore = await analyzer.GetPerformanceScoreAsync(plan);
+Console.WriteLine($"Performance score: {finalScore}/100");
+
+// Generate a detailed analysis report
+var report = await analyzer.GetAnalysisReportAsync(plan);
+Console.WriteLine(report);
+
+```
+
+### Public Members
+
+- `GetExpensiveOperationsAsync(QueryPlanAnalyzerService, QueryPlan, int)` - Gets the top N most expensive operations in the execution plan
+- `GetIndexOperationsAsync(QueryPlanAnalyzerService, QueryPlan)` - Gets all index operations (seeks, scans, lookups) from the execution plan
+- `GetPlanSummaryAsync(QueryPlanAnalyzerService, QueryPlan)` - Gets a summary report of the execution plan analysis
+- `GroupByIssueType(QueryPlanAnalyzerService, IEnumerable<PerformanceIssue>)` - Groups performance issues by their type for better analysis
+- `GetHighImpactTableScansAsync(QueryPlanAnalyzerService, QueryPlan, int)` - Gets all table scans with high estimated row counts (potential performance issues)
+- `GetPerformanceScoreAsync(QueryPlanAnalyzerService, QueryPlan)` - Gets a performance score for the query plan (0-100, lower is better)
+- `GetAnalysisReportAsync(QueryPlanAnalyzerService, QueryPlan, CultureInfo?)` - Gets a detailed analysis report as a formatted string
+
+---
+
 ## SqlPatternAnalyzerTestsExtensions
 
 The `SqlPatternAnalyzerTestsExtensions` class provides extension methods for the `SqlPatternAnalyzerTests` class that simplify execution of related test groups. These methods combine multiple test invocations into convenient one-call methods, making it easier to run specific categories of tests without boilerplate code. The extensions cover SELECT * pattern detection, N+1 pattern detection, readability score calculation, and optimization recommendations.
