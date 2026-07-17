@@ -20,9 +20,57 @@ breakdown, data flow, design rationale, and known limitations, see
 
 ---
 
-## StringExtensions
+## PerformanceIssueExtensions
 
-The `StringExtensions` class provides utility methods for string manipulation commonly used when processing SQL queries. It includes methods for normalizing whitespace, removing comments, truncating strings, checking for SQL keywords, converting between naming conventions, detecting suspicious patterns, extracting query types, splitting statements, and calculating text positions.
+The `PerformanceIssueExtensions` class provides extension methods for the `PerformanceIssue` type, facilitating the manipulation, filtering, and presentation of SQL performance issues. It includes methods for creating deep copies, generating human-readable impact and location descriptions, determining actionability, and grouping issues by their type and priority.
+
+### Usage Example
+
+```csharp
+// Assuming you have a list of performance issues from the analyzer
+// var issues = ...; 
+
+// Filter actionable issues
+var actionable = issues.FilterBySeverity(IssueSeverity.Warning)
+                       .FilterByImpact(minImpact: 15.0);
+
+// Order by priority
+var sortedIssues = actionable.OrderByPriority();
+
+// Group by issue type
+var grouped = sortedIssues.GroupByIssueType();
+
+foreach (var group in grouped)
+{
+    Console.WriteLine($"Issue Type: {group.Key}");
+    foreach (var issue in group.Value)
+    {
+        // Get issue details
+        Console.WriteLine($"  - {issue.GetPriorityLabel()} - {issue.GetImpactDescription()}");
+        Console.WriteLine($"    Location: {issue.GetLocationInfo()}");
+        
+        if (issue.IsActionable()) {
+            Console.WriteLine($"    Actionable! {issue.GetTimeIncreaseDescription()}");
+        }
+    }
+}
+```
+
+### Public Members
+
+- `DeepCopy` - Creates a deep copy of a performance issue
+- `GetImpactDescription` - Gets a formatted string describing the performance impact
+- `GetTimeIncreaseDescription` - Gets a formatted string describing the estimated time increase, if available
+- `GetLocationInfo` - Gets a formatted string with location information (line, column, clause)
+- `GetMetadataPairs` - Gets the metadata as a collection of key-value pairs
+- `IsActionable` - Determines whether the issue is actionable based on severity and impact thresholds
+- `GetIssueTypeLabel` - Gets the issue type as a string
+- `GetPriorityLabel` - Gets the priority as a formatted string with emoji indicator
+- `FilterBySeverity` - Filters a collection of performance issues by severity
+- `FilterByImpact` - Filters a collection of performance issues by minimum impact percentage
+- `OrderByPriority` - Orders a collection of performance issues by priority (descending)
+- `GroupByIssueType` - Groups performance issues by their issue type
+---
 
 ### Usage Example
 
