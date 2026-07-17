@@ -33,7 +33,7 @@ public static class QueryRewriteSuggestionValidation
         {
             errors.Add("SuggestionId must not be null or whitespace.");
         }
-        else if (!IsValidGuid(value.SuggestionId))
+        else if (!Guid.TryParse(value.SuggestionId, out _))
         {
             errors.Add("SuggestionId must be a valid GUID.");
         }
@@ -74,7 +74,7 @@ public static class QueryRewriteSuggestionValidation
 
         // Validate AdditionalNotes
         // AdditionalNotes can be empty, but if present should not be whitespace-only
-        if (!string.IsNullOrEmpty(value.AdditionalNotes) && string.IsNullOrWhiteSpace(value.AdditionalNotes))
+        if (value.AdditionalNotes is not null && string.IsNullOrWhiteSpace(value.AdditionalNotes))
         {
             errors.Add("AdditionalNotes must not be whitespace-only if provided.");
         }
@@ -102,7 +102,7 @@ public static class QueryRewriteSuggestionValidation
         {
             errors.Add("GeneratedAt must be set to a non-default DateTime.");
         }
-        else if (value.GeneratedAt.Kind != DateTimeKind.Utc)
+        else if (value.GeneratedAt.Kind is not DateTimeKind.Utc)
         {
             errors.Add("GeneratedAt must be in UTC.");
         }
@@ -110,13 +110,6 @@ public static class QueryRewriteSuggestionValidation
         return errors.AsReadOnly();
     }
 
-    /// <summary>
-    /// Determines whether a string is a valid GUID.
-    /// </summary>
-    private static bool IsValidGuid(string input)
-    {
-        return Guid.TryParse(input, out _);
-    }
 
     /// <summary>
     /// Checks if a <see cref="QueryRewriteSuggestion"/> is valid.
