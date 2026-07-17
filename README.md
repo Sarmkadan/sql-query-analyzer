@@ -63,6 +63,67 @@ Console.WriteLine(request.GetConfigurationSummary());
 
 ---
 
+## PerformanceMetricCollectorExtensions
+
+The `PerformanceMetricCollectorExtensions` class provides extension methods for the `PerformanceMetricCollector` type that simplify access to performance metrics and statistics collected during SQL query analysis operations. These methods expose key performance indicators including analysis success/failure counts, cache performance metrics, execution time percentiles, throughput, and issue detection statistics, making it easier to monitor and analyze analyzer performance.
+
+### Usage Example
+
+
+```csharp
+// Create a performance metric collector instance (typically injected via DI)
+var collector = new PerformanceMetricCollector();
+
+// Track some analysis operations
+collector.TrackAnalysisStart();
+// Simulate analysis work...
+collector.TrackAnalysisEnd(isSuccess: true);
+collector.TrackCacheHit();
+
+// Access performance metrics
+int successfulAnalyses = collector.GetSuccessfulAnalyses();
+int failedAnalyses = collector.GetFailedAnalyses();
+int cacheHits = collector.GetCacheHits();
+int cacheMisses = collector.GetCacheMisses();
+
+double avgExecutionTime = collector.GetAverageExecutionTimeMs();
+double cacheHitRatio = collector.GetCacheHitRatio();
+double successRate = collector.GetSuccessRate();
+double throughput = collector.GetThroughput();
+
+double p50Time = collector.GetP50ExecutionTimeMs();
+double p95Time = collector.GetP95ExecutionTimeMs();
+double p99Time = collector.GetP99ExecutionTimeMs();
+
+int totalIssues = collector.GetTotalIssuesDetected();
+
+// Display metrics
+Console.WriteLine($"Successful analyses: {successfulAnalyses}");
+Console.WriteLine($"Failed analyses: {failedAnalyses}");
+Console.WriteLine($"Cache hit ratio: {cacheHitRatio:P1}");
+Console.WriteLine($"Average execution time: {avgExecutionTime:F2}ms");
+Console.WriteLine($"Throughput: {throughput:F2} queries/sec");
+Console.WriteLine($"P50 execution time: {p50Time:F2}ms");
+Console.WriteLine($"Total issues detected: {totalIssues}");
+```
+
+### Public Members
+
+- `GetSuccessfulAnalyses` - Gets the total number of successful analyses
+- `GetFailedAnalyses` - Gets the total number of failed analyses
+- `GetCacheHits` - Gets the total number of cache hits
+- `GetCacheMisses` - Gets the total number of cache misses
+- `GetAverageExecutionTimeMs` - Gets the average execution time in milliseconds across all analyses
+- `GetCacheHitRatio` - Gets the cache hit ratio as a percentage
+- `GetSuccessRate` - Gets the success rate as a percentage
+- `GetThroughput` - Gets the throughput in queries analyzed per second
+- `GetP50ExecutionTimeMs` - Gets the 50th percentile (median) execution time in milliseconds
+- `GetP95ExecutionTimeMs` - Gets the 95th percentile execution time in milliseconds
+- `GetP99ExecutionTimeMs` - Gets the 99th percentile execution time in milliseconds
+- `GetTotalIssuesDetected` - Gets the total number of issues detected across all analyses
+
+---
+
 ## CliApplicationHostExtensions
 
 
