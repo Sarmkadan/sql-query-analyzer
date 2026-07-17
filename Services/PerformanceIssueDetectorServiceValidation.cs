@@ -6,7 +6,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
+using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Configuration;
 
 namespace SqlQueryAnalyzer.Services;
@@ -28,22 +28,18 @@ public static class PerformanceIssueDetectorServiceValidation
 
         var errors = new List<string>();
 
-        // Validate logger field (required dependency) - use reflection to access private field
-        var loggerField = typeof(PerformanceIssueDetectorService).GetField(
-            "_logger", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        if (loggerField?.GetValue(value) is null)
+        // Validate logger dependency
+        if (value.GetLogger() is null)
         {
             errors.Add("Logger dependency cannot be null.");
         }
 
-        // Validate index severity thresholds field
-        var severityField = typeof(PerformanceIssueDetectorService).GetField(
-            "_indexSeverity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        if (severityField?.GetValue(value) is null)
+        // Validate index severity thresholds
+        if (value.GetIndexSeverityThresholds() is null)
         {
             errors.Add("Index severity thresholds cannot be null.");
         }
-        else if (severityField.GetValue(value) is IndexSeverityThresholds thresholds)
+        else if (value.GetIndexSeverityThresholds() is IndexSeverityThresholds thresholds)
         {
             errors.AddRange(ValidateIndexSeverityThresholds(thresholds));
         }
@@ -80,13 +76,9 @@ public static class PerformanceIssueDetectorServiceValidation
 
     private static IReadOnlyList<string> ValidateIndexSeverityThresholds(IndexSeverityThresholds thresholds)
     {
-        var errors = new List<string>();
+        ArgumentNullException.ThrowIfNull(thresholds);
 
-        if (thresholds is null)
-        {
-            errors.Add("Index severity thresholds instance cannot be null.");
-            return errors.AsReadOnly();
-        }
+        var errors = new List<string>();
 
         // Validate InfoMaxRows threshold
         if (thresholds.InfoMaxRows <= 0)
@@ -130,5 +122,41 @@ public static class PerformanceIssueDetectorServiceValidation
         }
 
         return errors.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Gets the logger dependency from the service instance.
+    /// </summary>
+    /// <param name="service">The service instance.</param>
+    /// <returns>The logger instance, or null if not available.</returns>
+    private static ILogger<PerformanceIssueDetectorService>? GetLogger(this PerformanceIssueDetectorService service)
+        => service.GetFieldValue<ILogger<PerformanceIssueDetectorService>>("_logger");
+
+    /// <summary>
+    /// Gets the index severity thresholds from the service instance.
+    /// </summary>
+    /// <param name="service">The service instance.</param>
+    /// <returns>The thresholds instance, or null if not available.</returns>
+    private static IndexSeverityThresholds? GetIndexSeverityThresholds(this PerformanceIssueDetectorService service)
+        => service.GetFieldValue<IndexSeverityThresholds>("_indexSeverity");
+
+    /// <summary>
+    /// Gets a field value using reflection.
+    /// </summary>
+    /// <typeparam name="T">The field type.</typeparam>
+    /// <param name="service">The service instance.</param>
+    /// <param name="fieldName">The field name.</param>
+    /// <returns>The field value, or null if not found or inaccessible.</returns>
+    private static T? GetFieldValue<T>(this PerformanceIssueDetectorService service, string fieldName)
+        where T : class
+    {
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentException.ThrowIfNullOrEmpty(fieldName);
+
+        var field = typeof(PerformanceIssueDetectorService).GetField(
+            fieldName,
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        return field?.GetValue(service) as T;
     }
 }
