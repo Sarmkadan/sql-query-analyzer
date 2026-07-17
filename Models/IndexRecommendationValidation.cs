@@ -164,8 +164,10 @@ public static class IndexRecommendationValidation
     /// </summary>
     /// <param name="value">The index recommendation to check.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static bool IsValid(this IndexRecommendation value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         return value.Validate().Count == 0;
     }
 
@@ -189,7 +191,7 @@ public static class IndexRecommendationValidation
 
     private static bool IsValidGuid(string value)
     {
-        if (value.Length != 36 && value.Length != 32)
+        if (string.IsNullOrWhiteSpace(value))
         {
             return false;
         }
@@ -224,7 +226,12 @@ public static class IndexRecommendationValidation
 
     private static bool IsValidIndexType(string value)
     {
-        return string.Equals(value, "CLUSTERED", StringComparison.OrdinalIgnoreCase) ||
-               string.Equals(value, "NONCLUSTERED", StringComparison.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        return string.Equals(value, "CLUSTERED", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "NONCLUSTERED", StringComparison.OrdinalIgnoreCase);
     }
 }
