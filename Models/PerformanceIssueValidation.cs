@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Globalization;
 
@@ -54,7 +54,11 @@ public static class PerformanceIssueValidation
         }
 
         // Validate AffectedClause
-        if (value.AffectedClause.Length > 100)
+        if (string.IsNullOrWhiteSpace(value.AffectedClause))
+        {
+            problems.Add("AffectedClause cannot be null, empty, or whitespace.");
+        }
+        else if (value.AffectedClause.Length > 100)
         {
             problems.Add("AffectedClause exceeds maximum length of 100 characters.");
         }
@@ -120,13 +124,21 @@ public static class PerformanceIssueValidation
         }
 
         // Validate RecommendedFix
-        if (value.RecommendedFix.Length > 2000)
+        if (string.IsNullOrWhiteSpace(value.RecommendedFix))
+        {
+            problems.Add("RecommendedFix cannot be null, empty, or whitespace.");
+        }
+        else if (value.RecommendedFix.Length > 2000)
         {
             problems.Add("RecommendedFix exceeds maximum length of 2000 characters.");
         }
 
         // Validate ExampleFix
-        if (value.ExampleFix.Length > 2000)
+        if (string.IsNullOrWhiteSpace(value.ExampleFix))
+        {
+            problems.Add("ExampleFix cannot be null, empty, or whitespace.");
+        }
+        else if (value.ExampleFix.Length > 2000)
         {
             problems.Add("ExampleFix exceeds maximum length of 2000 characters.");
         }
@@ -183,10 +195,7 @@ public static class PerformanceIssueValidation
     /// <param name="value">The performance issue to check.</param>
     /// <returns>True if the issue is valid; otherwise, false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static bool IsValid(this PerformanceIssue value)
-    {
-        return value.Validate().Count == 0;
-    }
+    public static bool IsValid(this PerformanceIssue value) => value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="PerformanceIssue"/> is valid, throwing an <see cref="ArgumentException"/> if it is not.
