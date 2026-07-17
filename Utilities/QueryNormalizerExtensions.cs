@@ -4,7 +4,8 @@ using System.Collections.Generic;
 namespace SqlQueryAnalyzer.Utilities;
 
 /// <summary>
-/// Provides extension methods for <see cref="QueryNormalizer"/>.
+/// Provides extension methods for <see cref="QueryNormalizer"/> that offer a more convenient API
+/// for common normalization operations.
 /// </summary>
 public static class QueryNormalizerExtensions
 {
@@ -13,14 +14,14 @@ public static class QueryNormalizerExtensions
     /// </summary>
     /// <param name="normalizer">The <see cref="QueryNormalizer"/> instance.</param>
     /// <param name="query">The SQL query to normalize.</param>
-    /// <returns>The normalized, trimmed SQL query.</returns>
+    /// <returns>The normalized, trimmed SQL query. Returns <see cref="string.Empty"/> if the input is null, empty, or whitespace.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="normalizer"/> is null.</exception>
     public static string NormalizeAndTrim(this QueryNormalizer normalizer, string query)
     {
         ArgumentNullException.ThrowIfNull(normalizer);
-        if (string.IsNullOrWhiteSpace(query))
-            return string.Empty;
-        return normalizer.Normalize(query).Trim();
+        return string.IsNullOrWhiteSpace(query)
+            ? string.Empty
+            : normalizer.Normalize(query).Trim();
     }
 
     /// <summary>
@@ -28,7 +29,8 @@ public static class QueryNormalizerExtensions
     /// </summary>
     /// <param name="normalizer">The <see cref="QueryNormalizer"/> instance.</param>
     /// <param name="query">The SQL query to extract table names from.</param>
-    /// <returns>A read-only list of unique table names.</returns>
+    /// <returns>A read-only list of unique table names in the order they appear in the query,
+    /// with case-insensitive comparison.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="normalizer"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="query"/> is null or empty.</exception>
     public static IReadOnlyList<string> GetTableNames(this QueryNormalizer normalizer, string query)
@@ -43,7 +45,8 @@ public static class QueryNormalizerExtensions
     /// </summary>
     /// <param name="normalizer">The <see cref="QueryNormalizer"/> instance.</param>
     /// <param name="query">The SQL query to extract column names from.</param>
-    /// <returns>A read-only list of unique column names.</returns>
+    /// <returns>A read-only list of unique column names from the SELECT clause,
+    /// with case-insensitive comparison. Returns an empty list if the query has no SELECT clause.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="normalizer"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="query"/> is null or empty.</exception>
     public static IReadOnlyList<string> GetColumnNames(this QueryNormalizer normalizer, string query)
