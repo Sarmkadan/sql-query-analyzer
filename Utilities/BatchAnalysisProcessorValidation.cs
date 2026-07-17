@@ -38,9 +38,7 @@ public static class BatchAnalysisProcessorValidation
     /// <param name="value">The instance to check.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
     public static bool IsValid([NotNullWhen(true)] this BatchAnalysisProcessor? value)
-    {
-        return value != null && Validate(value).Count == 0;
-    }
+        => value != null && Validate(value).Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="BatchAnalysisProcessor"/> instance is valid.
@@ -53,6 +51,8 @@ public static class BatchAnalysisProcessorValidation
         ArgumentNullException.ThrowIfNull(value);
 
         var problems = Validate(value);
+        ArgumentNullException.ThrowIfNull(problems);
+
         if (problems.Count > 0)
         {
             throw new ArgumentException(
