@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 
@@ -36,9 +37,8 @@ namespace SqlQueryAnalyzer.Models
         public static IReadOnlyList<string> GetAllColumns(this IndexRecommendation recommendation)
         {
             ArgumentNullException.ThrowIfNull(recommendation);
-            // Preserve order: key columns first, then include columns.
             return recommendation.KeyColumns
-                .Concat(recommendation.IncludeColumns ?? Enumerable.Empty<string>())
+                .Concat(recommendation.IncludeColumns ?? [])
                 .ToList()
                 .AsReadOnly();
         }
@@ -57,10 +57,12 @@ namespace SqlQueryAnalyzer.Models
         public static bool IsHighImpact(this IndexRecommendation recommendation, double threshold = 0.75)
         {
             ArgumentNullException.ThrowIfNull(recommendation);
-            if (threshold < 0.0 || threshold > 1.0)
-                throw new ArgumentException("Threshold must be between 0 and 1.", nameof(threshold));
 
-            return recommendation.ImpactScore >= threshold;
+            return threshold switch
+            {
+                < 0.0 or > 1.0 => throw new ArgumentException("Threshold must be between 0 and 1.", nameof(threshold)),
+                _ => recommendation.ImpactScore >= threshold
+            };
         }
 
         /// <summary>
@@ -73,8 +75,11 @@ namespace SqlQueryAnalyzer.Models
         public static string EnsureScriptGenerated(this IndexRecommendation recommendation)
         {
             ArgumentNullException.ThrowIfNull(recommendation);
+
             if (string.IsNullOrWhiteSpace(recommendation.GeneratedScript))
+            {
                 recommendation.GenerateScript();
+            }
 
             return recommendation.GeneratedScript;
         }
