@@ -2,14 +2,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace SqlQueryAnalyzer.DTOs;
 
 /// <summary>
-/// Provides useful extension methods for <see cref="AnalysisRequestDto"/> to enhance query analysis functionality.
+/// Provides extension methods for <see cref="AnalysisRequestDto"/> to enhance query analysis functionality.
 /// </summary>
+/// <remarks>
+/// All extension methods follow idiomatic C# patterns with proper null safety, XML documentation,
+/// and use modern C# features like expression-bodied members and pattern matching where appropriate.
+/// </remarks>
 public static class AnalysisRequestDtoExtensions
 {
     /// <summary>
@@ -23,31 +26,7 @@ public static class AnalysisRequestDtoExtensions
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var parts = new List<string>();
-
-        if (!string.IsNullOrWhiteSpace(request.ApplicationName))
-        {
-            parts.Add(request.ApplicationName);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.ModuleName))
-        {
-            parts.Add(request.ModuleName);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.ProcedureName))
-        {
-            parts.Add(request.ProcedureName);
-        }
-
-        if (parts.Count == 0)
-        {
-            parts.Add("ad-hoc");
-        }
-
-        parts.Add($"{request.QueryText?.Length ?? 0}");
-
-        return string.Join("_", parts);
+        return string.Join("_", GetContextParts(request).Append($"{request.QueryText?.Length ?? 0}"));
     }
 
     /// <summary>
@@ -103,29 +82,8 @@ public static class AnalysisRequestDtoExtensions
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var parts = new List<string>();
-
-        if (!string.IsNullOrWhiteSpace(request.ApplicationName))
-        {
-            parts.Add(request.ApplicationName);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.ModuleName))
-        {
-            parts.Add(request.ModuleName);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.ProcedureName))
-        {
-            parts.Add(request.ProcedureName);
-        }
-
-        if (parts.Count == 0)
-        {
-            return "Ad-hoc Query";
-        }
-
-        return string.Join(" - ", parts);
+        var parts = GetContextParts(request).ToList();
+        return parts.Count == 0 ? "Ad-hoc Query" : string.Join(" - ", parts);
     }
 
     /// <summary>
@@ -142,26 +100,17 @@ public static class AnalysisRequestDtoExtensions
         var enabledFeatures = new List<string>();
 
         if (request.AnalyzePlan)
-        {
             enabledFeatures.Add("Plan Analysis");
-        }
 
         if (request.AnalyzeFragmentation)
-        {
             enabledFeatures.Add("Fragmentation Analysis");
-        }
 
         if (request.IncludeIndexSuggestions)
-        {
             enabledFeatures.Add("Index Suggestions");
-        }
 
-        if (enabledFeatures.Count == 0)
-        {
-            return "Quick Analysis (no detailed checks)";
-        }
-
-        return $"Analysis: {string.Join(", ", enabledFeatures)}";
+        return enabledFeatures.Count == 0
+            ? "Quick Analysis (no detailed checks)"
+            : $"Analysis: {string.Join(", ", enabledFeatures)}";
     }
 
     /// <summary>
@@ -185,5 +134,20 @@ public static class AnalysisRequestDtoExtensions
             AnalyzePlan = request.AnalyzePlan,
             ExecutionPlanXml = request.ExecutionPlanXml
         };
+    }
+
+    /// <summary>
+    /// Extracts non-empty context parts from the request for display purposes.
+    /// </summary>
+    private static IEnumerable<string> GetContextParts(this AnalysisRequestDto request)
+    {
+        if (!string.IsNullOrWhiteSpace(request.ApplicationName))
+            yield return request.ApplicationName;
+
+        if (!string.IsNullOrWhiteSpace(request.ModuleName))
+            yield return request.ModuleName;
+
+        if (!string.IsNullOrWhiteSpace(request.ProcedureName))
+            yield return request.ProcedureName;
     }
 }
