@@ -25,10 +25,10 @@ public static class PerformanceIssueDetectorServiceExtensions
     /// <summary>
     /// Detects performance issues across multiple queries and returns a combined report.
     /// </summary>
-    /// <param name="service">The detector service instance</param>
-    /// <param name="queries">Collection of queries to analyze</param>
-    /// <returns>Combined list of all detected issues across all queries</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="queries"/> is null</exception>
+    /// <param name="service">The detector service instance.</param>
+    /// <param name="queries">Collection of queries to analyze.</param>
+    /// <returns>Combined list of all detected issues across all queries.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="queries"/> is null.</exception>
     public static async Task<IReadOnlyList<PerformanceIssue>> DetectIssuesAsync(
         this PerformanceIssueDetectorService service,
         IEnumerable<DatabaseQuery> queries)
@@ -40,7 +40,7 @@ public static class PerformanceIssueDetectorServiceExtensions
 
         foreach (var query in queries)
         {
-            var issues = await service.DetectIssuesAsync(query);
+            var issues = await service.DetectIssuesAsync(query).ConfigureAwait(false);
             allIssues.AddRange(issues);
         }
 
@@ -50,11 +50,11 @@ public static class PerformanceIssueDetectorServiceExtensions
     /// <summary>
     /// Detects N+1 query patterns specifically for queries referencing the same table.
     /// </summary>
-    /// <param name="service">The detector service instance</param>
-    /// <param name="queries">Collection of queries to analyze</param>
-    /// <param name="tableName">Optional specific table name to check for N+1 patterns</param>
-    /// <returns>List of N+1 issues detected</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="queries"/> is null</exception>
+    /// <param name="service">The detector service instance.</param>
+    /// <param name="queries">Collection of queries to analyze.</param>
+    /// <param name="tableName">Optional specific table name to check for N+1 patterns.</param>
+    /// <returns>List of N+1 issues detected.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="queries"/> is null.</exception>
     public static async ValueTask<IReadOnlyList<PerformanceIssue>> DetectNPlusOneAsync(
         this PerformanceIssueDetectorService service,
         IEnumerable<DatabaseQuery> queries,
@@ -72,17 +72,17 @@ public static class PerformanceIssueDetectorServiceExtensions
             return Array.Empty<PerformanceIssue>();
         }
 
-        var issues = await service.DetectNPlusOneAsync(filteredQueries);
+        var issues = await service.DetectNPlusOneAsync(filteredQueries).ConfigureAwait(false);
         return issues.AsReadOnly();
     }
 
     /// <summary>
     /// Detects join issues across multiple queries and returns a combined report.
     /// </summary>
-    /// <param name="service">The detector service instance</param>
-    /// <param name="queries">Collection of queries to analyze</param>
-    /// <returns>Combined list of join-related issues across all queries</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="queries"/> is null</exception>
+    /// <param name="service">The detector service instance.</param>
+    /// <param name="queries">Collection of queries to analyze.</param>
+    /// <returns>Combined list of join-related issues across all queries.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="queries"/> is null.</exception>
     public static async Task<IReadOnlyList<PerformanceIssue>> DetectJoinIssuesAsync(
         this PerformanceIssueDetectorService service,
         IEnumerable<DatabaseQuery> queries)
@@ -94,7 +94,7 @@ public static class PerformanceIssueDetectorServiceExtensions
 
         foreach (var query in queries)
         {
-            var issues = await service.DetectJoinIssuesAsync(query);
+            var issues = await service.DetectJoinIssuesAsync(query).ConfigureAwait(false);
             allIssues.AddRange(issues);
         }
 
@@ -104,10 +104,10 @@ public static class PerformanceIssueDetectorServiceExtensions
     /// <summary>
     /// Detects index opportunities across multiple queries and returns a combined report.
     /// </summary>
-    /// <param name="service">The detector service instance</param>
-    /// <param name="queries">Collection of queries to analyze</param>
-    /// <returns>Combined list of index-related issues across all queries</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="queries"/> is null</exception>
+    /// <param name="service">The detector service instance.</param>
+    /// <param name="queries">Collection of queries to analyze.</param>
+    /// <returns>Combined list of index-related issues across all queries.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="queries"/> is null.</exception>
     public static async Task<IReadOnlyList<PerformanceIssue>> DetectIndexOpportunitiesAsync(
         this PerformanceIssueDetectorService service,
         IEnumerable<DatabaseQuery> queries)
@@ -119,7 +119,7 @@ public static class PerformanceIssueDetectorServiceExtensions
 
         foreach (var query in queries)
         {
-            var issues = await service.DetectIndexOpportunitiesAsync(query);
+            var issues = await service.DetectIndexOpportunitiesAsync(query).ConfigureAwait(false);
             allIssues.AddRange(issues);
         }
 
@@ -129,10 +129,10 @@ public static class PerformanceIssueDetectorServiceExtensions
     /// <summary>
     /// Filters detected issues by severity level.
     /// </summary>
-    /// <param name="issues">Collection of performance issues</param>
-    /// <param name="severity">Minimum severity level to include</param>
-    /// <returns>Filtered collection of issues with severity >= specified level</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="issues"/> is null</exception>
+    /// <param name="issues">Collection of performance issues.</param>
+    /// <param name="severity">Minimum severity level to include.</param>
+    /// <returns>Filtered collection of issues with severity >= specified level.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="issues"/> is null.</exception>
     public static IEnumerable<PerformanceIssue> FilterBySeverity(
         this IEnumerable<PerformanceIssue> issues,
         IssueSeverity severity)
@@ -145,9 +145,9 @@ public static class PerformanceIssueDetectorServiceExtensions
     /// <summary>
     /// Groups performance issues by their type for easier analysis.
     /// </summary>
-    /// <param name="issues">Collection of performance issues</param>
-    /// <returns>Dictionary grouping issues by their <see cref="IssueType"/></returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="issues"/> is null</exception>
+    /// <param name="issues">Collection of performance issues.</param>
+    /// <returns>Dictionary grouping issues by their <see cref="IssueType"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="issues"/> is null.</exception>
     public static IReadOnlyDictionary<IssueType, IReadOnlyList<PerformanceIssue>> GroupByIssueType(
         this IEnumerable<PerformanceIssue> issues)
     {
@@ -157,17 +157,16 @@ public static class PerformanceIssueDetectorServiceExtensions
             .GroupBy(i => i.IssueType)
             .ToDictionary(
                 g => g.Key,
-                g => g.ToList().AsReadOnly()
-            )
-            .ToDictionary(kvp => kvp.Key, kvp => (IReadOnlyList<PerformanceIssue>)kvp.Value);
+                g => (IReadOnlyList<PerformanceIssue>)g.ToList().AsReadOnly()
+            );
     }
 
     /// <summary>
     /// Calculates total estimated performance impact across all issues.
     /// </summary>
-    /// <param name="issues">Collection of performance issues</param>
-    /// <returns>Sum of all estimated performance impacts</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="issues"/> is null</exception>
+    /// <param name="issues">Collection of performance issues.</param>
+    /// <returns>Sum of all estimated performance impacts.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="issues"/> is null.</exception>
     public static double CalculateTotalImpact(this IEnumerable<PerformanceIssue> issues)
     {
         ArgumentNullException.ThrowIfNull(issues);
@@ -178,9 +177,9 @@ public static class PerformanceIssueDetectorServiceExtensions
     /// <summary>
     /// Creates a prioritized list of recommended fixes based on detected issues.
     /// </summary>
-    /// <param name="issues">Collection of performance issues</param>
-    /// <returns>Ordered list of unique recommended fixes</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="issues"/> is null</exception>
+    /// <param name="issues">Collection of performance issues.</param>
+    /// <returns>Ordered list of unique recommended fixes.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="issues"/> is null.</exception>
     public static IReadOnlyList<string> GetPrioritizedFixes(this IEnumerable<PerformanceIssue> issues)
     {
         ArgumentNullException.ThrowIfNull(issues);
