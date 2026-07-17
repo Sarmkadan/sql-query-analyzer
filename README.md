@@ -63,6 +63,91 @@ Console.WriteLine(request.GetConfigurationSummary());
 
 ---
 
+## CliApplicationHostExtensions
+
+
+The `CliApplicationHostExtensions` class provides extension methods for the `CliApplicationHost` type, enhancing CLI functionality with common operations for result validation, metadata management, and query analysis utilities. It includes methods for accessing performance issues, checking for critical issues, managing metadata, retrieving performance scores, counting issues by severity, and accessing command-line arguments.
+
+### Usage Example
+
+```csharp
+// Create a CLI application host instance
+var host = new CliApplicationHost(
+    query: "SELECT * FROM Users WHERE Status = 'active'",
+    arguments: new CommandLineArguments(new[] { "--analyze-plan" }),
+    result: new QueryAnalysisResult
+    {
+        PerformanceScore = 75.5,
+        Issues = new List<PerformanceIssue>
+        {
+            new PerformanceIssue
+            {
+                Severity = IssueSeverity.Warning,
+                Type = "SelectStar",
+                Description = "Query uses SELECT * which retrieves all columns"
+            },
+            new PerformanceIssue
+            {
+                Severity = IssueSeverity.Critical,
+                Type = "MissingWhere",
+                Description = "Query has no WHERE clause"
+            }
+        }
+    }
+);
+
+// Access performance issues
+var issues = host.GetIssues();
+Console.WriteLine($"Found {issues.Count()} issues");
+
+// Check for critical issues
+bool hasCritical = host.HasCriticalIssues();
+Console.WriteLine($"Has critical issues: {hasCritical}");
+
+// Manage metadata
+host.SetMetadata("analysisId", Guid.NewGuid());
+host.SetMetadata("userId", "user-123");
+var analysisId = host.GetMetadata<Guid>("analysisId");
+Console.WriteLine($"Analysis ID: {analysisId}");
+
+// Get performance score as formatted string
+string scoreString = host.GetPerformanceScoreString();
+Console.WriteLine($"Performance Score: {scoreString}");
+
+// Get issue counts by severity
+var issueCounts = host.GetIssueCountsBySeverity();
+foreach (var kvp in issueCounts)
+{
+    Console.WriteLine($"{kvp.Key}: {kvp.Value} issues");
+}
+
+// Check if analysis should continue
+bool shouldContinue = host.ShouldContinueAnalysis();
+Console.WriteLine($"Should continue: {shouldContinue}");
+
+// Get the query text
+string queryText = host.GetQueryText();
+Console.WriteLine($"Query: {queryText}");
+
+// Access command line arguments
+var args = host.GetCommandLineArguments();
+Console.WriteLine($"Arguments: {args}");
+```
+
+### Public Members
+
+- `GetIssues` - Validates that the analysis result contains issues and returns an enumerable of performance issues
+- `HasCriticalIssues` - Determines whether the analysis result has any critical issues
+- `SetMetadata` - Adds or updates metadata with the specified key and value
+- `GetMetadata<T>` - Gets metadata value by key or returns the default value if key doesn't exist
+- `GetPerformanceScoreString` - Gets the performance score as a formatted string with invariant culture
+- `GetIssueCountsBySeverity` - Gets the total number of issues grouped by severity level
+- `ShouldContinueAnalysis` - Determines whether the analysis should continue based on the ShouldContinue flag
+- `GetQueryText` - Gets the query text from the host's Query property
+- `GetCommandLineArguments` - Gets the command line arguments from the host's Arguments property
+
+---
+
 ## PerformanceIssueExtensions
 
 The `PerformanceIssueExtensions` class provides extension methods for the `PerformanceIssue` type, facilitating the manipulation, filtering, and presentation of SQL performance issues. It includes methods for creating deep copies, generating human-readable impact and location descriptions, determining actionability, and grouping issues by their type and priority.
