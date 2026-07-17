@@ -22,54 +22,18 @@ public static class QueryAnalysisCacheValidation
     /// <param name="value">The cache instance to validate.</param>
     /// <returns>A list of validation problems; empty if valid.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+    /// <remarks>
+    /// Delegates all validation logic to <see cref="ValidateCacheStatistics"/> which handles
+    /// comprehensive validation of cache statistics including entry counts, hit rate, access patterns,
+    /// and age metrics.
+    /// </remarks>
     public static IReadOnlyList<string> Validate(this QueryAnalysisCache? value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
         var problems = new List<string>();
-
-        // Validate cache statistics
         var stats = value.GetStatistics();
         ValidateCacheStatistics(stats, problems);
-
-        // Validate cache entry properties (if accessible through public members)
-        // Note: Individual entries are not directly accessible via public API,
-        // so we validate the aggregate statistics that represent the cache state
-
-        if (stats.TotalEntries < 0)
-        {
-            problems.Add($"Cache statistics TotalEntries is negative: {stats.TotalEntries}");
-        }
-
-        if (stats.MaxEntries <= 0)
-        {
-            problems.Add($"Cache statistics MaxEntries must be positive: {stats.MaxEntries}");
-        }
-
-        if (stats.HitRate < 0 || stats.HitRate > 100)
-        {
-            problems.Add($"Cache statistics HitRate must be between 0 and 100: {stats.HitRate}");
-        }
-
-        if (stats.AverageAccessCount < 0)
-        {
-            problems.Add($"Cache statistics AverageAccessCount is negative: {stats.AverageAccessCount}");
-        }
-
-        if (stats.OldestEntryAge < 0)
-        {
-            problems.Add($"Cache statistics OldestEntryAge is negative: {stats.OldestEntryAge}");
-        }
-
-        if (stats.Hits < 0)
-        {
-            problems.Add($"Cache statistics Hits is negative: {stats.Hits}");
-        }
-
-        if (stats.Misses < 0)
-        {
-            problems.Add($"Cache statistics Misses is negative: {stats.Misses}");
-        }
 
         return problems.AsReadOnly();
     }
@@ -93,6 +57,10 @@ public static class QueryAnalysisCacheValidation
     /// <param name="value">The cache instance to validate.</param>
     /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is invalid.</exception>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+    /// <remarks>
+    /// Throws an exception with a detailed message listing all validation problems when the cache
+    /// fails validation.
+    /// </remarks>
     public static void EnsureValid(this QueryAnalysisCache? value)
     {
         ArgumentNullException.ThrowIfNull(value);
