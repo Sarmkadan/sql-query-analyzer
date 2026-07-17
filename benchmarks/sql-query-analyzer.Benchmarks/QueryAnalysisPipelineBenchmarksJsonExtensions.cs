@@ -4,7 +4,7 @@ using System.Text.Json.Serialization.Metadata;
 namespace SqlQueryAnalyzer.Benchmarks;
 
 /// <summary>
-/// Provides JSON serialization extensions for <see cref="QueryAnalysisPipelineBenchmarks"/>.
+/// Provides JSON serialization extensions for <see cref="QueryAnalysisPipelineBenchmarks"/> benchmarks data.
 /// </summary>
 public static class QueryAnalysisPipelineBenchmarksJsonExtensions
 {
@@ -33,12 +33,14 @@ public static class QueryAnalysisPipelineBenchmarksJsonExtensions
     /// Parses a JSON string into a <see cref="QueryAnalysisPipelineBenchmarks"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized benchmarks instance, or <see langword="null"/> if the JSON is empty.</returns>
+    /// <returns>The deserialized benchmarks instance, or <see langword="null"/> if the JSON is empty or whitespace.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="json"/> is empty or consists only of whitespace.</exception>
     /// <exception cref="JsonException">Thrown if the JSON is invalid or cannot be deserialized.</exception>
     public static QueryAnalysisPipelineBenchmarks? FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         return JsonSerializer.Deserialize<QueryAnalysisPipelineBenchmarks>(json, _jsonOptions);
     }
