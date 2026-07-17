@@ -39,9 +39,10 @@ public static class QueryRewriteSuggestionJsonExtensions
     /// Deserializes a JSON string to a <see cref="QueryRewriteSuggestion"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized query rewrite suggestion, or null if input is empty.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null or empty.</exception>
-    /// <exception cref="JsonException">Thrown when JSON is invalid.</exception>
+    /// <returns>The deserialized query rewrite suggestion, or null if JSON is invalid or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+/// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
+    /// <exception cref="JsonException">Thrown when JSON is invalid or cannot be deserialized.</exception>
     public static QueryRewriteSuggestion? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -52,8 +53,10 @@ public static class QueryRewriteSuggestionJsonExtensions
     /// Tries to deserialize a JSON string to a <see cref="QueryRewriteSuggestion"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">The deserialized query rewrite suggestion, or null on failure.</param>
+    /// <param name="value">When this method returns, contains the deserialized query rewrite suggestion if successful, or null if deserialization failed.</param>
     /// <returns>True if deserialization succeeded, false otherwise.</returns>
+/// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+/// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
     public static bool TryFromJson(string json, out QueryRewriteSuggestion? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
