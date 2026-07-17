@@ -1,4 +1,5 @@
 #nullable enable
+
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -22,12 +23,10 @@ public static class QueryProfilerExtensionsValidation
     /// </summary>
     /// <param name="settings">The profiler settings to validate.</param>
     /// <returns>A list of validation errors; empty if the settings are valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="settings"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate(this ProfilerSettings? settings)
     {
-        if (settings is null)
-        {
-            return new[] { "ProfilerSettings cannot be null." };
-        }
+        ArgumentNullException.ThrowIfNull(settings);
 
         return settings.Validate();
     }
@@ -47,9 +46,11 @@ public static class QueryProfilerExtensionsValidation
     /// <exception cref="ArgumentException">Thrown when the settings are invalid, containing the validation errors.</exception>
     public static void EnsureValid(this ProfilerSettings? settings)
     {
-        var errors = Validate(settings);
+        ArgumentNullException.ThrowIfNull(settings);
 
-        if (errors.Count > 0)
+        var errors = settings.Validate();
+
+        if (errors.Count is not 0)
         {
             throw new ArgumentException(
                 $"ProfilerSettings are invalid:{Environment.NewLine} - {
@@ -63,12 +64,10 @@ public static class QueryProfilerExtensionsValidation
     /// </summary>
     /// <param name="report">The profiler report to validate.</param>
     /// <returns>A list of validation errors; empty if the report is valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="report"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate(this QueryProfilerReport? report)
     {
-        if (report is null)
-        {
-            return new[] { "QueryProfilerReport cannot be null." };
-        }
+        ArgumentNullException.ThrowIfNull(report);
 
         var errors = new List<string>();
 
@@ -87,7 +86,7 @@ public static class QueryProfilerExtensionsValidation
             errors.Add("ProfiledAt cannot be the default DateTime value.");
         }
 
-        if (report.PerformanceScore < 0 || report.PerformanceScore > 100)
+        if (report.PerformanceScore is < 0 or > 100)
         {
             errors.Add("PerformanceScore must be between 0 and 100.");
         }
@@ -146,12 +145,10 @@ public static class QueryProfilerExtensionsValidation
     /// </summary>
     /// <param name="stage">The execution stage to validate.</param>
     /// <returns>A list of validation errors; empty if the stage is valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="stage"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate(this ExecutionStage? stage)
     {
-        if (stage is null)
-        {
-            return new[] { "ExecutionStage cannot be null." };
-        }
+        ArgumentNullException.ThrowIfNull(stage);
 
         var errors = new List<string>();
 
@@ -199,12 +196,10 @@ public static class QueryProfilerExtensionsValidation
     /// </summary>
     /// <param name="metric">The profiler metric to validate.</param>
     /// <returns>A list of validation errors; empty if the metric is valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metric"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate(this ProfilerMetric? metric)
     {
-        if (metric is null)
-        {
-            return new[] { "ProfilerMetric cannot be null." };
-        }
+        ArgumentNullException.ThrowIfNull(metric);
 
         var errors = new List<string>();
 
