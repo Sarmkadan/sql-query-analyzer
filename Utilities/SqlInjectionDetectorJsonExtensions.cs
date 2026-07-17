@@ -127,10 +127,7 @@ public static class SqlInjectionDetectorJsonExtensions
     /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
     public static SqlInjectionIssue? FromJsonToSqlInjectionIssue(string json)
     {
-        if (string.IsNullOrEmpty(json))
-        {
-            return null;
-        }
+        ArgumentException.ThrowIfNullOrEmpty(json);
 
         return JsonSerializer.Deserialize<SqlInjectionIssue>(json, _jsonOptions);
     }
@@ -141,23 +138,25 @@ public static class SqlInjectionDetectorJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized instance if successful, otherwise null.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static bool TryFromJson(string json, out SqlInjectionIssue? value)
     {
-        value = null;
+        value = string.IsNullOrEmpty(json)
+            ? null
+            : TryDeserialize(json);
 
-        if (string.IsNullOrEmpty(json))
-        {
-            return false;
-        }
+        return value is not null;
+    }
 
+    private static SqlInjectionIssue? TryDeserialize(string json)
+    {
         try
         {
-            value = JsonSerializer.Deserialize<SqlInjectionIssue>(json, _jsonOptions);
-            return true;
+            return JsonSerializer.Deserialize<SqlInjectionIssue>(json, _jsonOptions);
         }
         catch (JsonException)
         {
-            return false;
+            return null;
         }
     }
 }
