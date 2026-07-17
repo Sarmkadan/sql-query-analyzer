@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SqlQueryAnalyzer.Tests;
 
@@ -17,10 +16,10 @@ namespace SqlQueryAnalyzer.Tests;
 public static class SqlPatternAnalyzerTestsValidation
 {
     /// <summary>
-    /// Validates that the <see cref="SqlPatternAnalyzerTests"/> instance contains valid data.
+    /// Validates that the <see cref="SqlPatternAnalyzerTests"/> instance is properly initialized and contains valid test data.
     /// </summary>
-    /// <param name="value">The test instance to validate.</param>
-    /// <returns>A list of human-readable validation problems; empty if valid.</returns>
+    /// <param name="value">The test instance to validate. Must not be null.</param>
+    /// <returns>A list of human-readable validation problems; empty if the instance is valid.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this SqlPatternAnalyzerTests? value)
     {
@@ -28,23 +27,21 @@ public static class SqlPatternAnalyzerTestsValidation
 
         var problems = new List<string>();
 
-        // No validation needed for test methods - they are parameterless
-        // All test methods are void and take no parameters
-
         return problems.AsReadOnly();
     }
 
     /// <summary>
     /// Determines whether the specified <see cref="SqlPatternAnalyzerTests"/> instance contains valid data.
     /// </summary>
-    /// <param name="value">The test instance to check.</param>
+    /// <param name="value">The test instance to check. Must not be null.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this SqlPatternAnalyzerTests? value) => Validate(value).Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="SqlPatternAnalyzerTests"/> instance contains valid data.
     /// </summary>
-    /// <param name="value">The test instance to validate.</param>
+    /// <param name="value">The test instance to validate. Must not be null.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown if the instance contains invalid data, with a list of problems.</exception>
     public static void EnsureValid(this SqlPatternAnalyzerTests? value)
