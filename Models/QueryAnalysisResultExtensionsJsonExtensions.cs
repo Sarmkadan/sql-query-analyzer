@@ -12,7 +12,7 @@ using System.Text.Json.Serialization;
 namespace SqlQueryAnalyzer.Models;
 
 /// <summary>
-/// Provides System.Text.Json serialization extensions for <see cref="QueryAnalysisResultExtensions"/>
+/// Provides System.Text.Json serialization extensions for <see cref="QueryAnalysisResult"/>
 /// to enable JSON serialization of <see cref="QueryAnalysisResult"/> instances.
 /// </summary>
 public static class QueryAnalysisResultExtensionsJsonExtensions
@@ -49,10 +49,12 @@ public static class QueryAnalysisResultExtensionsJsonExtensions
     /// Deserializes a <see cref="QueryAnalysisResult"/> from a JSON string.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized query analysis result, or <see langword="null"/> if the JSON is empty or invalid.</returns>
-    /// <exception cref="ArgumentException"><paramref name="json"/> is null or empty.</exception>
+    /// <returns>The deserialized query analysis result, or <see langword="null"/> if the JSON is empty, invalid, or whitespace.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty or whitespace.</exception>
     public static QueryAnalysisResult? FromJson(string json)
     {
+        ArgumentNullException.ThrowIfNull(json);
         ArgumentException.ThrowIfNullOrEmpty(json);
 
         try
