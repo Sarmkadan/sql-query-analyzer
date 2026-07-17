@@ -1640,6 +1640,90 @@ catch (ArgumentException ex)
 
 ---
 
+## SqlQueryAnalyzerOptionsExtensionsValidation
+
+The `SqlQueryAnalyzerOptionsExtensionsValidation` class provides validation helpers for the `SqlQueryAnalyzerOptionsExtensions` extension methods. It validates that all extension methods return expected values based on configuration, ensuring consistent behavior across the SQL Query Analyzer options system. The validation covers all public extension methods including validity checks, analyzer enablement, provider normalization, critical analysis detection, timeout calculations, thread limits, logging configuration, pattern matching, execution plan analysis, and query length constraints.
+
+### Usage Example
+
+```csharp
+// Create SQL query analyzer options with configuration
+var options = new SqlQueryAnalyzerOptions
+{
+    Database = new DatabaseSettings
+    {
+        Provider = "SqlServer",
+        ConnectionString = "Server=localhost;Database=Test;User Id=sa;Password=test;",
+        ConnectionTimeoutSeconds = 30,
+        EnableConnectionLogging = true
+    },
+    Analysis = new AnalysisSettings
+    {
+        MaxThreads = 8,
+        DetectNPlusOne = true,
+        DetectMissingIndexes = true,
+        DetectJoinIssues = true,
+        AnalyzeExecutionPlans = true,
+        IgnorePatterns = new List<string> { "temp_*", "audit_*" }
+    },
+    Cache = new CacheSettings { Enabled = true },
+    Performance = new PerformanceSettings { MaxQueryLength = 2048 },
+    Logging = new LoggingSettings { MinimumLevel = "Information" }
+};
+
+// Validate all extension methods
+var validationErrors = options.ValidateSqlQueryAnalyzerOptionsExtensions();
+if (validationErrors.Count > 0)
+{
+    Console.WriteLine("Validation errors found:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("All extension methods are valid!");
+}
+
+// Check if all extension methods work correctly
+bool allValid = options.AreSqlQueryAnalyzerOptionsExtensionsValid();
+Console.WriteLine($"All extension methods valid: {allValid}");
+
+// Use EnsureValid to throw exceptions on validation failure
+try
+{
+    options.EnsureSqlQueryAnalyzerOptionsExtensionsAreValid();
+    Console.WriteLine("All validations passed - no exception thrown");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
+### Public Members
+
+- `ValidateExtensionMethodIsValid(this SqlQueryAnalyzerOptions value)` - Validates that the `IsValid` extension method returns correct results based on configuration
+- `ValidateIsAnalyzerEnabled(this SqlQueryAnalyzerOptions value)` - Validates that the `IsAnalyzerEnabled` extension method returns correct results based on cache and analysis settings
+- `ValidateGetNormalizedProvider(this SqlQueryAnalyzerOptions value)` - Validates that the `GetNormalizedProvider` extension method returns lowercase normalized provider names
+- `ValidateHasCriticalAnalysisEnabled(this SqlQueryAnalyzerOptions value)` - Validates that the `HasCriticalAnalysisEnabled` extension method correctly identifies when critical analysis features are enabled
+- `ValidateGetConnectionTimeoutMs(this SqlQueryAnalyzerOptions value)` - Validates that the `GetConnectionTimeoutMs` extension method converts seconds to milliseconds correctly
+- `ValidateGetMaxConcurrentThreads(this SqlQueryAnalyzerOptions value)` - Validates that the `GetMaxConcurrentThreads` extension method clamps thread count within valid range [1, 100]
+- `ValidateShouldEnableDetailedLogging(this SqlQueryAnalyzerOptions value)` - Validates that the `ShouldEnableDetailedLogging` extension method returns database connection logging setting
+- `ValidateGetIgnorePatterns(this SqlQueryAnalyzerOptions value)` - Validates that the `GetIgnorePatterns` extension method returns analysis ignore patterns correctly
+- `ValidateShouldAnalyzeExecutionPlans(this SqlQueryAnalyzerOptions value)` - Validates that the `ShouldAnalyzeExecutionPlans` extension method returns analysis execution plan setting
+- `ValidateGetMaxQueryLength(this SqlQueryAnalyzerOptions value)` - Validates that the `GetMaxQueryLength` extension method returns at least the minimum query length (1024)
+- `ValidateSqlQueryAnalyzerOptionsExtensions(this SqlQueryAnalyzerOptions value)` - Validates all extension methods and returns a combined list of all validation problems
+- `AreSqlQueryAnalyzerOptionsExtensionsValid(this SqlQueryAnalyzerOptions value)` - Determines whether all extension methods work correctly by checking if validation returns no problems
+- `EnsureSqlQueryAnalyzerOptionsExtensionsAreValid(this SqlQueryAnalyzerOptions value)` - Ensures all extension methods work correctly, throwing an exception if any validation fails
+
+
+
+---
+
+
+
 ## ErrorHandlingMiddlewareValidation
 
 The `ErrorHandlingMiddlewareValidation` class provides validation helpers for the `ErrorHandlingMiddleware` and related error handling types. It offers extension methods for validating middleware instances, error reports, and degradation strategies, returning validation errors or boolean validation status. Methods are provided for both validation with error collection and exception-throwing validation.
