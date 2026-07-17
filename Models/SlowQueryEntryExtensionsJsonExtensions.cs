@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 namespace SqlQueryAnalyzer.Models;
 
 /// <summary>
-/// Provides System.Text.Json serialization extensions for <see cref="SlowQueryEntryExtensions"/>
+/// Provides System.Text.Json serialization extensions for <see cref="SlowQueryEntry"/>
 /// to enable JSON serialization of <see cref="SlowQueryEntry"/> instances.
 /// </summary>
 public static class SlowQueryEntryExtensionsJsonExtensions
@@ -37,9 +37,10 @@ public static class SlowQueryEntryExtensionsJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented
-            ? new JsonSerializerOptions(_jsonSerializerOptions) { WriteIndented = true }
-            : _jsonSerializerOptions;
+        var options = new JsonSerializerOptions(_jsonSerializerOptions)
+        {
+            WriteIndented = indented
+        };
 
         return JsonSerializer.Serialize(value, options);
     }
