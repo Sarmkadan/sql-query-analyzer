@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SqlQueryAnalyzer.Models;
 
@@ -47,7 +46,7 @@ public static class QueryStatisticsValidation
             var calculatedAverage = TimeSpan.FromTicks(value.TotalExecutionTime.Ticks / value.ExecutionCount);
             if (value.MinimumExecutionTime > calculatedAverage || value.MaximumExecutionTime < calculatedAverage)
             {
-                problems.Add("MinimumExecutionTime and MaximumExecutionTime must be within bounds of the average execution time.");
+                problems.Add("MinimumExecutionTime must not exceed average execution time and MaximumExecutionTime must not be less than average execution time.");
             }
         }
 
@@ -85,7 +84,7 @@ public static class QueryStatisticsValidation
 
         if (value.MaxRowsReturned > 0 && value.AverageRowsReturned > value.MaxRowsReturned)
         {
-            problems.Add("AverageRowsReturned cannot exceed MaxRowsReturned.");
+            problems.Add("AverageRowsReturned must not exceed MaxRowsReturned.");
         }
 
         // Validate time metrics
@@ -112,33 +111,33 @@ public static class QueryStatisticsValidation
 
         if (value.AverageMemoryUsageMB > value.PeakMemoryUsageMB)
         {
-            problems.Add("AverageMemoryUsageMB cannot exceed PeakMemoryUsageMB.");
+            problems.Add("AverageMemoryUsageMB must not exceed PeakMemoryUsageMB.");
         }
 
         // Validate timestamps
-        var defaultDate = default(DateTime);
-        if (value.LastCompilationTime == defaultDate)
+        if (value.LastCompilationTime == default)
         {
             problems.Add("LastCompilationTime must be a valid non-default DateTime.");
         }
 
-        if (value.FirstExecution == defaultDate)
+        if (value.FirstExecution == default)
         {
             problems.Add("FirstExecution must be a valid non-default DateTime.");
         }
 
-        if (value.LastCompilationTime > DateTime.UtcNow.AddHours(1))
+        var utcNow = DateTime.UtcNow;
+        if (value.LastCompilationTime > utcNow.AddHours(1))
         {
             problems.Add("LastCompilationTime cannot be in the future.");
         }
 
-        if (value.FirstExecution > DateTime.UtcNow.AddHours(1))
+        if (value.FirstExecution > utcNow.AddHours(1))
         {
             problems.Add("FirstExecution cannot be in the future.");
         }
 
         // Validate cache key
-        if (value.IsCached && string.IsNullOrEmpty(value.CacheKey))
+        if (value.IsCached && string.IsNullOrWhiteSpace(value.CacheKey))
         {
             problems.Add("CacheKey must be non-empty when IsCached is true.");
         }
