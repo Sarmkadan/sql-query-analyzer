@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SqlQueryAnalyzer.Models;
 using SqlQueryAnalyzer.Services;
+using SqlQueryAnalyzer.CLI;
 
 namespace SqlQueryAnalyzer.Middleware
 {
@@ -25,11 +26,9 @@ namespace SqlQueryAnalyzer.Middleware
         public static AnalysisPipeline UseLogging(this AnalysisPipeline pipeline, ILogger<LoggingMiddleware>? logger = null)
         {
             ArgumentNullException.ThrowIfNull(pipeline);
-
             pipeline.RegisterMiddleware(logger is null
                 ? new LoggingMiddleware(NullLogger<LoggingMiddleware>.Instance)
                 : new LoggingMiddleware(logger));
-
             return pipeline;
         }
 
@@ -43,11 +42,9 @@ namespace SqlQueryAnalyzer.Middleware
         public static AnalysisPipeline UseValidation(this AnalysisPipeline pipeline, ILogger<ValidationMiddleware>? logger = null)
         {
             ArgumentNullException.ThrowIfNull(pipeline);
-
             pipeline.RegisterMiddleware(logger is null
                 ? new ValidationMiddleware(NullLogger<ValidationMiddleware>.Instance)
                 : new ValidationMiddleware(logger));
-
             return pipeline;
         }
 
@@ -61,11 +58,9 @@ namespace SqlQueryAnalyzer.Middleware
         public static AnalysisPipeline UseNormalization(this AnalysisPipeline pipeline, ILogger<QueryNormalizationMiddleware>? logger = null)
         {
             ArgumentNullException.ThrowIfNull(pipeline);
-
             pipeline.RegisterMiddleware(logger is null
                 ? new QueryNormalizationMiddleware(NullLogger<QueryNormalizationMiddleware>.Instance)
                 : new QueryNormalizationMiddleware(logger));
-
             return pipeline;
         }
 
@@ -99,11 +94,9 @@ namespace SqlQueryAnalyzer.Middleware
         public static AnalysisPipeline UseOptimization(this AnalysisPipeline pipeline, ILogger<OptimizationMiddleware>? logger = null)
         {
             ArgumentNullException.ThrowIfNull(pipeline);
-
             pipeline.RegisterMiddleware(logger is null
                 ? new OptimizationMiddleware(NullLogger<OptimizationMiddleware>.Instance)
                 : new OptimizationMiddleware(logger));
-
             return pipeline;
         }
 
@@ -120,7 +113,7 @@ namespace SqlQueryAnalyzer.Middleware
             ArgumentNullException.ThrowIfNull(pipeline);
             ArgumentException.ThrowIfNullOrWhiteSpace(query);
 
-            var context = new global::SqlQueryAnalyzer.CLI.AnalysisContext { Query = query };
+            var context = new AnalysisContext { Query = query };
             await pipeline.ExecuteAsync(context).ConfigureAwait(false);
             return context.Result ?? throw new InvalidOperationException("Analysis failed to produce a result");
         }
@@ -199,7 +192,7 @@ namespace SqlQueryAnalyzer.Middleware
         /// <param name="context">The analysis context containing query and configuration.</param>
         /// <returns>True if pipeline completed successfully; false if execution was halted.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="pipeline"/> or <paramref name="context"/> is null.</exception>
-        public static async Task<bool> ExecuteWithSuccessCheckAsync(this AnalysisPipeline pipeline, global::SqlQueryAnalyzer.CLI.AnalysisContext context)
+        public static async Task<bool> ExecuteWithSuccessCheckAsync(this AnalysisPipeline pipeline, AnalysisContext context)
         {
             ArgumentNullException.ThrowIfNull(pipeline);
             ArgumentNullException.ThrowIfNull(context);
