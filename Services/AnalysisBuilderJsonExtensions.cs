@@ -3,7 +3,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System;
 using System.Collections.Generic;
@@ -113,14 +113,10 @@ public static class AnalysisBuilderJsonExtensions
     /// <param name="json">The JSON string to deserialize</param>
     /// <param name="value">Receives the AnalysisBuilder instance if successful</param>
     /// <returns>True if deserialization succeeded; otherwise, false</returns>
+    /// <exception cref="ArgumentException">Thrown when json is null or empty</exception>
     public static bool TryFromJson(string json, out AnalysisBuilder? value)
     {
-        value = null;
-
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return false;
-        }
+        ArgumentException.ThrowIfNullOrEmpty(json);
 
         try
         {
@@ -129,6 +125,7 @@ public static class AnalysisBuilderJsonExtensions
         }
         catch (JsonException)
         {
+            value = null;
             return false;
         }
     }
