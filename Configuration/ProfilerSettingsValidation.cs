@@ -19,7 +19,6 @@ public static class ProfilerSettingsValidation
 {
     /// <summary>
     /// Validates the provided <see cref="ProfilerSettings"/> instance.
-    /// Returns a list of human-readable validation errors.
     /// </summary>
     /// <param name="value">The settings to validate.</param>
     /// <returns>List of validation errors; empty if valid.</returns>
@@ -29,10 +28,6 @@ public static class ProfilerSettingsValidation
         ArgumentNullException.ThrowIfNull(value);
 
         var errors = new List<string>();
-
-        // Validate boolean flags - these are always valid as they're just true/false
-        // No validation needed for CaptureExecutionPlanByDefault, CaptureTimingsByDefault,
-        // CaptureResourceUsageByDefault, IncludePlanVisualizationByDefault
 
         // Validate numeric limits
         if (value.DefaultMaxDurationMs < 100)
