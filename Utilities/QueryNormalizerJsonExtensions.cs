@@ -90,4 +90,26 @@ public static class QueryNormalizerJsonExtensions
             return false;
         }
     }
+
+    /// <summary>
+    /// Serializes a parameterized query representation to JSON.
+    /// </summary>
+    /// <param name="query">The SQL query to parameterize and serialize.</param>
+    /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
+    /// <returns>A JSON string containing the parameterized query.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="query"/> is null.</exception>
+    public static string ToParameterizedJson(this QueryNormalizer? normalizer, string query, bool indented = false)
+    {
+        ArgumentNullException.ThrowIfNull(normalizer);
+        ArgumentNullException.ThrowIfNull(query);
+
+        var parameterized = normalizer.ToParameterizedQuery(query);
+        var result = new { ParameterizedQuery = parameterized };
+
+        var options = indented
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            : _jsonOptions;
+
+        return JsonSerializer.Serialize(result, options);
+    }
 }

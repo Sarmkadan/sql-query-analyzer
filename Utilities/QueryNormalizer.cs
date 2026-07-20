@@ -160,10 +160,11 @@ public partial class QueryNormalizer
     /// <summary>
     /// Uses a single alternation regex instead of one Regex.Replace call per keyword,
     /// reducing keyword capitalization from O(k) passes to O(1).
+    /// Lowercases keywords outside string literals as per PR requirements.
     /// </summary>
     private static string StandardizeKeywordCapitalization(string query)
     {
-        return SqlKeywordsRegex().Replace(query, static m => m.Value.ToUpperInvariant());
+        return SqlKeywordsRegex().Replace(query, static m => m.Value.ToLowerInvariant());
     }
 
     private static string NormalizeLineBreaks(string query)
@@ -213,12 +214,15 @@ public partial class QueryNormalizer
         foreach (var part in columnList.Split(','))
         {
             var col = part.Trim();
-            if (col == "*") continue;
 
             var asMatch = ColumnAliasRegex().Match(col);
             if (asMatch.Success)
             {
                 columns.Add(asMatch.Groups[1].Value);
+            }
+            else if (col == "*")
+            {
+                columns.Add("*");
             }
             else
             {
@@ -236,4 +240,50 @@ public partial class QueryNormalizer
     /// Uses FrozenSet for O(1) lookup — suitable for hot-path validation.
     /// </summary>
     public static bool IsSqlKeyword(string token) => s_sqlKeywords.Contains(token);
+
+    /// <summary>
+    /// Parameterizes a SQL query by replacing numeric and string literals with ? placeholders.
+    /// This is useful for creating consistent query representations for comparison and caching.
+    /// The query is normalized (lowercase keywords, comments removed, whitespace collapsed) before parameterization.
+    /// </summary>
+    /// <param name="query">The SQL query to parameterize.</param>
+    /// <returns>A parameterized version of the query with literals replaced by ? placeholders.</returns>
+    public string ToParameterizedQuery(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return string.Empty;
+
+        // First normalize the query (lowercase keywords, remove comments, collapse whitespace)
+        var normalized = Normalize(query);
+
+        // Then parameterize the normalized query
+        var (working, literals) = ExtractAndReplaceLiterals(normalized);
+
+        // Replace numeric literals with ?
+        working = ReplaceNumericLiterals(working);
+
+        // Replace all string literal placeholders with ? (don't restore original values)
+        foreach (var placeholder in literals.Keys)
+        {
+            working = working.Replace(placeholder, "?");
+        }
+
+        return working.Trim();
+    }
+
+    /// <summary>
+    /// Replaces all numeric literals (integers and decimals) with ? placeholders.
+    /// </summary>
+    private static string ReplaceNumericLiterals(string query)
+    {
+        // Match integers, decimals, and scientific notation
+        // Pattern: word boundary, optional sign followed by digits, optional decimal point with digits, optional exponent
+        var result = System.Text.RegularExpressions.Regex.Replace(
+            query,
+            @"\b-?\d+(\.\d+)?([eE][+-]?\d+)?\b",
+            "?"
+        );
+        return result;
+    }
+
 }

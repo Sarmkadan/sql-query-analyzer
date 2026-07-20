@@ -55,4 +55,20 @@ public static class QueryNormalizerExtensions
         ArgumentException.ThrowIfNullOrEmpty(query);
         return normalizer.ExtractColumnNames(query);
     }
+
+    /// <summary>
+    /// Parameterizes a SQL query by replacing numeric and string literals with ? placeholders.
+    /// Returns the parameterized query as a trimmed string.
+    /// </summary>
+    /// <param name="normalizer">The <see cref="QueryNormalizer"/> instance.</param>
+    /// <param name="query">The SQL query to parameterize.</param>
+    /// <returns>The parameterized, trimmed SQL query. Returns <see cref="string.Empty"/> if the input is null, empty, or whitespace.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="normalizer"/> is null.</exception>
+    public static string ToParameterizedQueryAndTrim(this QueryNormalizer normalizer, string query)
+    {
+        ArgumentNullException.ThrowIfNull(normalizer);
+        return string.IsNullOrWhiteSpace(query)
+            ? string.Empty
+            : normalizer.ToParameterizedQuery(query).Trim();
+    }
 }
