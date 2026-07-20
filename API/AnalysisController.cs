@@ -6,6 +6,8 @@
 // =============================================================================
 
 using Microsoft.Extensions.Logging;
+using SqlQueryAnalyzer.Constants;
+using SqlQueryAnalyzer.DTOs;
 using SqlQueryAnalyzer.Models;
 using SqlQueryAnalyzer.Services;
 
@@ -27,6 +29,138 @@ public sealed class AnalysisController
     {
         _analyzerService = analyzerService;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Analyzes multiple queries in batch using AnalysisRequestDto objects.
+    /// POST /api/analyze/batch/advanced
+    /// Accepts an array of AnalysisRequestDto objects, runs the pipeline per query,
+    /// returns per-query results plus summary counts.
+    /// </summary>
+    public async Task<ApiResponse<BatchAnalysisResponseDto>> AnalyzeAdvancedBatchAsync(List<AnalysisRequestDto> requests)
+    {
+        try
+        {
+            if (requests == null || requests.Count == 0)
+            {
+                return new ApiResponse<BatchAnalysisResponseDto>
+                {
+                    Success = false,
+                    Message = "At least one request is required",
+                    StatusCode = 400
+                };
+            }
+
+            if (requests.Count > 100)
+            {
+                return new ApiResponse<BatchAnalysisResponseDto>
+                {
+                    Success = false,
+                    Message = "Batch size cannot exceed 100 queries",
+                    StatusCode = 400
+                };
+            }
+
+            _logger.LogInformation($"Advanced batch analyzing {requests.Count} queries");
+
+            var results = new List<AnalysisResponseDto>();
+            var errors = new List<string>();
+            var totalAnalysisTimeMs = 0L;
+            var totalScore = 0.0;
+            var nPlusOnePatterns = new List<string>();
+
+            foreach (var request in requests)
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(request.QueryText))
+                    {
+                        errors.Add("Query cannot be empty");
+                        continue;
+                    }
+
+                    var startTime = DateTime.UtcNow;
+                    var result = await _analyzerService.AnalyzeQueryAsync(request.QueryText);
+                    var analysisTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+
+                    totalAnalysisTimeMs += analysisTimeMs;
+
+                    var responseDto = new AnalysisResponseDto
+                    {
+                        QueryId = result.QueryId,
+                        PerformanceScore = result.PerformanceScore,
+                        ComplexityLevel = result.Complexity.ToString(),
+                        IssueCount = result.Issues.Count,
+                        CriticalIssueCount = result.Issues.Count(i => i.Severity == IssueSeverity.Critical),
+                        Issues = result.Issues.Select(i => new PerformanceIssueDto
+                        {
+                            IssueType = i.IssueType.ToString(),
+                            Severity = i.Severity.ToString(),
+                            Description = i.Description,
+                            EstimatedImpact = i.EstimatedPerformanceImpact,
+                            RecommendedFix = i.RecommendedFix,
+                            Priority = i.Priority
+                        }).ToList(),
+                        IndexSuggestions = result.IndexSuggestions.Select(s => new IndexSuggestionDto
+                        {
+                            TableName = s.TableName,
+                            IndexName = s.IndexName,
+                            Columns = s.IndexColumns,
+                            IncludeColumns = s.IncludeColumns,
+                            EstimatedGain = s.EstimatedPerformanceGain,
+                            CreateScript = s.GeneratedCreateScript,
+                            AffectedQueries = s.AffectedQueries
+                        }).ToList(),
+                        Summary = result.GetSummary(),
+                        AnalysisTimeMs = analysisTimeMs
+                    };
+
+                    results.Add(responseDto);
+                    totalScore += result.PerformanceScore;
+
+                    if (result.Issues.Any(i => i.IssueType == IssueType.NPlusOne))
+                    {
+                        nPlusOnePatterns.Add(result.QueryId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to analyze query in batch");
+                    errors.Add($"Query failed: {ex.Message}");
+                }
+            }
+
+            var batchResponse = new BatchAnalysisResponseDto
+            {
+                TotalQueries = requests.Count,
+                SuccessfulAnalyses = results.Count,
+                FailedAnalyses = errors.Count,
+                Results = results,
+                NPlusOnePatterns = nPlusOnePatterns,
+                AverageScore = results.Count > 0 ? totalScore / results.Count : 0,
+                TotalAnalysisTimeMs = totalAnalysisTimeMs
+            };
+
+            return new ApiResponse<BatchAnalysisResponseDto>
+            {
+                Success = errors.Count == 0,
+                Data = batchResponse,
+                Message = errors.Count == 0
+                    ? $"Analyzed {results.Count} queries successfully"
+                    : $"Analyzed {results.Count} queries with {errors.Count} failures",
+                StatusCode = errors.Count == 0 ? 200 : 207
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Advanced batch analysis failed");
+            return new ApiResponse<BatchAnalysisResponseDto>
+            {
+                Success = false,
+                Message = $"Advanced batch analysis failed: {ex.Message}",
+                StatusCode = 500
+            };
+        }
     }
 
     /// <summary>
