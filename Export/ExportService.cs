@@ -31,6 +31,7 @@ public sealed class ExportService
         RegisterFormatter("xml", new XmlResultFormatter());
         RegisterFormatter("html", new HtmlResultFormatter());
         RegisterFormatter("text", new TextResultFormatter());
+        RegisterFormatter("md", new MarkdownResultFormatter());
     }
 
     /// <summary>
