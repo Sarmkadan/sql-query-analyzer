@@ -1,108 +1,19 @@
-#nullable enable
-// =============================================================================
-// Author: Vladyslav Zaiets | https://sarmkadan.com
-// CTO & Software Architect
-// =============================================================================
+using System;
+using SqlQueryAnalyzer.Utilities;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using SqlQueryAnalyzer.Configuration;
-using SqlQueryAnalyzer.Services;
-using SqlQueryAnalyzer.Repositories;
-using SqlQueryAnalyzer.Models;
-using SqlQueryAnalyzer.Visualization;
+Console.WriteLine("Query1: SELECT * FROM Users WHERE Id IN (SELECT UserId FROM ActiveUsers)");
+var tables1 = SqlPatternAnalyzer.ExtractTablesFromQuery("SELECT * FROM Users WHERE Id IN (SELECT UserId FROM ActiveUsers)");
+Console.WriteLine($"Tables: {string.Join(", ", tables1)}");
+Console.WriteLine($"Count: {tables1.Count}");
 
-namespace SqlQueryAnalyzer;
+Console.WriteLine();
+Console.WriteLine("Query2: SELECT * FROM Users WHERE Id IN (SELECT UserId FROM Orders) AND DeptId IN (SELECT DeptId FROM Departments)");
+var tables2 = SqlPatternAnalyzer.ExtractTablesFromQuery("SELECT * FROM Users WHERE Id IN (SELECT UserId FROM Orders) AND DeptId IN (SELECT DeptId FROM Departments)");
+Console.WriteLine($"Tables: {string.Join(", ", tables2)}");
+Console.WriteLine($"Count: {tables2.Count}");
 
-class Program
-{
-    static async Task Main(string[] args)
-    {
-        // Build configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-            .AddEnvironmentVariables(prefix: "SQA_")
-            .Build();
-
-        var services = new ServiceCollection();
-
-        // Register configuration
-        services.AddOptions<SqlQueryAnalyzerOptions>()
-            .Bind(configuration.GetSection(SqlQueryAnalyzerOptions.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        // Configure logging
-        services.AddLogging(config =>
-        {
-            config.AddConfiguration(configuration.GetSection("Logging"));
-            config.AddConsole();
-            config.SetMinimumLevel(LogLevel.Information);
-        });
-
-        // Register configuration
-        services.AddSingleton<IConnectionConfiguration, SqlServerConfiguration>();
-
-        services.AddSingleton(ProfilerSettings.ForDevelopment());
-
-        // Register repositories
-        services.AddSingleton<IQueryRepository, QueryRepository>();
-        services.AddSingleton<IAnalysisRepository, AnalysisRepository>();
-        services.AddSingleton<IIndexRepository, IndexRepository>();
-
-        // Register services
-        services.AddSingleton<IQueryAnalyzerService, QueryAnalyzerService>();
-        services.AddSingleton<IIndexAnalyzerService, IndexAnalyzerService>();
-        services.AddSingleton<IQueryPlanAnalyzerService, QueryPlanAnalyzerService>();
-        services.AddSingleton<IPerformanceIssueDetectorService, PerformanceIssueDetectorService>();
-        services.AddSingleton<IExplainPlanParserService, ExplainPlanParserService>();
-        services.AddSingleton<IHtmlPlanVisualizer, HtmlPlanVisualizer>();
-        services.AddSingleton<IIndexRecommendationEngine, IndexRecommendationEngine>();
-        services.AddSingleton<ISlowQueryLogParser, SlowQueryLogParser>();
-
-        var serviceProvider = services.BuildServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-
-        try
-        {
-            logger.LogInformation("Starting SQL Query Analyzer v1.0.0");
-
-            var analyzer = serviceProvider.GetRequiredService<IQueryAnalyzerService>();
-
-            // Example usage
-            await RunAnalysisExample(analyzer, logger);
-
-            logger.LogInformation("Analysis completed successfully");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Application terminated with error");
-            Environment.Exit(1);
-        }
-    }
-
-    // Demonstrate basic analyzer usage
-    static async Task RunAnalysisExample(IQueryAnalyzerService analyzer, ILogger logger)
-    {
-        var sampleQueries = new[]
-        {
-            "SELECT * FROM Orders o JOIN Customers c ON o.CustomerId = c.Id WHERE c.Country = 'USA'",
-            "SELECT OrderId, CustomerId FROM Orders WHERE OrderDate > GETDATE() - 30",
-            "SELECT DISTINCT c.Id FROM Customers c WHERE NOT EXISTS (SELECT 1 FROM Orders o WHERE o.CustomerId = c.Id)"
-        };
-
-        foreach (var query in sampleQueries)
-        {
-            logger.LogInformation($"Analyzing: {query.Substring(0, Math.Min(60, query.Length))}...");
-            var result = await analyzer.AnalyzeQueryAsync(query);
-
-            logger.LogInformation($"Issues found: {result.Issues.Count}");
-            foreach (var issue in result.Issues)
-            {
-                logger.LogWarning($"  - {issue.IssueType}: {issue.Description}");
-            }
-        }
-    }
-}
+Console.WriteLine();
+Console.WriteLine("Query3: SELECT u.Name, o.Total FROM Users u JOIN Orders o ON u.Id = o.UserId WHERE u.Name = 'John' AND o.Status = 'Active'");
+var tables3 = SqlPatternAnalyzer.ExtractTablesFromQuery("SELECT u.Name, o.Total FROM Users u JOIN Orders o ON u.Id = o.UserId WHERE u.Name = 'John' AND o.Status = 'Active'");
+Console.WriteLine($"Tables: {string.Join(", ", tables3)}");
+Console.WriteLine($"Count: {tables3.Count}");
