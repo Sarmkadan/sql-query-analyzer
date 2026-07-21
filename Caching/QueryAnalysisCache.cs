@@ -24,6 +24,11 @@ public sealed class QueryAnalysisCache
     private readonly int _maxEntries;
     private readonly TimeSpan _entryTtl;
 
+    // Singleton instance for static access
+    private static QueryAnalysisCache? _instance;
+
+    public static QueryAnalysisCache Instance => _instance ?? throw new InvalidOperationException("QueryAnalysisCache not initialized. Register with DI first.");
+
     public QueryAnalysisCache(
         ILogger<QueryAnalysisCache> logger,
         QueryCacheKeyGenerator keyGenerator,
@@ -34,6 +39,14 @@ public sealed class QueryAnalysisCache
         _keyGenerator = keyGenerator;
         _maxEntries = maxEntries;
         _entryTtl = TimeSpan.FromSeconds(ttlSeconds);
+    }
+
+    /// <summary>
+    /// Sets the singleton instance (for DI integration).
+    /// </summary>
+    internal static void SetInstance(QueryAnalysisCache cache)
+    {
+        _instance = cache;
     }
 
     /// <summary>

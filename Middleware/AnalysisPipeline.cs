@@ -7,6 +7,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SqlQueryAnalyzer.CLI;
+using SqlQueryAnalyzer.Caching;
 using SqlQueryAnalyzer.Services;
 using SqlQueryAnalyzer.Utilities;
 
@@ -35,6 +36,7 @@ public class AnalysisPipeline
         RegisterMiddleware(new LoggingMiddleware(NullLogger<LoggingMiddleware>.Instance));
         RegisterMiddleware(new ValidationMiddleware(NullLogger<ValidationMiddleware>.Instance));
         RegisterMiddleware(new QueryNormalizationMiddleware(NullLogger<QueryNormalizationMiddleware>.Instance));
+        RegisterMiddleware(new CachingMiddleware(QueryAnalysisCache.Instance, NullLogger<CachingMiddleware>.Instance));
         RegisterMiddleware(new AnalysisMiddleware(analyzer, NullLogger<AnalysisMiddleware>.Instance));
         RegisterMiddleware(new OptimizationMiddleware(NullLogger<OptimizationMiddleware>.Instance));
     }
@@ -251,6 +253,9 @@ public class OptimizationMiddleware : IAnalysisMiddleware
 
         try
         {
+            // Store result in cache after analysis
+            QueryAnalysisCache.Instance.Set(context.Query, context.Result);
+
             // Apply severity filter if specified
             if (!string.IsNullOrEmpty(context.Arguments.FilterBySeverity))
             {
