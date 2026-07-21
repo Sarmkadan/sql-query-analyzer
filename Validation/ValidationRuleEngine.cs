@@ -37,6 +37,7 @@ public sealed class ValidationRuleEngine
         if (string.IsNullOrEmpty(query))
         {
             result.Errors.Add("Query cannot be empty");
+            result.IsValid = false;
             return result;
         }
 
