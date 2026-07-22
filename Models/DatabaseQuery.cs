@@ -2,10 +2,11 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace SqlQueryAnalyzer.Models;
 
@@ -87,9 +88,16 @@ public sealed class DatabaseQuery
         ReferencedTables.Count > 0;
 
     // Parse query text and extract basic information
+    /// <summary>
+    /// Parses the query text and extracts metadata including query type, referenced tables,
+    /// join conditions, and WHERE clauses.
+    /// </summary>
+    /// <exception cref="ArgumentException">Thrown if QueryText is null or empty.</exception>
     public void Parse()
     {
-        // Normalize for analysis
+        ArgumentException.ThrowIfNullOrEmpty(QueryText);
+
+        // Normalize for analysis - remove comments and mask string literals before regex matching
         NormalizedQuery = NormalizeQuery(QueryText);
 
         // Count statements
@@ -106,6 +114,9 @@ public sealed class DatabaseQuery
 
         // Extract joins
         ExtractJoins();
+
+        // Extract WHERE conditions
+        ExtractWhere();
     }
 
     private void DetectQueryType()
@@ -128,62 +139,115 @@ public sealed class DatabaseQuery
             QueryType = QueryType.Procedure;
     }
 
+    private void ExtractWhere()
+    {
+        // Use timeout to prevent catastrophic backtracking
+        // Note: RegexOptions.NonBacktracking cannot be used with lookaheads, so we use timeout only
+        var wherePattern = @"WHERE\s+(.+?)(?=GROUP\s+BY|ORDER\s+BY|UNION\s+(ALL\s+)?|LIMIT|OFFSET|;|$)";
+        try
+        {
+            var whereRegex = new Regex(wherePattern, RegexOptions.IgnoreCase | RegexOptions.Singleline, TimeSpan.FromSeconds(1));
+            var whereMatch = whereRegex.Match(NormalizedQuery);
+
+            if (whereMatch.Success && whereMatch.Groups.Count > 1)
+            {
+                var whereClause = whereMatch.Groups[1].Value.Trim();
+                if (!string.IsNullOrWhiteSpace(whereClause))
+                {
+                    WhereConditions.Add(whereClause);
+                }
+            }
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            // Query is too complex to analyze - skip WHERE extraction
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            // Invalid regex pattern or other error - skip WHERE extraction
+        }
+    }
+
     private void ExtractTables()
     {
         // Extract CTE alias names first — they are virtual and must not be counted
         // as physical table references, which would cause false-positive N+1 detection.
         var ctePattern = @"\bWITH\s+(\w+)\s+AS\s*\(";
-        var cteRegex = new System.Text.RegularExpressions.Regex(ctePattern,
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-        var cteNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (System.Text.RegularExpressions.Match cteMatch in cteRegex.Matches(NormalizedQuery))
-            cteNames.Add(cteMatch.Groups[1].Value);
-
-        // Simple extraction - in real scenario would use proper SQL parser
-        var pattern = @"FROM\s+(\w+)|JOIN\s+(\w+)|INTO\s+(\w+)|UPDATE\s+(\w+)";
-        var regex = new System.Text.RegularExpressions.Regex(pattern,
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-        var matches = regex.Matches(NormalizedQuery);
-        var seenTables = new HashSet<string>();
-
-        foreach (System.Text.RegularExpressions.Match match in matches)
+        try
         {
-            // Group.Value is never null (it is "" for a non-participating group),
-            // so a ?? chain would always stop at Groups[1] and silently drop
-            // tables captured by the JOIN/INTO/UPDATE alternatives. Pick the
-            // group that actually matched instead.
-            var table = match.Groups[1].Success ? match.Groups[1].Value
-                      : match.Groups[2].Success ? match.Groups[2].Value
-                      : match.Groups[3].Success ? match.Groups[3].Value
-                      : match.Groups[4].Value;
-            if (!string.IsNullOrWhiteSpace(table) && !cteNames.Contains(table) && seenTables.Add(table))
-                ReferencedTables.Add(table);
+            var cteRegex = new Regex(ctePattern, RegexOptions.IgnoreCase | RegexOptions.NonBacktracking, TimeSpan.FromSeconds(1));
+            var cteNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (Match cteMatch in cteRegex.Matches(NormalizedQuery))
+            {
+                cteNames.Add(cteMatch.Groups[1].Value);
+            }
+
+            // Simple extraction - in real scenario would use proper SQL parser
+            var pattern = @"FROM\s+(\w+)|JOIN\s+(\w+)|INTO\s+(\w+)|UPDATE\s+(\w+)";
+            var regex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.NonBacktracking, TimeSpan.FromSeconds(1));
+
+            var matches = regex.Matches(NormalizedQuery);
+            var seenTables = new HashSet<string>();
+
+            foreach (Match match in matches)
+            {
+                // Group.Value is never null (it is "" for a non-participating group),
+                // so a ?? chain would always stop at Groups[1] and silently drop
+                // tables captured by the JOIN/INTO/UPDATE alternatives. Pick the
+                // group that actually matched instead.
+                var table = match.Groups[1].Success ? match.Groups[1].Value
+                    : match.Groups[2].Success ? match.Groups[2].Value
+                    : match.Groups[3].Success ? match.Groups[3].Value
+                    : match.Groups[4].Value;
+                if (!string.IsNullOrWhiteSpace(table) && !cteNames.Contains(table) && seenTables.Add(table))
+                    ReferencedTables.Add(table);
+            }
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            // Query is too complex to analyze - skip table extraction
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            // Invalid regex pattern or other error - skip table extraction
         }
     }
 
     private void ExtractJoins()
     {
         var pattern = @"(INNER\s+|LEFT\s+|RIGHT\s+|FULL\s+)?\s*JOIN\s+(.+?)\s+ON\s+(.+?)(?=WHERE|GROUP|ORDER|JOIN|$)";
-        var regex = new System.Text.RegularExpressions.Regex(pattern,
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-        var matches = regex.Matches(NormalizedQuery);
-        foreach (System.Text.RegularExpressions.Match match in matches)
+        try
         {
-            JoinConditions.Add(match.Groups[3].Value.Trim());
+            var regex = new Regex(pattern, RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+
+            var matches = regex.Matches(NormalizedQuery);
+            foreach (Match match in matches)
+            {
+                JoinConditions.Add(match.Groups[3].Value.Trim());
+            }
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            // Query is too complex to analyze - skip join extraction
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            // Invalid regex pattern or other error - skip join extraction
         }
     }
 
     private string NormalizeQuery(string query)
     {
         // Remove comments
-        var withoutComments = System.Text.RegularExpressions.Regex.Replace(query,
-            @"--[^\n]*|/\*[\s\S]*?\*/", " ");
+        var withoutComments = Regex.Replace(query,
+            @"--[^\n]*|/\*[\s\S]*?\*/",
+            " ",
+            RegexOptions.Multiline);
 
         // Remove extra whitespace
-        var normalized = System.Text.RegularExpressions.Regex.Replace(withoutComments,
-            @"\s+", " ");
+        var normalized = Regex.Replace(withoutComments,
+            @"\s+",
+            " ");
 
         return normalized.Trim();
     }
@@ -199,7 +263,7 @@ public sealed class DatabaseQuery
         using (var sha = System.Security.Cryptography.SHA256.Create())
         {
             var hash = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(NormalizedQuery));
-            QueryHash = System.Convert.ToBase64String(hash);
+            QueryHash = Convert.ToBase64String(hash);
         }
         return QueryHash;
     }
