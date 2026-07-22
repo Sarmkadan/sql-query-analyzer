@@ -3,15 +3,18 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace SqlQueryAnalyzer.Utilities;
 
 /// <summary>
-/// Provides validation extension methods for <see cref="QueryNormalizer"/> operations.
+/// Provides safe validation extension methods for <see cref="QueryNormalizer"/> operations.
+/// All methods include null/empty input validation and exception handling to prevent
+/// exceptions from propagating to callers.
 /// </summary>
 public static class QueryNormalizerValidation
 {
@@ -36,8 +39,10 @@ public static class QueryNormalizerValidation
             normalizedQuery = normalizer.Normalize(query);
             return true;
         }
-        catch
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // Log exception details in debug builds for diagnostics
+            System.Diagnostics.Debug.WriteLine($"Query normalization failed: {ex}");
             return false;
         }
     }
@@ -63,8 +68,10 @@ public static class QueryNormalizerValidation
             parameterizedQuery = normalizer.ToParameterizedQuery(query);
             return true;
         }
-        catch
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // Log exception details in debug builds for diagnostics
+            System.Diagnostics.Debug.WriteLine($"Query parameterization failed: {ex}");
             return false;
         }
     }
@@ -91,8 +98,10 @@ public static class QueryNormalizerValidation
             tableNames = [.. tables];
             return true;
         }
-        catch
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // Log exception details in debug builds for diagnostics
+            System.Diagnostics.Debug.WriteLine($"Table name extraction failed: {ex}");
             return false;
         }
     }
@@ -119,8 +128,10 @@ public static class QueryNormalizerValidation
             columnNames = [.. columns];
             return true;
         }
-        catch
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // Log exception details in debug builds for diagnostics
+            System.Diagnostics.Debug.WriteLine($"Column name extraction failed: {ex}");
             return false;
         }
     }
