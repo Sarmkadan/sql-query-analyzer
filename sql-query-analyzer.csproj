@@ -52,4 +52,9 @@
     <Compile Remove="tests/**/*.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="sql-query-analyzer.Tests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />  <!-- For Moq -->
+  </ItemGroup>
+
 </Project>

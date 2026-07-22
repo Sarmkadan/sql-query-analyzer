@@ -27,16 +27,26 @@ public class AnalysisPipeline
     public AnalysisPipeline(
         ILogger<AnalysisPipeline> logger,
         IQueryAnalyzerService analyzer)
+        : this(logger, analyzer, includeCachingMiddleware: true)
+    {
+    }
+
+    internal AnalysisPipeline(
+        ILogger<AnalysisPipeline> logger,
+        IQueryAnalyzerService analyzer,
+        bool includeCachingMiddleware = true)
     {
         _logger = logger;
         _analyzer = analyzer;
-
 
         // Register middleware in order of execution
         RegisterMiddleware(new LoggingMiddleware(NullLogger<LoggingMiddleware>.Instance));
         RegisterMiddleware(new ValidationMiddleware(NullLogger<ValidationMiddleware>.Instance));
         RegisterMiddleware(new QueryNormalizationMiddleware(NullLogger<QueryNormalizationMiddleware>.Instance));
-        RegisterMiddleware(new CachingMiddleware(QueryAnalysisCache.Instance, NullLogger<CachingMiddleware>.Instance));
+        if (includeCachingMiddleware)
+        {
+            RegisterMiddleware(new CachingMiddleware(QueryAnalysisCache.Instance, NullLogger<CachingMiddleware>.Instance));
+        }
         RegisterMiddleware(new AnalysisMiddleware(analyzer, NullLogger<AnalysisMiddleware>.Instance));
         RegisterMiddleware(new OptimizationMiddleware(NullLogger<OptimizationMiddleware>.Instance));
     }
