@@ -1,10 +1,11 @@
 #nullable enable
-
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
+using System.Collections.Concurrent;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Models;
 using SqlQueryAnalyzer.Utilities;
@@ -20,9 +21,11 @@ public sealed class QueryAnalysisCache
 {
     private readonly ILogger<QueryAnalysisCache> _logger;
     private readonly QueryCacheKeyGenerator _keyGenerator;
-    private readonly Dictionary<string, CacheEntry> _cache = new();
+    private readonly MemoryCache _cache;
     private readonly int _maxEntries;
     private readonly TimeSpan _entryTtl;
+    private readonly ConcurrentDictionary<string, CacheEntryMetadata> _metadata = new();
+    private readonly object _cacheLock = new();
 
     // Singleton instance for static access
     private static QueryAnalysisCache? _instance;
@@ -35,10 +38,21 @@ public sealed class QueryAnalysisCache
         int maxEntries = 1000,
         int ttlSeconds = 3600)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(keyGenerator);
+
         _logger = logger;
         _keyGenerator = keyGenerator;
         _maxEntries = maxEntries;
         _entryTtl = TimeSpan.FromSeconds(ttlSeconds);
+
+        // Configure MemoryCache with size limit and thread-safe operations
+        var cacheOptions = new MemoryCacheOptions
+        {
+            SizeLimit = maxEntries,
+            ExpirationScanFrequency = TimeSpan.FromSeconds(30)
+        };
+        _cache = new MemoryCache(cacheOptions);
     }
 
     /// <summary>
@@ -46,6 +60,7 @@ public sealed class QueryAnalysisCache
     /// </summary>
     internal static void SetInstance(QueryAnalysisCache cache)
     {
+        ArgumentNullException.ThrowIfNull(cache);
         _instance = cache;
     }
 
@@ -55,32 +70,32 @@ public sealed class QueryAnalysisCache
     /// </summary>
     public bool TryGetResult(string query, out QueryAnalysisResult? result)
     {
+        ArgumentException.ThrowIfNullOrEmpty(query);
+
         result = null;
 
         try
         {
             var key = _keyGenerator.GenerateQueryKey(query);
 
-            if (_cache.TryGetValue(key, out var entry))
+            if (_cache.TryGetValue<CacheEntry>(key, out var entry))
             {
-                // Check if entry has expired
-                if (DateTime.UtcNow - entry.CreatedAt > _entryTtl)
-                {
-                    _cache.Remove(key);
-                    _logger.LogDebug($"Cache entry expired: {key}");
-                    return false;
-                }
-
-                // Update access time for LRU
-                entry.LastAccessedAt = DateTime.UtcNow;
-                entry.AccessCount++;
+                // Update access metadata
+                _metadata.AddOrUpdate(key,
+                    _ => new CacheEntryMetadata { LastAccessedAt = DateTime.UtcNow, AccessCount = 1 },
+                    (_, existing) =>
+                    {
+                        existing.LastAccessedAt = DateTime.UtcNow;
+                        existing.AccessCount++;
+                        return existing;
+                    });
 
                 result = entry.Result;
-                _logger.LogDebug($"Cache hit for query. Key: {key}");
+                _logger.LogDebug("Cache hit for query. Key: {Key}", key);
                 return true;
             }
 
-            _logger.LogDebug($"Cache miss for query. Key: {key}");
+            _logger.LogDebug("Cache miss for query. Key: {Key}", key);
         }
         catch (Exception ex)
         {
@@ -96,32 +111,43 @@ public sealed class QueryAnalysisCache
     /// </summary>
     public void Set(string query, QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(result);
+
         try
         {
             var key = _keyGenerator.GenerateQueryKey(query);
 
-            // Remove old entry if exists
-            if (_cache.ContainsKey(key))
-            {
-                _cache.Remove(key);
-            }
-
-            // Evict LRU entries if at capacity
-            if (_cache.Count >= _maxEntries)
-            {
-                EvictLruEntry();
-            }
-
             var entry = new CacheEntry
             {
-                Key = key,
-                Result = result,
-                CreatedAt = DateTime.UtcNow,
-                LastAccessedAt = DateTime.UtcNow
+                Result = result
             };
 
-            _cache[key] = entry;
-            _logger.LogDebug($"Cached analysis result. Key: {key}, Size: {_cache.Count}/{_maxEntries}");
+            // Set with size = 1 (each entry counts as 1 unit toward limit)
+            var cacheOptions = new MemoryCacheEntryOptions
+            {
+                Size = 1,
+                Priority = CacheItemPriority.Normal,
+                AbsoluteExpirationRelativeToNow = _entryTtl
+            };
+
+            // Track eviction callbacks for LRU tracking
+            cacheOptions.RegisterPostEvictionCallback(EvictionCallback);
+
+            _cache.Set(key, entry, cacheOptions);
+
+            // Initialize or update metadata
+            _metadata.AddOrUpdate(key,
+                _ => new CacheEntryMetadata { LastAccessedAt = DateTime.UtcNow, AccessCount = 1 },
+                (_, existing) =>
+                {
+                    existing.LastAccessedAt = DateTime.UtcNow;
+                    existing.AccessCount++;
+                    return existing;
+                });
+
+            _logger.LogDebug("Cached analysis result. Key: {Key}, Size: {Current}/{Max}",
+                key, GetCacheCount(), _maxEntries);
         }
         catch (Exception ex)
         {
@@ -134,12 +160,16 @@ public sealed class QueryAnalysisCache
     /// </summary>
     public void Invalidate(string query)
     {
+        ArgumentException.ThrowIfNullOrEmpty(query);
+
         try
         {
             var key = _keyGenerator.GenerateQueryKey(query);
-            if (_cache.Remove(key))
+            if (_cache.TryGetValue<CacheEntry>(key, out _))
             {
-                _logger.LogDebug($"Cache invalidated for query. Key: {key}");
+                _cache.Remove(key);
+                _metadata.TryRemove(key, out _);
+                _logger.LogDebug("Cache invalidated for query. Key: {Key}", key);
             }
         }
         catch (Exception ex)
@@ -153,9 +183,13 @@ public sealed class QueryAnalysisCache
     /// </summary>
     public void Clear()
     {
-        var count = _cache.Count;
-        _cache.Clear();
-        _logger.LogInformation($"Cache cleared. {count} entries removed.");
+        lock (_cacheLock)
+        {
+            var count = GetCacheCount();
+            _cache.Clear();
+            _metadata.Clear();
+            _logger.LogInformation("Cache cleared. {Count} entries removed.", count);
+        }
     }
 
     /// <summary>
@@ -164,19 +198,20 @@ public sealed class QueryAnalysisCache
     /// </summary>
     public void RemoveExpiredEntries()
     {
-        var keysToRemove = _cache
-            .Where(kvp => DateTime.UtcNow - kvp.Value.CreatedAt > _entryTtl)
-            .Select(kvp => kvp.Key)
+        // MemoryCache automatically handles expiration during TryGetValue
+        // This method is kept for backward compatibility
+        var expiredKeys = _metadata.Keys
+            .Where(key => !_cache.TryGetValue<CacheEntry>(key, out _))
             .ToList();
 
-        foreach (var key in keysToRemove)
+        foreach (var key in expiredKeys)
         {
-            _cache.Remove(key);
+            _metadata.TryRemove(key, out _);
         }
 
-        if (keysToRemove.Count > 0)
+        if (expiredKeys.Count > 0)
         {
-            _logger.LogDebug($"Removed {keysToRemove.Count} expired cache entries");
+            _logger.LogDebug("Removed {Count} expired cache entries", expiredKeys.Count);
         }
     }
 
@@ -185,43 +220,64 @@ public sealed class QueryAnalysisCache
     /// </summary>
     public CacheStatistics GetStatistics()
     {
-        var hits = _cache.Values.Sum(e => e.AccessCount);
-        var misses = Math.Max(0, hits - _cache.Count);
+        var metadataValues = _metadata.Values.ToList();
+        var hits = metadataValues.Sum(e => e.AccessCount);
+        var totalEntries = GetCacheCount();
 
         return new CacheStatistics
         {
-            TotalEntries = _cache.Count,
+            TotalEntries = totalEntries,
             MaxEntries = _maxEntries,
             Hits = hits,
-            Misses = misses,
-            HitRate = hits > 0 ? (hits * 100.0) / (hits + misses) : 0,
-            AverageAccessCount = _cache.Count > 0 ? (double)hits / _cache.Count : 0,
-            OldestEntryAge = _cache.Count > 0
-                ? (DateTime.UtcNow - _cache.Values.Min(e => e.CreatedAt)).TotalSeconds
+            Misses = Math.Max(0, hits - totalEntries),
+            HitRate = hits > 0 ? (hits * 100.0) / (hits + Math.Max(0, totalEntries - hits)) : 0,
+            AverageAccessCount = metadataValues.Count > 0 ? (double)hits / metadataValues.Count : 0,
+            OldestEntryAge = metadataValues.Count > 0
+                ? (DateTime.UtcNow - metadataValues.Min(e => e.CreatedAt)).TotalSeconds
                 : 0
         };
     }
 
     /// <summary>
-    /// Evicts least-recently-used entry from cache.
+    /// Gets the current cache entry count safely (thread-safe).
     /// </summary>
-    private void EvictLruEntry()
+    private int GetCacheCount()
     {
-        if (_cache.Count == 0)
-            return;
+        // MemoryCache doesn't expose Count directly, so we track it via metadata
+        // This is more accurate anyway since it reflects actual cached entries
+        return _metadata.Count;
+    }
 
-        var lruEntry = _cache
-            .OrderBy(kvp => kvp.Value.LastAccessedAt)
-            .First();
+    /// <summary>
+    /// Evicts least-recently-used entry from cache.
+    /// Called automatically by MemoryCache when size limit is reached.
+    /// </summary>
+    private void EvictLruEntry(string key, object value, EvictionReason reason, object state)
+    {
+        if (reason == EvictionReason.Capacity)
+        {
+            _metadata.TryRemove(key, out _);
+            _logger.LogDebug("Evicted LRU cache entry: {Key}", key);
+        }
+    }
 
-        _cache.Remove(lruEntry.Key);
-        _logger.LogDebug($"Evicted LRU cache entry: {lruEntry.Key}");
+    /// <summary>
+    /// Callback for MemoryCache eviction events.
+    /// </summary>
+    private void EvictionCallback(object key, object value, EvictionReason reason, object state)
+    {
+        EvictLruEntry((string)key, value, reason, state);
     }
 
     /// <summary>
     /// Returns current cache size.
     /// </summary>
-    public int Count => _cache.Count;
+    public int Count => GetCacheCount();
+
+    /// <summary>
+    /// Gets the current cache entry count safely (thread-safe).
+    /// </summary>
+    public int SafeCount => GetCacheCount();
 }
 
 /// <summary>
@@ -229,9 +285,15 @@ public sealed class QueryAnalysisCache
 /// </summary>
 internal class CacheEntry
 {
-    public string Key { get; set; } = string.Empty;
     public QueryAnalysisResult Result { get; set; } = null!;
-    public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>
+/// Metadata about cache entries for LRU tracking and statistics.
+/// </summary>
+internal class CacheEntryMetadata
+{
+    public DateTime CreatedAt { get; } = DateTime.UtcNow;
     public DateTime LastAccessedAt { get; set; }
     public int AccessCount { get; set; }
 }

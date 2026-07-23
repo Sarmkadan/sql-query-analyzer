@@ -2,10 +2,11 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Security.Cryptography;
 using System.Text;
+using SqlQueryAnalyzer.Utilities;
 
 namespace SqlQueryAnalyzer.Utilities;
 
@@ -30,8 +31,7 @@ public class QueryCacheKeyGenerator
     /// </summary>
     public string GenerateQueryKey(string query)
     {
-        if (string.IsNullOrEmpty(query))
-            throw new ArgumentException("Query cannot be null or empty");
+        ArgumentException.ThrowIfNullOrEmpty(query);
 
         var normalized = NormalizeForHashing(query);
         var hash = ComputeHash(normalized);
@@ -44,8 +44,7 @@ public class QueryCacheKeyGenerator
     /// </summary>
     public string GenerateResultKey(string query)
     {
-        if (string.IsNullOrEmpty(query))
-            throw new ArgumentException("Query cannot be null or empty");
+        ArgumentException.ThrowIfNullOrEmpty(query);
 
         var normalized = NormalizeForHashing(query);
         var hash = ComputeHash(normalized);
@@ -58,6 +57,8 @@ public class QueryCacheKeyGenerator
     /// </summary>
     public string GenerateMetadataKey(string query, Dictionary<string, string>? parameters = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(query);
+
         var builder = new StringBuilder(query);
 
         if (parameters != null)
@@ -82,8 +83,9 @@ public class QueryCacheKeyGenerator
     /// </summary>
     public string GenerateBatchKey(string[] queries)
     {
-        if (queries == null || queries.Length == 0)
-            throw new ArgumentException("Query list cannot be null or empty");
+        ArgumentNullException.ThrowIfNull(queries);
+        if (queries.Length == 0)
+            throw new ArgumentException("Query list cannot be empty", nameof(queries));
 
         var combined = string.Join("|", queries.Select(q => ComputeHash(NormalizeForHashing(q))));
         var hash = ComputeHash(combined);
@@ -109,20 +111,20 @@ public class QueryCacheKeyGenerator
 
     /// <summary>
     /// Normalizes query for consistent hashing.
-    /// Removes whitespace variations that don't affect query logic.
+    /// Uses QueryNormalizer to ensure full normalization including parameterization.
     /// </summary>
     private string NormalizeForHashing(string input)
     {
-        // Convert to uppercase for case-insensitive hashing
-        var normalized = input.ToUpperInvariant();
+        if (string.IsNullOrEmpty(input))
+            return input;
 
-        // Remove excess whitespace
-        normalized = System.Text.RegularExpressions.Regex.Replace(normalized, @"\s+", " ");
-
-        // Trim leading/trailing spaces
-        normalized = normalized.Trim();
-
-        return normalized;
+        // Use QueryNormalizer for full normalization including:
+        // - Lowercase keywords
+        // - Parameterization (replaces literals with placeholders)
+        // - Comment removal
+        // - Whitespace normalization
+        var normalizer = new QueryNormalizer();
+        return normalizer.ToParameterizedQuery(input);
     }
 
     /// <summary>
@@ -131,6 +133,8 @@ public class QueryCacheKeyGenerator
     /// </summary>
     private string ComputeHash(string input)
     {
+        ArgumentException.ThrowIfNullOrEmpty(input);
+
         using var sha256 = SHA256.Create();
         var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
 
@@ -154,10 +158,10 @@ public class QueryCacheKeyGenerator
             return false;
 
         return key.StartsWith(KeyPrefix) &&
-               (key.Contains(QueryHashPrefix) ||
-                key.Contains(ResultHashPrefix) ||
-                key.Contains("meta:") ||
-                key.Contains("batch:"));
+            (key.Contains(QueryHashPrefix) ||
+             key.Contains(ResultHashPrefix) ||
+             key.Contains("meta:") ||
+             key.Contains("batch:"));
     }
 
     /// <summary>
