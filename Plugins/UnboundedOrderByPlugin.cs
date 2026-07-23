@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Constants;
 using SqlQueryAnalyzer.Models;
+using SqlQueryAnalyzer.Services;
 
 namespace SqlQueryAnalyzer.Plugins;
 
@@ -16,7 +17,7 @@ namespace SqlQueryAnalyzer.Plugins;
 /// which may indicate full result set sorting rather than paginated sorting.
 /// Flags ORDER BY without TOP/LIMIT/OFFSET-FETCH as potential full-sort operations.
 /// </summary>
-public class UnboundedOrderByPlugin : AnalysisPluginBase
+public class UnboundedOrderByPlugin : AnalysisPluginBase, IDetectorPlugin
 {
     private readonly ILogger<UnboundedOrderByPlugin>? _logger;
 
@@ -24,40 +25,34 @@ public class UnboundedOrderByPlugin : AnalysisPluginBase
     public override string Name => "Unbounded ORDER BY Detection Plugin";
     public override Version Version => new(1, 0, 0);
 
+    /// <inheritdoc />
+    public string RuleId => "unbounded-orderby";
+
     public UnboundedOrderByPlugin(ILogger<UnboundedOrderByPlugin>? logger = null)
     {
         _logger = logger;
     }
 
-    public override async Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
+    /// <inheritdoc />
+    public IEnumerable<PerformanceIssue> Analyze(DatabaseQuery query)
     {
-        if (result.Query == null || string.IsNullOrWhiteSpace(result.Query))
-        {
-            _logger?.LogDebug("Query is null or empty, skipping Unbounded ORDER BY detection");
-            return result;
-        }
+        ArgumentNullException.ThrowIfNull(query);
 
-        var query = result.Query;
+        var queryText = query.QueryText;
+        var issues = new List<PerformanceIssue>();
 
-        // Skip analysis if plugin is disabled
-        if (!IsEnabled)
-        {
-            _logger?.LogDebug("Plugin {PluginName} is disabled, skipping", Name);
-            return result;
-        }
-
-        _logger?.LogDebug("Processing query for unbounded ORDER BY patterns: {QueryId}", result.QueryId);
+        _logger?.LogDebug("Processing query for unbounded ORDER BY patterns: {QueryId}", query.QueryId);
 
         // Find all ORDER BY clauses in the query using a simpler approach
         // Match ORDER BY followed by column list until end of statement
-        var orderByMatches = Regex.Matches(query,
+        var orderByMatches = Regex.Matches(queryText,
             @"ORDER\s+BY\s+([^;]*?)(?=\s*(?:;|$))",
             RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         if (orderByMatches.Count == 0)
         {
             _logger?.LogDebug("No ORDER BY clauses found in query");
-            return result;
+            return Enumerable.Empty<PerformanceIssue>();
         }
 
         foreach (Match match in orderByMatches)
@@ -73,12 +68,48 @@ public class UnboundedOrderByPlugin : AnalysisPluginBase
             }
 
             // Check if this ORDER BY has pagination (TOP/LIMIT/OFFSET-FETCH) before the ORDER BY
-            if (!HasPagination(query, match.Index))
+            if (!HasPagination(queryText, match.Index))
             {
                 var issue = CreateUnboundedOrderByIssue(orderByClause, match.Index);
-                result.Issues.Add(issue);
-                _logger?.LogInformation("Detected unbounded ORDER BY pattern in query {QueryId}", result.QueryId);
+                issues.Add(issue);
+                _logger?.LogInformation("Detected unbounded ORDER BY pattern in query {QueryId}", query.QueryId);
             }
+        }
+
+        return issues;
+    }
+
+    /// <inheritdoc />
+    public override async Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
+    {
+        if (string.IsNullOrWhiteSpace(result.Query))
+        {
+            _logger?.LogDebug("Query is null or empty, skipping Unbounded ORDER BY detection");
+            return result;
+        }
+
+        // Skip analysis if plugin is disabled
+        if (!IsEnabled)
+        {
+            _logger?.LogDebug("Plugin {PluginName} is disabled, skipping", Name);
+            return result;
+        }
+
+        _logger?.LogDebug("Processing query for unbounded ORDER BY patterns: {QueryId}", result.QueryId);
+
+        // Use the IDetectorPlugin.Analyze method to get issues
+        var queryObj = new DatabaseQuery { QueryText = result.Query };
+        var issues = Analyze(queryObj).ToList();
+
+        // Add issues to result
+        foreach (var issue in issues)
+        {
+            result.Issues.Add(issue);
+        }
+
+        if (issues.Count > 0)
+        {
+            _logger?.LogInformation("Detected {Count} unbounded ORDER BY pattern(s) in query {QueryId}", issues.Count, result.QueryId);
         }
 
         return await Task.FromResult(result);
@@ -87,6 +118,9 @@ public class UnboundedOrderByPlugin : AnalysisPluginBase
     /// <summary>
     /// Checks if the query has pagination clauses (TOP/LIMIT/OFFSET-FETCH) that bound the result set.
     /// </summary>
+    /// <param name="query">The full query text.</param>
+    /// <param name="orderByMatchIndex">The character position where ORDER BY starts.</param>
+    /// <returns>True if pagination is present; otherwise, false.</returns>
     private bool HasPagination(string query, int orderByMatchIndex)
     {
         // Check for TOP clause before ORDER BY
@@ -114,6 +148,9 @@ public class UnboundedOrderByPlugin : AnalysisPluginBase
     /// <summary>
     /// Creates a performance issue for unbounded ORDER BY pattern.
     /// </summary>
+    /// <param name="orderByClause">The ORDER BY clause text.</param>
+    /// <param name="matchIndex">The character position of the ORDER BY clause in the query.</param>
+    /// <returns>A performance issue with rule metadata and subsumption information.</returns>
     private PerformanceIssue CreateUnboundedOrderByIssue(string orderByClause, int matchIndex)
     {
         // Calculate line number from match index
@@ -138,6 +175,9 @@ public class UnboundedOrderByPlugin : AnalysisPluginBase
             ExampleFix = "SELECT column1, column2 FROM table_name ORDER BY column1 OFFSET 0 ROWS FETCH NEXT 100 ROWS ONLY"
         };
 
+        // Add rule identifier
+        issue.Metadata.Add("rule_id", RuleId);
+
         // Add detailed explanation to metadata
         issue.Metadata.Add("orderby_clause", orderByClause);
         issue.Metadata.Add("impact_reason",
@@ -148,6 +188,10 @@ public class UnboundedOrderByPlugin : AnalysisPluginBase
             "Always use pagination with ORDER BY when dealing with large result sets. " +
             "Use TOP/LIMIT/OFFSET-FETCH to limit the number of rows sorted.");
         issue.Metadata.Add("pattern", "unbounded-orderby");
+
+        // Mark that this issue subsumes the "missing-where-limit" issue for the same query span
+        // This prevents double-counting when both rules detect the same pattern
+        issue.Metadata.Add("subsumes_rules", "missing-where-limit");
 
         return issue;
     }
