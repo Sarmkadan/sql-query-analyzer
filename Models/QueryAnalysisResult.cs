@@ -81,6 +81,18 @@ public sealed class QueryAnalysisResult
     public Dictionary<string, object> Metadata { get; set; } = [];
 
     /// <summary>
+    /// Gets or sets the list of non-fatal failures recorded while running pipeline stages
+    /// or detectors that threw an exception or exceeded their execution budget.
+    /// </summary>
+    public List<AnalysisDiagnostic> Diagnostics { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets a value indicating whether one or more pipeline stages or detectors
+    /// failed and were skipped, meaning the result reflects only the stages that succeeded.
+    /// </summary>
+    public bool IsPartial { get; set; }
+
+    /// <summary>
     /// Gets the overall complexity score.
     /// Higher values indicate queries that are more costly to optimize.
     /// </summary>

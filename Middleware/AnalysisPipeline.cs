@@ -20,9 +20,22 @@ namespace SqlQueryAnalyzer.Middleware;
 /// </summary>
 public class AnalysisPipeline
 {
+    /// <summary>
+    /// Default execution budget granted to a single middleware stage before it is
+    /// treated as timed out and skipped.
+    /// </summary>
+    public static readonly TimeSpan DefaultMiddlewareTimeout = TimeSpan.FromSeconds(2);
+
     private readonly List<IAnalysisMiddleware> _middlewares = new();
     private readonly ILogger<AnalysisPipeline> _logger;
     private readonly IQueryAnalyzerService _analyzer;
+
+    /// <summary>
+    /// Gets or sets the maximum time a single middleware stage is allowed to run before
+    /// it is cancelled and recorded as a failed/timed-out diagnostic instead of aborting
+    /// the whole pipeline. Defaults to <see cref="DefaultMiddlewareTimeout"/>.
+    /// </summary>
+    public TimeSpan MiddlewareTimeout { get; set; } = DefaultMiddlewareTimeout;
 
     public AnalysisPipeline(
         ILogger<AnalysisPipeline> logger,
@@ -63,32 +76,75 @@ public class AnalysisPipeline
     /// <summary>
     /// Executes the complete analysis pipeline for a given context.
     /// Each middleware has opportunity to process or modify the context.
+    /// Every stage is isolated: an exception or timeout in one middleware is recorded
+    /// as a diagnostic on the result and execution continues with the remaining stages,
+    /// rather than aborting the whole analysis.
     /// </summary>
-    public async Task ExecuteAsync(AnalysisContext context)
+    /// <param name="context">The analysis context carried through the pipeline.</param>
+    /// <param name="cancellationToken">Token used to cancel the whole pipeline run. Does not affect per-middleware timeouts, which are governed by <see cref="MiddlewareTimeout"/>.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is null.</exception>
+    public async Task ExecuteAsync(AnalysisContext context, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         _logger.LogInformation("Starting analysis pipeline");
 
-        try
+        foreach (var middleware in _middlewares)
         {
-            foreach (var middleware in _middlewares)
-            {
-                if (!context.ShouldContinue)
-                {
-                    _logger.LogWarning("Pipeline execution halted by middleware");
-                    break;
-                }
+            cancellationToken.ThrowIfCancellationRequested();
 
-                _logger.LogDebug($"Executing middleware: {middleware.GetType().Name}");
-                await middleware.ExecuteAsync(context);
+            if (!context.ShouldContinue)
+            {
+                _logger.LogWarning("Pipeline execution halted by middleware");
+                break;
             }
 
-            _logger.LogInformation("Analysis pipeline completed successfully");
+            var middlewareName = middleware.GetType().Name;
+            _logger.LogDebug($"Executing middleware: {middlewareName}");
+
+            using var timeoutCts = new CancellationTokenSource(MiddlewareTimeout);
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+
+            try
+            {
+                await middleware.ExecuteAsync(context).WaitAsync(linkedCts.Token);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && timeoutCts.IsCancellationRequested)
+            {
+                var message = $"Middleware timed out after {MiddlewareTimeout.TotalMilliseconds:F0}ms";
+                _logger.LogError($"Middleware {middlewareName} timed out");
+                RecordDiagnostic(context, middlewareName, message, timedOut: true);
+            }
+            catch (OperationCanceledException)
+            {
+                // The caller's own cancellation token fired: this is a genuine abort request, not a fault to isolate.
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Middleware {middlewareName} failed");
+                RecordDiagnostic(context, middlewareName, ex.Message, timedOut: false);
+            }
         }
-        catch (Exception ex)
+
+        _logger.LogInformation("Analysis pipeline completed");
+    }
+
+    /// <summary>
+    /// Records a failed or timed-out middleware stage as a diagnostic entry on the
+    /// context's result, creating a placeholder result if analysis has not produced one yet,
+    /// and marks the analysis as partial.
+    /// </summary>
+    private static void RecordDiagnostic(AnalysisContext context, string ruleId, string message, bool timedOut)
+    {
+        context.Result ??= new Models.QueryAnalysisResult { Query = context.Query };
+        context.Result.IsPartial = true;
+        context.Result.Diagnostics.Add(new Models.AnalysisDiagnostic
         {
-            _logger.LogError(ex, "Pipeline execution failed");
-            throw;
-        }
+            RuleId = ruleId,
+            Message = message,
+            TimedOut = timedOut
+        });
     }
 
     /// <summary>
