@@ -84,6 +84,10 @@ public partial class QueryNormalizer
     [GeneratedRegex(@"([a-zA-Z_][a-zA-Z0-9_]*)\s+AS\s+([a-zA-Z_][a-zA-Z0-9_]*)", RegexOptions.IgnoreCase)]
     private static partial Regex ColumnAliasRegex();
 
+    // Matches integers, decimals, and scientific notation for numeric literal parameterization.
+    [GeneratedRegex(@"\b-?\d+(\.\d+)?([eE][+-]?\d+)?\b")]
+    private static partial Regex NumericLiteralRegex();
+
     /// <summary>
     /// Normalizes a SQL query by applying multiple transformations.
     /// Returns normalized query that's logically identical to input.
@@ -273,17 +277,9 @@ public partial class QueryNormalizer
 
     /// <summary>
     /// Replaces all numeric literals (integers and decimals) with ? placeholders.
+    /// Uses the source-generated <see cref="NumericLiteralRegex"/> instead of a runtime-compiled
+    /// pattern, keeping this in line with every other regex pass in this type.
     /// </summary>
-    private static string ReplaceNumericLiterals(string query)
-    {
-        // Match integers, decimals, and scientific notation
-        // Pattern: word boundary, optional sign followed by digits, optional decimal point with digits, optional exponent
-        var result = System.Text.RegularExpressions.Regex.Replace(
-            query,
-            @"\b-?\d+(\.\d+)?([eE][+-]?\d+)?\b",
-            "?"
-        );
-        return result;
-    }
+    private static string ReplaceNumericLiterals(string query) => NumericLiteralRegex().Replace(query, "?");
 
 }
