@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Constants;
 using SqlQueryAnalyzer.Models;
+using SqlQueryAnalyzer.Utilities;
 
 namespace SqlQueryAnalyzer.Plugins;
 
@@ -96,9 +97,8 @@ public class CartesianJoinPlugin : AnalysisPluginBase
     /// </summary>
     private bool IsImplicitCrossJoinPattern(string fromClause)
     {
-        // Normalize the clause: remove comments and extra whitespace
-        var normalized = RemoveComments(fromClause);
-        normalized = Regex.Replace(normalized, @"\s+", " ").Trim();
+        // Normalize the clause: remove comments and collapse whitespace via the shared normalizer.
+        var normalized = fromClause.RemoveSqlComments().NormalizeSqlWhitespace();
 
         // Count the number of tables (comma-separated)
         var tableCount = normalized.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Length;
@@ -117,20 +117,6 @@ public class CartesianJoinPlugin : AnalysisPluginBase
 
         // Check for CROSS JOIN (case-insensitive)
         return Regex.IsMatch(remainingQuery, @"CROSS\s+JOIN", RegexOptions.IgnoreCase);
-    }
-
-    /// <summary>
-    /// Removes SQL comments from the text to avoid false positives.
-    /// </summary>
-    private string RemoveComments(string text)
-    {
-        // Remove single-line comments (-- to end of line)
-        var result = Regex.Replace(text, @"--.*?(?=\r?\n|$)", "", RegexOptions.Multiline);
-
-        // Remove multi-line comments (/* ... */)
-        result = Regex.Replace(result, @"/\*.*?\*/", "", RegexOptions.Singleline);
-
-        return result;
     }
 
     /// <summary>

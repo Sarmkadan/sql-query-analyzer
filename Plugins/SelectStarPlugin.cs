@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Constants;
 using SqlQueryAnalyzer.Models;
+using SqlQueryAnalyzer.Utilities;
 
 namespace SqlQueryAnalyzer.Plugins;
 
@@ -85,9 +86,8 @@ public class SelectStarPlugin : AnalysisPluginBase
     /// </summary>
     private bool IsSelectStarPattern(string selectClause)
     {
-        // Normalize the clause: remove whitespace and comments
-        var normalized = RemoveComments(selectClause);
-        normalized = Regex.Replace(normalized, @"\s+", " ").Trim();
+        // Normalize the clause: remove comments and collapse whitespace via the shared normalizer.
+        var normalized = selectClause.RemoveSqlComments().NormalizeSqlWhitespace();
 
         // Check for SELECT * (case-insensitive)
         // Pattern: SELECT followed by * (with optional whitespace)
@@ -120,20 +120,6 @@ public class SelectStarPlugin : AnalysisPluginBase
         }
 
         return false;
-    }
-
-    /// <summary>
-    /// Removes SQL comments from the text to avoid false positives.
-    /// </summary>
-    private string RemoveComments(string text)
-    {
-        // Remove single-line comments (-- to end of line)
-        var result = Regex.Replace(text, @"--.*?(?=\r?\n|$)", "", RegexOptions.Multiline);
-
-        // Remove multi-line comments (/* ... */)
-        result = Regex.Replace(result, @"/\*.*?\*/", "", RegexOptions.Singleline);
-
-        return result;
     }
 
     /// <summary>

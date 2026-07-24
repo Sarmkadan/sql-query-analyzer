@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Constants;
 using SqlQueryAnalyzer.Models;
+using SqlQueryAnalyzer.Utilities;
 
 namespace SqlQueryAnalyzer.Plugins;
 
@@ -90,9 +91,8 @@ public class DistinctAbusePlugin : AnalysisPluginBase
     /// </summary>
     private bool HasJoinClauses(string queryAfterFrom)
     {
-        // Normalize the query: remove comments and extra whitespace
-        var normalized = RemoveComments(queryAfterFrom);
-        normalized = Regex.Replace(normalized, @"\s+", " ").Trim();
+        // Normalize the query: remove comments and collapse whitespace via the shared normalizer.
+        var normalized = queryAfterFrom.RemoveSqlComments().NormalizeSqlWhitespace();
 
         // Check for various JOIN patterns
         var hasExplicitJoin = Regex.IsMatch(normalized,
@@ -102,20 +102,6 @@ public class DistinctAbusePlugin : AnalysisPluginBase
         var hasCommaJoin = Regex.IsMatch(normalized, @",\s*\w+", RegexOptions.IgnoreCase);
 
         return hasExplicitJoin || hasCommaJoin;
-    }
-
-    /// <summary>
-    /// Removes SQL comments from the text to avoid false positives.
-    /// </summary>
-    private string RemoveComments(string text)
-    {
-        // Remove single-line comments (-- to end of line)
-        var result = Regex.Replace(text, @"--.*?(?=\r?\n|$)", "", RegexOptions.Multiline);
-
-        // Remove multi-line comments (/* ... */)
-        result = Regex.Replace(result, @"/\*.*?\*/", "", RegexOptions.Singleline);
-
-        return result;
     }
 
     /// <summary>
