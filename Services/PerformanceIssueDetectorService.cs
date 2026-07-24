@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Configuration;
@@ -26,9 +27,22 @@ namespace SqlQueryAnalyzer.Services;
 /// </summary>
 public class PerformanceIssueDetectorService : IPerformanceIssueDetectorService
 {
+    /// <summary>
+    /// Default execution budget granted to a single rule plugin before it is treated as
+    /// timed out and its findings for the current query are skipped.
+    /// </summary>
+    public static readonly TimeSpan DefaultDetectorTimeout = TimeSpan.FromSeconds(2);
+
     private readonly ILogger<PerformanceIssueDetectorService> _logger;
     private readonly IndexSeverityThresholds _indexSeverity;
     private readonly IReadOnlyList<IDetectorPlugin> _plugins;
+
+    /// <summary>
+    /// Gets or sets the maximum time a single rule plugin is allowed to run before it is
+    /// treated as timed out and recorded as a diagnostic instead of aborting the whole
+    /// detection run. Defaults to <see cref="DefaultDetectorTimeout"/>.
+    /// </summary>
+    public TimeSpan DetectorTimeout { get; set; } = DefaultDetectorTimeout;
 
     /// <summary>
     /// Creates the service with the default set of built-in rule plugins.
@@ -106,23 +120,62 @@ public class PerformanceIssueDetectorService : IPerformanceIssueDetectorService
     /// <param name="query">The query to analyze.</param>
     /// <returns>The detected performance issues, ordered by severity then impact.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="query"/> is null.</exception>
-    public Task<List<PerformanceIssue>> DetectIssuesAsync(DatabaseQuery query)
+    public async Task<List<PerformanceIssue>> DetectIssuesAsync(DatabaseQuery query)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        var (issues, _) = await DetectIssuesWithDiagnosticsAsync(query).ConfigureAwait(false);
+        return issues;
+    }
+
+    /// <summary>
+    /// Runs every registered rule plugin against the query, isolating each plugin behind its
+    /// own timeout (<see cref="DetectorTimeout"/>) and exception boundary so that one faulty
+    /// or slow plugin (e.g. a third-party plugin such as a distinct-abuse detector) cannot
+    /// abort detection for the remaining rules. Failures and timeouts are recorded as
+    /// diagnostics instead of being silently dropped.
+    /// </summary>
+    /// <param name="query">The query to analyze.</param>
+    /// <param name="cancellationToken">Token used to cancel the whole detection run.</param>
+    /// <returns>The detected issues, severity-ordered, alongside diagnostics for any plugin that could not complete.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="query"/> is null.</exception>
+    public async Task<(List<PerformanceIssue> Issues, List<AnalysisDiagnostic> Diagnostics)> DetectIssuesWithDiagnosticsAsync(
+        DatabaseQuery query,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
 
         _logger.LogInformation($"Detecting issues in query: {query.QueryId}");
 
         var issues = new List<PerformanceIssue>();
+        var diagnostics = new List<AnalysisDiagnostic>();
 
         foreach (var plugin in _plugins)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
-                issues.AddRange(plugin.Analyze(query));
+                var pluginIssues = await Task.Run(() => plugin.Analyze(query).ToList(), cancellationToken)
+                    .WaitAsync(DetectorTimeout, cancellationToken)
+                    .ConfigureAwait(false);
+                issues.AddRange(pluginIssues);
+            }
+            catch (TimeoutException)
+            {
+                var message = $"Detector '{plugin.RuleId}' timed out after {DetectorTimeout.TotalMilliseconds:F0}ms";
+                _logger.LogError($"Rule plugin '{plugin.RuleId}' timed out - skipping its findings");
+                diagnostics.Add(new AnalysisDiagnostic { RuleId = plugin.RuleId, Message = message, TimedOut = true });
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // The caller's own cancellation token fired: this is a genuine abort request, not a fault to isolate.
+                throw;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Rule plugin '{plugin.RuleId}' failed - skipping its findings");
+                diagnostics.Add(new AnalysisDiagnostic { RuleId = plugin.RuleId, Message = ex.Message, TimedOut = false });
             }
         }
 
@@ -130,9 +183,9 @@ public class PerformanceIssueDetectorService : IPerformanceIssueDetectorService
                        .ThenByDescending(i => i.EstimatedPerformanceImpact)
                        .ToList();
 
-        _logger.LogInformation($"Found {issues.Count} performance issues");
+        _logger.LogInformation($"Found {issues.Count} performance issues ({diagnostics.Count} detector(s) failed or timed out)");
 
-        return Task.FromResult(issues);
+        return (issues, diagnostics);
     }
 
     /// <summary>

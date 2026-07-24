@@ -106,6 +106,18 @@ public interface IPerformanceIssueDetectorService
 {
     Task<List<PerformanceIssue>> DetectIssuesAsync(DatabaseQuery query);
 
+    /// <summary>
+    /// Runs every registered rule plugin against the query, isolating each plugin behind its
+    /// own timeout and exception boundary, and returns both the successfully detected issues
+    /// and a diagnostic entry for every plugin that failed or timed out.
+    /// </summary>
+    /// <param name="query">The query to analyze.</param>
+    /// <param name="cancellationToken">Token used to cancel the whole detection run.</param>
+    /// <returns>The detected issues alongside diagnostics for any plugin that could not complete.</returns>
+    Task<(List<PerformanceIssue> Issues, List<Models.AnalysisDiagnostic> Diagnostics)> DetectIssuesWithDiagnosticsAsync(
+        DatabaseQuery query,
+        CancellationToken cancellationToken = default);
+
     // These methods complete synchronously; ValueTask avoids the Task allocation.
     ValueTask<List<PerformanceIssue>> DetectNPlusOneAsync(List<DatabaseQuery> queries);
     ValueTask<List<PerformanceIssue>> DetectJoinIssuesAsync(DatabaseQuery query);
@@ -170,7 +182,15 @@ public class QueryAnalyzerService : IQueryAnalyzerService
 
         try
         {
-            result.Issues = await _issueDetector.DetectIssuesAsync(query);
+            var (issues, diagnostics) = await _issueDetector.DetectIssuesWithDiagnosticsAsync(query);
+            result.Issues = issues;
+
+            if (diagnostics.Count > 0)
+            {
+                result.Diagnostics.AddRange(diagnostics);
+                result.IsPartial = true;
+                _logger.LogWarning($"{diagnostics.Count} detector(s) failed or timed out - analysis is partial");
+            }
 
             if (query.ReferencedTables.Count > 0)
             {
