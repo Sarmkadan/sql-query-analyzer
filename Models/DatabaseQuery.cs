@@ -218,6 +218,7 @@ public sealed class DatabaseQuery
         var pattern = @"(INNER\s+|LEFT\s+|RIGHT\s+|FULL\s+)?\s*JOIN\s+(.+?)\s+ON\s+(.+?)(?=WHERE|GROUP|ORDER|JOIN|$)";
         try
         {
+            // Timeout used to prevent catastrophic backtracking; lookahead prevents NonBacktracking
             var regex = new Regex(pattern, RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
             var matches = regex.Matches(NormalizedQuery);
@@ -239,15 +240,20 @@ public sealed class DatabaseQuery
     private string NormalizeQuery(string query)
     {
         // Remove comments
+        // Use NonBacktracking and timeout
         var withoutComments = Regex.Replace(query,
             @"--[^\n]*|/\*[\s\S]*?\*/",
             " ",
-            RegexOptions.Multiline);
+            RegexOptions.Multiline | RegexOptions.NonBacktracking,
+            TimeSpan.FromSeconds(1));
 
         // Remove extra whitespace
+        // Simple regex, but adding timeout for safety
         var normalized = Regex.Replace(withoutComments,
             @"\s+",
-            " ");
+            " ",
+            RegexOptions.None,
+            TimeSpan.FromSeconds(1));
 
         return normalized.Trim();
     }
