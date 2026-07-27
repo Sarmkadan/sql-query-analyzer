@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using SqlQueryAnalyzer.Exceptions;
 
 namespace SqlQueryAnalyzer.Models;
 
@@ -15,6 +16,11 @@ namespace SqlQueryAnalyzer.Models;
 /// </summary>
 public sealed class DatabaseQuery
 {
+    /// <summary>
+    /// Maximum allowed query length in characters (100 KB).
+    /// </summary>
+    private const int MaxQueryLength = 100 * 1024;
+
     /// <summary>
     /// Gets or sets the unique identifier for the query.
     /// </summary>
@@ -93,9 +99,18 @@ public sealed class DatabaseQuery
     /// join conditions, and WHERE clauses.
     /// </summary>
     /// <exception cref="ArgumentException">Thrown if QueryText is null or empty.</exception>
+    /// <exception cref="QueryTooLargeException">Thrown if QueryText exceeds the maximum allowed length of 100 KB.</exception>
     public void Parse()
     {
         ArgumentException.ThrowIfNullOrEmpty(QueryText);
+
+        // Validate query length to prevent resource exhaustion from excessive regex processing
+        if (QueryText.Length > MaxQueryLength)
+        {
+            throw new QueryTooLargeException(
+                $"Query text exceeds maximum allowed length of {MaxQueryLength} characters.",
+                QueryText);
+        }
 
         // Normalize for analysis - remove comments and mask string literals before regex matching
         NormalizedQuery = NormalizeQuery(QueryText);
