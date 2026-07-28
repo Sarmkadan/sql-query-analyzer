@@ -20,7 +20,7 @@ namespace SqlQueryAnalyzer.Services;
 /// <summary>
 /// Provides methods for analyzing SQL queries to detect performance issues and optimize them.
 /// </summary>
-public interface IQueryAnalyzerService
+public interface IQueryAnalyzerService : IDisposable
 {
     /// <summary>
     /// Analyzes a raw SQL query string for performance issues.
@@ -138,7 +138,7 @@ public interface IExplainPlanParserService
 /// <summary>
 /// Implementation of query analyzer service
 /// </summary>
-public class QueryAnalyzerService : IQueryAnalyzerService
+public class QueryAnalyzerService : IQueryAnalyzerService, IDisposable
 {
     private readonly IPerformanceIssueDetectorService _issueDetector;
     private readonly IIndexAnalyzerService _indexAnalyzer;
@@ -268,5 +268,14 @@ public class QueryAnalyzerService : IQueryAnalyzerService
             baseTime += issue.EstimatedPerformanceImpact * 10;
 
         return TimeSpan.FromMilliseconds(Math.Min(baseTime, 10000));
+    }
+
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
+    public void Dispose()
+    {
+        // Currently, no managed resources to dispose.
+        // If any dependencies implement IDisposable, they should be disposed here.
     }
 }
