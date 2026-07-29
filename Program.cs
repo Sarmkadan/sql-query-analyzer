@@ -13,6 +13,7 @@ using SqlQueryAnalyzer.Models;
 using SqlQueryAnalyzer.Visualization;
 using SqlQueryAnalyzer.Caching;
 using SqlQueryAnalyzer.Utilities;
+using SqlQueryAnalyzer.DTOs;
 
 namespace SqlQueryAnalyzer;
 
@@ -59,6 +60,9 @@ class Program
         services.AddSingleton<IHtmlPlanVisualizer, HtmlPlanVisualizer>();
         services.AddSingleton<IIndexRecommendationEngine, IndexRecommendationEngine>();
         services.AddSingleton<ISlowQueryLogParser, SlowQueryLogParser>();
+
+        // Register DTO mapper for DI
+        services.AddSingleton<IDtoMapper, DtoMapper>();
 
         var serviceProvider = services.BuildServiceProvider();
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>();

@@ -14,12 +14,13 @@ using SqlQueryAnalyzer.Constants;
 namespace SqlQueryAnalyzer.DTOs;
 
 /// <summary>
-/// Maps between domain models and DTOs
+/// Maps between domain models and DTOs.
+/// This class implements <see cref="IDtoMapper"/> and is registered for DI.
 /// </summary>
-public static class DtoMapper
+public class DtoMapper : IDtoMapper
 {
     // Map QueryAnalysisResult to AnalysisResponseDto
-    public static AnalysisResponseDto ToResponseDto(QueryAnalysisResult analysis, long analysisTimeMs)
+    public AnalysisResponseDto ToResponseDto(QueryAnalysisResult analysis, long analysisTimeMs)
     {
         return new AnalysisResponseDto
         {
@@ -36,7 +37,7 @@ public static class DtoMapper
     }
 
     // Map PerformanceIssue to PerformanceIssueDto
-    public static PerformanceIssueDto ToIssueDto(PerformanceIssue issue)
+    public PerformanceIssueDto ToIssueDto(PerformanceIssue issue)
     {
         return new PerformanceIssueDto
         {
@@ -50,7 +51,7 @@ public static class DtoMapper
     }
 
     // Map IndexSuggestion to IndexSuggestionDto
-    public static IndexSuggestionDto ToSuggestionDto(IndexSuggestion suggestion)
+    public IndexSuggestionDto ToSuggestionDto(IndexSuggestion suggestion)
     {
         return new IndexSuggestionDto
         {
@@ -65,7 +66,7 @@ public static class DtoMapper
     }
 
     // Map Index to IndexDetailDto
-    public static IndexDetailDto ToIndexDetailDto(ModelIndex index)
+    public IndexDetailDto ToIndexDetailDto(ModelIndex index)
     {
         return new IndexDetailDto
         {
@@ -81,7 +82,7 @@ public static class DtoMapper
     }
 
     // Map Index list to IndexAnalysisResponseDto
-    public static IndexAnalysisResponseDto ToIndexAnalysisResponseDto(
+    public IndexAnalysisResponseDto ToIndexAnalysisResponseDto(
         string tableName,
         List<ModelIndex> indexes,
         List<IndexSuggestion> suggestions,
@@ -100,7 +101,7 @@ public static class DtoMapper
     }
 
     // Map DatabaseQuery for display
-    public static QueryDetailDto ToQueryDetailDto(DatabaseQuery query)
+    public QueryDetailDto ToQueryDetailDto(DatabaseQuery query)
     {
         return new QueryDetailDto
         {
@@ -116,7 +117,7 @@ public static class DtoMapper
     }
 
     // Map batch analysis results
-    public static BatchAnalysisResponseDto ToBatchResponseDto(
+    public BatchAnalysisResponseDto ToBatchResponseDto(
         List<QueryAnalysisResult> results,
         List<string> nPlusOnePatterns,
         long totalTimeMs)
@@ -136,7 +137,7 @@ public static class DtoMapper
     }
 
     // Create summary text
-    private static string GetSummary(QueryAnalysisResult analysis)
+    private string GetSummary(QueryAnalysisResult analysis)
     {
         var criticalCount = analysis.Issues.Count(i => i.Severity == Constants.IssueSeverity.Critical);
         var warningCount = analysis.Issues.Count(i => i.Severity == Constants.IssueSeverity.Warning);
