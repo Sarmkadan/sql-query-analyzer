@@ -5,6 +5,10 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Constants;
 using SqlQueryAnalyzer.DTOs;
@@ -35,7 +39,7 @@ public sealed class AnalysisController
     /// Analyzes multiple queries in batch using AnalysisRequestDto objects.
     /// POST /api/analyze/batch/advanced
     /// Accepts an array of AnalysisRequestDto objects, runs the pipeline per query,
-    /// returns per-query results plus summary counts.
+    /// returns per‑query results plus summary counts.
     /// </summary>
     public async Task<ApiResponse<BatchAnalysisResponseDto>> AnalyzeAdvancedBatchAsync(List<AnalysisRequestDto> requests)
     {
@@ -61,6 +65,27 @@ public sealed class AnalysisController
                 };
             }
 
+            // Validation: ensure each request has a non‑empty query.
+            var validationErrors = new List<string>();
+            for (int i = 0; i < requests.Count; i++)
+            {
+                if (string.IsNullOrWhiteSpace(requests[i].QueryText))
+                {
+                    validationErrors.Add($"Request {i}: Query cannot be empty");
+                }
+            }
+
+            if (validationErrors.Any())
+            {
+                return new ApiResponse<BatchAnalysisResponseDto>
+                {
+                    Success = false,
+                    Message = "Validation errors",
+                    StatusCode = 400,
+                    Errors = validationErrors
+                };
+            }
+
             _logger.LogInformation($"Advanced batch analyzing {requests.Count} queries");
 
             var results = new List<AnalysisResponseDto>();
@@ -73,12 +98,6 @@ public sealed class AnalysisController
             {
                 try
                 {
-                    if (string.IsNullOrEmpty(request.QueryText))
-                    {
-                        errors.Add("Query cannot be empty");
-                        continue;
-                    }
-
                     var startTime = DateTime.UtcNow;
                     var result = await _analyzerService.AnalyzeQueryAsync(request.QueryText);
                     var analysisTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
