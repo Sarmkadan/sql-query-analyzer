@@ -13,3 +13,11 @@ var indexSuggestionJson = indexSuggestion.ToJson();
 var deserializedIndexSuggestion = QueryValidatorJsonExtensions.FromJsonToIndexSuggestion(indexSuggestionJson);
 ```
 SqlQueryAnalyzerJsonExtensions
+
+## SelectStarPluginTests
+The `SelectStarPluginTests` class contains unit tests to verify the functionality of the `SelectStarPlugin`. It ensures that the plugin correctly detects `SELECT *` patterns in queries while ignoring exceptions like `COUNT(*)` or stars within comments.
+Here is an example of how to invoke one of the test methods:
+```csharp
+var testInstance = new SelectStarPluginTests();
+await testInstance.ProcessAsync_QueryWithSelectStar_AddsIssue();
+```
