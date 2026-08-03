@@ -51,10 +51,19 @@
 // validator.TryExtractColumnNames_WithEmptyInput_ReturnsFalseAndNullOutput();
 // validator.TryExtractColumnNames_WithValidInput_ReturnsTrueAndColumnNames();
 // ```
+//
 // ## UnboundedOrderByPluginTests
 // The `UnboundedOrderByPluginTests` class contains unit tests to verify the functionality of the `UnboundedOrderByPlugin`. It checks how the plugin handles queries with `ORDER BY` clauses, ensuring that unbounded queries are correctly identified and issues are added accordingly.
 // Here is an example of how to invoke one of the test methods:
 // ```csharp
 // var testInstance = new UnboundedOrderByPluginTests();
 // await testInstance.ProcessAsync_QueryWithOrderByWithoutPagination_AddsIssue();
+// ```
+//
+// ## DtoMapperTests
+// The `DtoMapperTests` class contains unit tests for the AnalysisRequestDto's JSON serialization and deserialization methods, as well as property mapping and default value tests. These tests verify that the AnalysisRequestDto correctly serializes to and from JSON, handles null and empty values appropriately, and assigns default property values.
+// Here's an example of how to invoke one of the test methods:
+// ```csharp
+// var testInstance = new DtoMapperTests();
+// testInstance.AnalysisRequestDto_WithAllPropertiesPopulated_MapsCorrectly();
 // ```
