@@ -37,6 +37,17 @@ public class AnalysisPipeline
     /// </summary>
     public TimeSpan MiddlewareTimeout { get; set; } = DefaultMiddlewareTimeout;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnalysisPipeline"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="analyzer">The query analyzer service.</param>
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnalysisPipeline"/>
+    /// class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="analyzer">The query analyzer service.</param>
     public AnalysisPipeline(
         ILogger<AnalysisPipeline> logger,
         IQueryAnalyzerService analyzer)
@@ -44,6 +55,18 @@ public class AnalysisPipeline
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnalysisPipeline"/> class for testing.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="analyzer">The query analyzer service.</param>
+    /// <param name="includeCachingMiddleware">Whether to include the caching middleware.</param>
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnalysisPipeline"/> class for testing.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="analyzer">The query analyzer service.</param>
+    /// <param name="includeCachingMiddleware">Whether to include the caching middleware.</param>
     internal AnalysisPipeline(
         ILogger<AnalysisPipeline> logger,
         IQueryAnalyzerService analyzer,

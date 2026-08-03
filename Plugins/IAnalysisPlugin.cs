@@ -156,15 +156,48 @@ public sealed class PluginManager
 /// </summary>
 public abstract class AnalysisPluginBase : IAnalysisPlugin
 {
+    /// <summary>
+    /// Gets or sets the logger for this plugin.
+    /// </summary>
     protected ILogger? Logger { get; set; }
 
+    /// <summary>
+    /// Gets the unique identifier for this plugin.
+    /// </summary>
     public abstract string PluginId { get; }
+
+    /// <summary>
+    /// Gets the display name of this plugin.
+    /// </summary>
     public abstract string Name { get; }
+
+    /// <summary>
+    /// Gets the version of this plugin.
+    /// </summary>
     public abstract Version Version { get; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this plugin is enabled.
+    /// </summary>
     public bool IsEnabled { get; set; } = true;
 
+    /// <summary>
+    /// Initializes the plugin asynchronously.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public virtual Task InitializeAsync() => Task.CompletedTask;
+
+    /// <summary>
+    /// Processes the analysis result asynchronously.
+    /// </summary>
+    /// <param name="result">The analysis result to process.</param>
+    /// <returns>The processed analysis result.</returns>
     public abstract Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result);
+
+    /// <summary>
+    /// Shuts down the plugin asynchronously.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public virtual Task ShutdownAsync() => Task.CompletedTask;
 }
 
