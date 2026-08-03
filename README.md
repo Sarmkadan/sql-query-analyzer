@@ -51,3 +51,10 @@
 // validator.TryExtractColumnNames_WithEmptyInput_ReturnsFalseAndNullOutput();
 // validator.TryExtractColumnNames_WithValidInput_ReturnsTrueAndColumnNames();
 // ```
+// ## UnboundedOrderByPluginTests
+// The `UnboundedOrderByPluginTests` class contains unit tests to verify the functionality of the `UnboundedOrderByPlugin`. It checks how the plugin handles queries with `ORDER BY` clauses, ensuring that unbounded queries are correctly identified and issues are added accordingly.
+// Here is an example of how to invoke one of the test methods:
+// ```csharp
+// var testInstance = new UnboundedOrderByPluginTests();
+// await testInstance.ProcessAsync_QueryWithOrderByWithoutPagination_AddsIssue();
+// ```
