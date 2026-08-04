@@ -14,6 +14,27 @@
 // ```
 // SqlQueryAnalyzerJsonExtensions
 //
+// ## ValidationRuleEngineTests
+// The `ValidationRuleEngineTests` class provides comprehensive unit tests for the `ValidationRuleEngine` component. It verifies SQL query validation logic, rule registration, and the correct aggregation of validation results (errors and warnings) across various edge cases.
+//
+// A typical usage pattern involves creating an instance of the test class and invoking its public validation methods:
+//
+// ```csharp
+// var tests = new ValidationRuleEngineTests();
+//
+// // Testing handling of invalid or empty inputs
+// tests.ValidateQuery_NullInput_ReturnsError();
+// tests.ValidateQuery_EmptyString_ReturnsError();
+//
+// // Testing rule validation and error aggregation
+// tests.ValidateQuery_FailingRule_MismatchedParentheses_CollectsError();
+// tests.ValidateQuery_MultipleFailures_AggregatesAllErrors();
+//
+// // Testing successful validation
+// tests.ValidateQuery_ValidQuery_ReturnsValidResultWithNoErrorsOrWarnings();
+// tests.ValidateQuery_ComplexValidQuery_ReturnsValidResult();
+// ```
+//
 // ## SelectStarPluginTests
 // The `SelectStarPluginTests` class contains unit tests to verify the functionality of the `SelectStarPlugin`. It ensures that the plugin correctly detects `SELECT *` patterns in queries while ignoring exceptions like `COUNT(*)` or stars within comments.
 // Here is an example of how to invoke one of the test methods:
