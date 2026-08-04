@@ -1,90 +1,16 @@
-// ## QueryValidatorJsonExtensions
-// The `QueryValidatorJsonExtensions` class provides methods for converting between JSON and .NET objects related to query validation, such as `QueryAnalysisResult`, `PerformanceIssue`, and `IndexSuggestion`. 
-// Here's an example of how to use it:
-// ```csharp
-// var queryAnalysisResult = new QueryAnalysisResult();
-// var json = queryAnalysisResult.ToJson();
-// var deserializedResult = QueryValidatorJsonExtensions.FromJsonToAnalysisResult(json);
-// var performanceIssue = new PerformanceIssue();
-// var performanceIssueJson = performanceIssue.ToJson();
-// var deserializedPerformanceIssue = QueryValidatorJsonExtensions.FromJsonToPerformanceIssue(performanceIssueJson);
-// var indexSuggestion = new IndexSuggestion();
-// var indexSuggestionJson = indexSuggestion.ToJson();
-// var deserializedIndexSuggestion = QueryValidatorJsonExtensions.FromJsonToIndexSuggestion(indexSuggestionJson);
-// ```
-// SqlQueryAnalyzerJsonExtensions
-//
-// ## ValidationRuleEngineTests
-// The `ValidationRuleEngineTests` class provides comprehensive unit tests for the `ValidationRuleEngine` component. It verifies SQL query validation logic, rule registration, and the correct aggregation of validation results (errors and warnings) across various edge cases.
-//
-// A typical usage pattern involves creating an instance of the test class and invoking its public validation methods:
-//
-// ```csharp
-// var tests = new ValidationRuleEngineTests();
-//
-// // Testing handling of invalid or empty inputs
-// tests.ValidateQuery_NullInput_ReturnsError();
-// tests.ValidateQuery_EmptyString_ReturnsError();
-//
-// // Testing rule validation and error aggregation
-// tests.ValidateQuery_FailingRule_MismatchedParentheses_CollectsError();
-// tests.ValidateQuery_MultipleFailures_AggregatesAllErrors();
-//
-// // Testing successful validation
-// tests.ValidateQuery_ValidQuery_ReturnsValidResultWithNoErrorsOrWarnings();
-// tests.ValidateQuery_ComplexValidQuery_ReturnsValidResult();
-// ```
-//
-// ## SelectStarPluginTests
-// The `SelectStarPluginTests` class contains unit tests to verify the functionality of the `SelectStarPlugin`. It ensures that the plugin correctly detects `SELECT *` patterns in queries while ignoring exceptions like `COUNT(*)` or stars within comments.
-// Here is an example of how to invoke one of the test methods:
-// ```csharp
-// var testInstance = new SelectStarPluginTests();
-// await testInstance.ProcessAsync_QueryWithSelectStar_AddsIssue();
-// ```
-//
-// ## QueryNormalizerValidationTests
-// The `QueryNormalizerValidationTests` class provides a suite of validation helpers that verify the behavior of the query normalizer under various input conditions. It checks how the normalizer handles null, empty, whitespace, and valid queries, as well as its ability to produce parameterized queries and extract table or column names.
-// A typical usage pattern creates an instance of the test class and invokes the public validation methods directly:
-//
-// ```csharp
-// var validator = new QueryNormalizerValidationTests();
-//
-// // Null, empty, and whitespace inputs are rejected.
-// validator.TryNormalize_WithNullInput_ReturnsFalseAndNullOutput();
-// validator.TryNormalize_WithEmptyInput_ReturnsFalseAndNullOutput();
-// validator.TryNormalize_WithWhitespaceInput_ReturnsFalseAndNullOutput();
-//
-// // A valid query is normalized successfully.
-// validator.TryNormalize_WithValidInput_ReturnsTrueAndNormalizedQuery();
-//
-// // Parameterized query generation.
-// validator.TryToParameterizedQuery_WithNullInput_ReturnsFalseAndNullOutput();
-// validator.TryToParameterizedQuery_WithEmptyInput_ReturnsFalseAndNullOutput();
-// validator.TryToParameterizedQuery_WithValidInput_ReturnsTrueAndParameterizedQuery();
-//
-// // Table and column name extraction.
-// validator.TryExtractTableNames_WithNullInput_ReturnsFalseAndNullOutput();
-// validator.TryExtractTableNames_WithEmptyInput_ReturnsFalseAndNullOutput();
-// validator.TryExtractTableNames_WithValidInput_ReturnsTrueAndTableNames();
-//
-// validator.TryExtractColumnNames_WithNullInput_ReturnsFalseAndNullOutput();
-// validator.TryExtractColumnNames_WithEmptyInput_ReturnsFalseAndNullOutput();
-// validator.TryExtractColumnNames_WithValidInput_ReturnsTrueAndColumnNames();
-// ```
-//
-// ## UnboundedOrderByPluginTests
-// The `UnboundedOrderByPluginTests` class contains unit tests to verify the functionality of the `UnboundedOrderByPlugin`. It checks how the plugin handles queries with `ORDER BY` clauses, ensuring that unbounded queries are correctly identified and issues are added accordingly.
-// Here is an example of how to invoke one of the test methods:
-// ```csharp
-// var testInstance = new UnboundedOrderByPluginTests();
-// await testInstance.ProcessAsync_QueryWithOrderByWithoutPagination_AddsIssue();
-// ```
-//
-// ## DtoMapperTests
-// The `DtoMapperTests` class contains unit tests for the AnalysisRequestDto's JSON serialization and deserialization methods, as well as property mapping and default value tests. These tests verify that the AnalysisRequestDto correctly serializes to and from JSON, handles null and empty values appropriately, and assigns default property values.
-// Here's an example of how to invoke one of the test methods:
-// ```csharp
-// var testInstance = new DtoMapperTests();
-// testInstance.AnalysisRequestDto_WithAllPropertiesPopulated_MapsCorrectly();
-// ```
+## AnalysisEventPublisherTests
+
+The `AnalysisEventPublisherTests` class contains unit tests for the `AnalysisEventPublisher` class. It verifies subscription management, event publishing, and error handling scenarios.
+
+Here's an example of how to use it:
+```csharp
+var publisher = new AnalysisEventPublisher();
+var subscriber1 = new Mock<IAnalysisEventSubscriber>().Object;
+var subscriber2 = new Mock<IAnalysisEventSubscriber>().Object;
+publisher.Subscribe(subscriber1);
+publisher.Subscribe(subscriber2);
+var @event = new AnalysisStartedEvent { QueryId = "test-query-123" };
+await publisher.PublishAsync(@event);
+subscriber1Mock.Verify(s => s.OnEventAsync(@event), Times.Once);
+subscriber2Mock.Verify(s => s.OnEventAsync(@event), Times.Once);
+```
