@@ -18,6 +18,7 @@ namespace SqlQueryAnalyzer.Tests;
 public class CartesianJoinPluginTests
 {
     private readonly ILoggerFactory _loggerFactory;
+    private readonly ILogger<CartesianJoinPluginTests> _logger;
 
     public CartesianJoinPluginTests()
     {
@@ -27,6 +28,8 @@ public class CartesianJoinPluginTests
             builder.AddConsole();
             builder.SetMinimumLevel(LogLevel.Warning); // Reduce noise in tests
         });
+
+        _logger = _loggerFactory.CreateLogger<CartesianJoinPluginTests>();
     }
 
     /// <summary>
@@ -43,16 +46,29 @@ public class CartesianJoinPluginTests
             QueryId = "test-1"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCommaSeparatedTables_AddsIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Should().NotBeNull();
-        processedResult.Issues.Should().HaveCount(1);
-        processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.CrossJoin);
-        processedResult.Issues[0].Severity.Should().Be(Constants.IssueSeverity.Critical);
-        processedResult.Issues[0].Description.Should().Contain("Implicit CROSS JOIN detected");
-        processedResult.Issues[0].Metadata.Should().ContainKey("pattern").WhoseValue.Should().Be("implicit-cross-join");
+            // Assert
+            processedResult.Should().NotBeNull();
+            processedResult.Issues.Should().HaveCount(1);
+            processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.CrossJoin);
+            processedResult.Issues[0].Severity.Should().Be(Constants.IssueSeverity.Critical);
+            processedResult.Issues[0].Description.Should().Contain("Implicit CROSS JOIN detected");
+            processedResult.Issues[0].Metadata.Should().ContainKey("pattern").WhoseValue.Should().Be("implicit-cross-join");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCommaSeparatedTables_AddsIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCommaSeparatedTables_AddsIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -69,15 +85,28 @@ public class CartesianJoinPluginTests
             QueryId = "test-2"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithExplicitCrossJoin_AddsIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().HaveCount(1);
-        processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.CrossJoin);
-        processedResult.Issues[0].Severity.Should().Be(Constants.IssueSeverity.Critical);
-        processedResult.Issues[0].Description.Should().Contain("Explicit CROSS JOIN detected");
-        processedResult.Issues[0].Metadata.Should().ContainKey("pattern").WhoseValue.Should().Be("explicit-cross-join");
+            // Assert
+            processedResult.Issues.Should().HaveCount(1);
+            processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.CrossJoin);
+            processedResult.Issues[0].Severity.Should().Be(Constants.IssueSeverity.Critical);
+            processedResult.Issues[0].Description.Should().Contain("Explicit CROSS JOIN detected");
+            processedResult.Issues[0].Metadata.Should().ContainKey("pattern").WhoseValue.Should().Be("explicit-cross-join");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithExplicitCrossJoin_AddsIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithExplicitCrossJoin_AddsIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -94,12 +123,25 @@ public class CartesianJoinPluginTests
             QueryId = "test-3"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCrossJoinWithoutCondition_AddsIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().HaveCount(1);
-        processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.CrossJoin);
+            // Assert
+            processedResult.Issues.Should().HaveCount(1);
+            processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.CrossJoin);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCrossJoinWithoutCondition_AddsIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCrossJoinWithoutCondition_AddsIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -116,12 +158,25 @@ public class CartesianJoinPluginTests
             QueryId = "test-4"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithThreeCommaSeparatedTables_AddsIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().HaveCount(1);
-        processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.CrossJoin);
+            // Assert
+            processedResult.Issues.Should().HaveCount(1);
+            processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.CrossJoin);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithThreeCommaSeparatedTables_AddsIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithThreeCommaSeparatedTables_AddsIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -138,11 +193,24 @@ public class CartesianJoinPluginTests
             QueryId = "test-5"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithProperInnerJoin_DoesNotAddIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithProperInnerJoin_DoesNotAddIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithProperInnerJoin_DoesNotAddIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -159,11 +227,24 @@ public class CartesianJoinPluginTests
             QueryId = "test-6"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithLeftJoin_DoesNotAddIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithLeftJoin_DoesNotAddIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithLeftJoin_DoesNotAddIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -180,11 +261,24 @@ public class CartesianJoinPluginTests
             QueryId = "test-7"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithSingleTable_DoesNotAddIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithSingleTable_DoesNotAddIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithSingleTable_DoesNotAddIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -201,11 +295,24 @@ public class CartesianJoinPluginTests
             QueryId = "test-8"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithoutFromClause_DoesNotAddIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithoutFromClause_DoesNotAddIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithoutFromClause_DoesNotAddIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -222,12 +329,25 @@ public class CartesianJoinPluginTests
             QueryId = "test-9"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithLowerCaseCrossJoin_AddsIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().HaveCount(1);
-        processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.CrossJoin);
+            // Assert
+            processedResult.Issues.Should().HaveCount(1);
+            processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.CrossJoin);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithLowerCaseCrossJoin_AddsIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithLowerCaseCrossJoin_AddsIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -244,12 +364,25 @@ public class CartesianJoinPluginTests
             QueryId = "test-10"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCrossJoinInComment_StillDetectsIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert - Note: Without a full SQL parser, we can't reliably remove comments from the middle of queries
-        // So we accept that this will detect the CROSS JOIN pattern. This is acceptable for a simple analyzer.
-        processedResult.Issues.Should().NotBeEmpty();
+            // Assert - Note: Without a full SQL parser, we can't reliably remove comments from the middle of queries
+            // So we accept that this will detect the CROSS JOIN pattern. This is acceptable for a simple analyzer.
+            processedResult.Issues.Should().NotBeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCrossJoinInComment_StillDetectsIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCrossJoinInComment_StillDetectsIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -266,11 +399,24 @@ public class CartesianJoinPluginTests
             QueryId = "test-11"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithMultiLineComment_DoesNotAddIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert - The plugin should handle this without crashing
-        processedResult.Should().NotBeNull();
+            // Assert - The plugin should handle this without crashing
+            processedResult.Should().NotBeNull();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithMultiLineComment_DoesNotAddIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithMultiLineComment_DoesNotAddIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -289,11 +435,24 @@ public class CartesianJoinPluginTests
             QueryId = "test-12"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_PluginDisabled_DoesNotAddIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_PluginDisabled_DoesNotAddIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_PluginDisabled_DoesNotAddIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -310,12 +469,25 @@ public class CartesianJoinPluginTests
             QueryId = "test-13"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_NullQuery_DoesNotThrow), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Should().NotBeNull();
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Should().NotBeNull();
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_NullQuery_DoesNotThrow), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_NullQuery_DoesNotThrow), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -332,11 +504,24 @@ public class CartesianJoinPluginTests
             QueryId = "test-14"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_EmptyQuery_DoesNotAddIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_EmptyQuery_DoesNotAddIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_EmptyQuery_DoesNotAddIssue), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -348,9 +533,22 @@ public class CartesianJoinPluginTests
         // Arrange
         var plugin = new CartesianJoinPlugin(_loggerFactory.CreateLogger<CartesianJoinPlugin>());
 
-        // Act & Assert
-        await plugin.InitializeAsync(); // Should not throw
-        await plugin.ShutdownAsync(); // Should not throw
+        _logger.LogInformation("Starting test {TestName}", nameof(InitializeAsync_And_ShutdownAsync_ShouldNotThrow));
+        try
+        {
+            // Act & Assert
+            await plugin.InitializeAsync(); // Should not throw
+            await plugin.ShutdownAsync(); // Should not throw
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName}", nameof(InitializeAsync_And_ShutdownAsync_ShouldNotThrow));
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName}", nameof(InitializeAsync_And_ShutdownAsync_ShouldNotThrow));
+        }
     }
 
     /// <summary>
@@ -362,11 +560,24 @@ public class CartesianJoinPluginTests
         // Arrange
         var plugin = new CartesianJoinPlugin();
 
-        // Act & Assert
-        plugin.PluginId.Should().Be("cartesian-join-detection");
-        plugin.Name.Should().Be("Cartesian Join Detection Plugin");
-        plugin.Version.Should().Be(new Version(1, 0, 0));
-        plugin.IsEnabled.Should().BeTrue();
+        _logger.LogInformation("Starting test {TestName}", nameof(PluginMetadata_IsCorrect));
+        try
+        {
+            // Act & Assert
+            plugin.PluginId.Should().Be("cartesian-join-detection");
+            plugin.Name.Should().Be("Cartesian Join Detection Plugin");
+            plugin.Version.Should().Be(new Version(1, 0, 0));
+            plugin.IsEnabled.Should().BeTrue();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName}", nameof(PluginMetadata_IsCorrect));
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName}", nameof(PluginMetadata_IsCorrect));
+        }
     }
 
     /// <summary>
@@ -383,16 +594,29 @@ public class CartesianJoinPluginTests
             QueryId = "test-15"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
-
-        // Assert
-        processedResult.Issues.Should().HaveCount(2);
-        processedResult.Issues.Should().AllSatisfy(issue =>
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithBothImplicitAndExplicitCrossJoin_AddsTwoIssues), result.QueryId);
+        try
         {
-            issue.IssueType.Should().Be(Constants.IssueType.CrossJoin);
-            issue.Severity.Should().Be(Constants.IssueSeverity.Critical);
-        });
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
+
+            // Assert
+            processedResult.Issues.Should().HaveCount(2);
+            processedResult.Issues.Should().AllSatisfy(issue =>
+            {
+                issue.IssueType.Should().Be(Constants.IssueType.CrossJoin);
+                issue.Severity.Should().Be(Constants.IssueSeverity.Critical);
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithBothImplicitAndExplicitCrossJoin_AddsTwoIssues), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithBothImplicitAndExplicitCrossJoin_AddsTwoIssues), result.QueryId);
+        }
     }
 
     /// <summary>
@@ -409,11 +633,24 @@ public class CartesianJoinPluginTests
             QueryId = "test-16"
         };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCrossJoinAndAliases_AddsIssue), result.QueryId);
+        try
+        {
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().HaveCount(1);
-        processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.CrossJoin);
+            // Assert
+            processedResult.Issues.Should().HaveCount(1);
+            processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.CrossJoin);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCrossJoinAndAliases_AddsIssue), result.QueryId);
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCrossJoinAndAliases_AddsIssue), result.QueryId);
+        }
     }
 }
