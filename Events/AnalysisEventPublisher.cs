@@ -44,7 +44,6 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
     public void Subscribe(IAnalysisEventSubscriber subscriber)
     {
         ArgumentNullException.ThrowIfNull(subscriber);
-
         _subscribers.Add(subscriber);
         _logger.LogDebug("Subscribed: {SubscriberType}", subscriber.GetType().Name);
     }
@@ -57,10 +56,10 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
     public void Unsubscribe(IAnalysisEventSubscriber subscriber)
     {
         ArgumentNullException.ThrowIfNull(subscriber);
-
         if (_subscribers.TryTake(out var removed) && removed == subscriber)
         {
             _logger.LogDebug("Unsubscribed: {SubscriberType}", subscriber.GetType().Name);
+            _exceptionCounts.TryRemove(subscriber, out _);
         }
     }
 
@@ -78,9 +77,7 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
     public async Task PublishAsync(AnalysisEvent @event, int maxConsecutiveFailures = 3)
     {
         ArgumentNullException.ThrowIfNull(@event);
-
         _logger.LogDebug("Publishing event: {EventType}", @event.EventType);
-
         var exceptions = new List<Exception>();
         var snapshot = _subscribers.ToList();
 
@@ -114,7 +111,6 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
     {
         ArgumentNullException.ThrowIfNull(subscriber);
         ArgumentNullException.ThrowIfNull(@event);
-
         await subscriber.OnEventAsync(@event);
     }
 
@@ -234,24 +230,24 @@ public class LoggingEventSubscriber : IAnalysisEventSubscriber
 
     public Task OnEventAsync(AnalysisEvent @event)
     {
+        ArgumentNullException.ThrowIfNull(@event);
         _logger.LogInformation("Event: {EventType} at {Timestamp:yyyy-MM-dd HH:mm:ss}", @event.EventType, @event.Timestamp);
-
         return @event switch
         {
             AnalysisCompletedEvent completed =>
-            Task.Run(() => _logger.LogInformation(
-                "Analysis completed: {QueryId}, Score: {PerformanceScore:F1}, Issues: {IssuesFound}",
-                completed.QueryId, completed.PerformanceScore, completed.IssuesFound)),
+                Task.Run(() => _logger.LogInformation(
+                    "Analysis completed: {QueryId}, Score: {PerformanceScore:F1}, Issues: {IssuesFound}",
+                    completed.QueryId, completed.PerformanceScore, completed.IssuesFound)),
 
             CriticalIssueDetectedEvent critical =>
-            Task.Run(() => _logger.LogError(
-                "Critical issue detected: {IssueType} - {Description} ({ImpactPercentage:F1}%)",
-                critical.IssueType, critical.Description, critical.ImpactPercentage)),
+                Task.Run(() => _logger.LogError(
+                    "Critical issue detected: {IssueType} - {Description} ({ImpactPercentage:F1}%)",
+                    critical.IssueType, critical.Description, critical.ImpactPercentage)),
 
             AnalysisFailedEvent failed =>
-            Task.Run(() => _logger.LogError(
-                "Analysis failed: {ErrorMessage} ({ExceptionType})",
-                failed.ErrorMessage, failed.ExceptionType)),
+                Task.Run(() => _logger.LogError(
+                    "Analysis failed: {ErrorMessage} ({ExceptionType})",
+                    failed.ErrorMessage, failed.ExceptionType)),
 
             _ => Task.CompletedTask
         };
@@ -272,6 +268,8 @@ public class NotificationEventSubscriber : IAnalysisEventSubscriber
 
     public Task OnEventAsync(AnalysisEvent @event)
     {
+        ArgumentNullException.ThrowIfNull(@event);
+        _logger.LogInformation("Event: {EventType} at {Timestamp:yyyy-MM-dd HH:mm:ss}", @event.EventType, @event.Timestamp);
         return @event switch
         {
             CriticalIssueDetectedEvent critical => SendNotificationAsync(
@@ -289,7 +287,6 @@ public class NotificationEventSubscriber : IAnalysisEventSubscriber
     private async Task SendNotificationAsync(string subject, string message)
     {
         _logger.LogWarning("Notification: {Subject} - {Message}", subject, message);
-
         // In production, integrate with notification service (email, Slack, etc)
         await Task.Delay(10);
     }
