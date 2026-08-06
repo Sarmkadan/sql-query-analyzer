@@ -18,6 +18,7 @@ namespace SqlQueryAnalyzer.Tests;
 public class SelectStarPluginTests
 {
     private readonly ILoggerFactory _loggerFactory;
+    private readonly ILogger<SelectStarPluginTests> _logger;
 
     public SelectStarPluginTests()
     {
@@ -27,6 +28,8 @@ public class SelectStarPluginTests
             builder.AddConsole();
             builder.SetMinimumLevel(LogLevel.Warning); // Reduce noise in tests
         });
+
+        _logger = _loggerFactory.CreateLogger<SelectStarPluginTests>();
     }
 
     /// <summary>
@@ -35,23 +38,36 @@ public class SelectStarPluginTests
     [Fact]
     public async Task ProcessAsync_QueryWithSelectStar_AddsIssue()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
-        var result = new QueryAnalysisResult
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithSelectStar_AddsIssue), "test-1");
+        try
         {
-            Query = "SELECT * FROM Orders",
-            QueryId = "test-1"
-        };
+            // Arrange
+            var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
+            var result = new QueryAnalysisResult
+            {
+                Query = "SELECT * FROM Orders",
+                QueryId = "test-1"
+            };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Should().NotBeNull();
-        processedResult.Issues.Should().HaveCount(1);
-        processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.SelectStar);
-        processedResult.Issues[0].Severity.Should().Be(Constants.IssueSeverity.Warning);
-        processedResult.Issues[0].Description.Should().Contain("SELECT * detected");
+            // Assert
+            processedResult.Should().NotBeNull();
+            processedResult.Issues.Should().HaveCount(1);
+            processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.SelectStar);
+            processedResult.Issues[0].Severity.Should().Be(Constants.IssueSeverity.Warning);
+            processedResult.Issues[0].Description.Should().Contain("SELECT * detected");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithSelectStar_AddsIssue), "test-1");
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithSelectStar_AddsIssue), "test-1");
+        }
     }
 
     /// <summary>
@@ -60,20 +76,33 @@ public class SelectStarPluginTests
     [Fact]
     public async Task ProcessAsync_QueryWithTableStar_AddsIssue()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
-        var result = new QueryAnalysisResult
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithTableStar_AddsIssue), "test-2");
+        try
         {
-            Query = "SELECT o.* FROM Orders o",
-            QueryId = "test-2"
-        };
+            // Arrange
+            var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
+            var result = new QueryAnalysisResult
+            {
+                Query = "SELECT o.* FROM Orders o",
+                QueryId = "test-2"
+            };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().HaveCount(1);
-        processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.SelectStar);
+            // Assert
+            processedResult.Issues.Should().HaveCount(1);
+            processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.SelectStar);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithTableStar_AddsIssue), "test-2");
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithTableStar_AddsIssue), "test-2");
+        }
     }
 
     /// <summary>
@@ -82,20 +111,33 @@ public class SelectStarPluginTests
     [Fact]
     public async Task ProcessAsync_QueryWithStarInMultiColumnSelect_AddsIssue()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
-        var result = new QueryAnalysisResult
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithStarInMultiColumnSelect_AddsIssue), "test-3");
+        try
         {
-            Query = "SELECT id, name, * FROM Orders",
-            QueryId = "test-3"
-        };
+            // Arrange
+            var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
+            var result = new QueryAnalysisResult
+            {
+                Query = "SELECT id, name, * FROM Orders",
+                QueryId = "test-3"
+            };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().HaveCount(1);
-        processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.SelectStar);
+            // Assert
+            processedResult.Issues.Should().HaveCount(1);
+            processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.SelectStar);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithStarInMultiColumnSelect_AddsIssue), "test-3");
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithStarInMultiColumnSelect_AddsIssue), "test-3");
+        }
     }
 
     /// <summary>
@@ -104,19 +146,32 @@ public class SelectStarPluginTests
     [Fact]
     public async Task ProcessAsync_QueryWithCountStar_DoesNotAddIssue()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
-        var result = new QueryAnalysisResult
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCountStar_DoesNotAddIssue), "test-4");
+        try
         {
-            Query = "SELECT COUNT(*) FROM Orders",
-            QueryId = "test-4"
-        };
+            // Arrange
+            var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
+            var result = new QueryAnalysisResult
+            {
+                Query = "SELECT COUNT(*) FROM Orders",
+                QueryId = "test-4"
+            };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCountStar_DoesNotAddIssue), "test-4");
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithCountStar_DoesNotAddIssue), "test-4");
+        }
     }
 
     /// <summary>
@@ -125,19 +180,32 @@ public class SelectStarPluginTests
     [Fact]
     public async Task ProcessAsync_QueryWithoutStar_DoesNotAddIssue()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
-        var result = new QueryAnalysisResult
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithoutStar_DoesNotAddIssue), "test-5");
+        try
         {
-            Query = "SELECT id, name, price FROM Products WHERE category = 'Electronics'",
-            QueryId = "test-5"
-        };
+            // Arrange
+            var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
+            var result = new QueryAnalysisResult
+            {
+                Query = "SELECT id, name, price FROM Products WHERE category = 'Electronics'",
+                QueryId = "test-5"
+            };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithoutStar_DoesNotAddIssue), "test-5");
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithoutStar_DoesNotAddIssue), "test-5");
+        }
     }
 
     /// <summary>
@@ -146,19 +214,32 @@ public class SelectStarPluginTests
     [Fact]
     public async Task ProcessAsync_QueryWithStarInComment_DoesNotAddIssue()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
-        var result = new QueryAnalysisResult
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithStarInComment_DoesNotAddIssue), "test-6");
+        try
         {
-            Query = "SELECT id, name FROM Orders -- This query uses SELECT * in comments\nWHERE status = 'active'",
-            QueryId = "test-6"
-        };
+            // Arrange
+            var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
+            var result = new QueryAnalysisResult
+            {
+                Query = "SELECT id, name FROM Orders -- This query uses SELECT * in comments\nWHERE status = 'active'",
+                QueryId = "test-6"
+            };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithStarInComment_DoesNotAddIssue), "test-6");
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithStarInComment_DoesNotAddIssue), "test-6");
+        }
     }
 
     /// <summary>
@@ -167,19 +248,32 @@ public class SelectStarPluginTests
     [Fact]
     public async Task ProcessAsync_QueryWithStarInMultiLineComment_DoesNotAddIssue()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
-        var result = new QueryAnalysisResult
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithStarInMultiLineComment_DoesNotAddIssue), "test-7");
+        try
         {
-            Query = "/* This is a comment with SELECT * pattern */ SELECT id, name FROM Orders",
-            QueryId = "test-7"
-        };
+            // Arrange
+            var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
+            var result = new QueryAnalysisResult
+            {
+                Query = "/* This is a comment with SELECT * pattern */ SELECT id, name FROM Orders",
+                QueryId = "test-7"
+            };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithStarInMultiLineComment_DoesNotAddIssue), "test-7");
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithStarInMultiLineComment_DoesNotAddIssue), "test-7");
+        }
     }
 
     /// <summary>
@@ -188,20 +282,33 @@ public class SelectStarPluginTests
     [Fact]
     public async Task ProcessAsync_QueryWithLowerCaseSelectStar_AddsIssue()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
-        var result = new QueryAnalysisResult
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithLowerCaseSelectStar_AddsIssue), "test-8");
+        try
         {
-            Query = "select * from orders",
-            QueryId = "test-8"
-        };
+            // Arrange
+            var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
+            var result = new QueryAnalysisResult
+            {
+                Query = "select * from orders",
+                QueryId = "test-8"
+            };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().HaveCount(1);
-        processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.SelectStar);
+            // Assert
+            processedResult.Issues.Should().HaveCount(1);
+            processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.SelectStar);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithLowerCaseSelectStar_AddsIssue), "test-8");
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_QueryWithLowerCaseSelectStar_AddsIssue), "test-8");
+        }
     }
 
     /// <summary>
@@ -210,21 +317,34 @@ public class SelectStarPluginTests
     [Fact]
     public async Task ProcessAsync_PluginDisabled_DoesNotAddIssue()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
-        plugin.IsEnabled = false;
-
-        var result = new QueryAnalysisResult
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_PluginDisabled_DoesNotAddIssue), "test-9");
+        try
         {
-            Query = "SELECT * FROM Orders",
-            QueryId = "test-9"
-        };
+            // Arrange
+            var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
+            plugin.IsEnabled = false;
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+            var result = new QueryAnalysisResult
+            {
+                Query = "SELECT * FROM Orders",
+                QueryId = "test-9"
+            };
 
-        // Assert
-        processedResult.Issues.Should().BeEmpty();
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
+
+            // Assert
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_PluginDisabled_DoesNotAddIssue), "test-9");
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_PluginDisabled_DoesNotAddIssue), "test-9");
+        }
     }
 
     /// <summary>
@@ -233,20 +353,33 @@ public class SelectStarPluginTests
     [Fact]
     public async Task ProcessAsync_NullQuery_DoesNotThrow()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
-        var result = new QueryAnalysisResult
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_NullQuery_DoesNotThrow), "test-10");
+        try
         {
-            Query = null,
-            QueryId = "test-10"
-        };
+            // Arrange
+            var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
+            var result = new QueryAnalysisResult
+            {
+                Query = null,
+                QueryId = "test-10"
+            };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Should().NotBeNull();
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Should().NotBeNull();
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_NullQuery_DoesNotThrow), "test-10");
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_NullQuery_DoesNotThrow), "test-10");
+        }
     }
 
     /// <summary>
@@ -255,19 +388,32 @@ public class SelectStarPluginTests
     [Fact]
     public async Task ProcessAsync_EmptyQuery_DoesNotAddIssue()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
-        var result = new QueryAnalysisResult
+        _logger.LogInformation("Starting test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_EmptyQuery_DoesNotAddIssue), "test-11");
+        try
         {
-            Query = "",
-            QueryId = "test-11"
-        };
+            // Arrange
+            var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
+            var result = new QueryAnalysisResult
+            {
+                Query = "",
+                QueryId = "test-11"
+            };
 
-        // Act
-        var processedResult = await plugin.ProcessAsync(result);
+            // Act
+            var processedResult = await plugin.ProcessAsync(result);
 
-        // Assert
-        processedResult.Issues.Should().BeEmpty();
+            // Assert
+            processedResult.Issues.Should().BeEmpty();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_EmptyQuery_DoesNotAddIssue), "test-11");
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName} for QueryId {QueryId}", nameof(ProcessAsync_EmptyQuery_DoesNotAddIssue), "test-11");
+        }
     }
 
     /// <summary>
@@ -276,12 +422,25 @@ public class SelectStarPluginTests
     [Fact]
     public async Task InitializeAsync_And_ShutdownAsync_ShouldNotThrow()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
+        _logger.LogInformation("Starting test {TestName}", nameof(InitializeAsync_And_ShutdownAsync_ShouldNotThrow));
+        try
+        {
+            // Arrange
+            var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
 
-        // Act & Assert
-        await plugin.InitializeAsync(); // Should not throw
-        await plugin.ShutdownAsync(); // Should not throw
+            // Act & Assert
+            await plugin.InitializeAsync(); // Should not throw
+            await plugin.ShutdownAsync(); // Should not throw
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName}", nameof(InitializeAsync_And_ShutdownAsync_ShouldNotThrow));
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName}", nameof(InitializeAsync_And_ShutdownAsync_ShouldNotThrow));
+        }
     }
 
     /// <summary>
@@ -290,13 +449,26 @@ public class SelectStarPluginTests
     [Fact]
     public void PluginMetadata_IsCorrect()
     {
-        // Arrange
-        var plugin = new SelectStarPlugin();
+        _logger.LogInformation("Starting test {TestName}", nameof(PluginMetadata_IsCorrect));
+        try
+        {
+            // Arrange
+            var plugin = new SelectStarPlugin();
 
-        // Act & Assert
-        plugin.PluginId.Should().Be("select-star-detection");
-        plugin.Name.Should().Be("SELECT * Detection Plugin");
-        plugin.Version.Should().Be(new Version(1, 0, 0));
-        plugin.IsEnabled.Should().BeTrue();
+            // Act & Assert
+            plugin.PluginId.Should().Be("select-star-detection");
+            plugin.Name.Should().Be("SELECT * Detection Plugin");
+            plugin.Version.Should().Be(new Version(1, 0, 0));
+            plugin.IsEnabled.Should().BeTrue();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test {TestName}", nameof(PluginMetadata_IsCorrect));
+            throw;
+        }
+        finally
+        {
+            _logger.LogInformation("Finished test {TestName}", nameof(PluginMetadata_IsCorrect));
+        }
     }
 }
