@@ -31,6 +31,8 @@ public sealed class AnalysisController
         IQueryAnalyzerService analyzerService,
         ILogger<AnalysisController> logger)
     {
+        ArgumentNullException.ThrowIfNull(analyzerService);
+        ArgumentNullException.ThrowIfNull(logger);
         _analyzerService = analyzerService;
         _logger = logger;
     }
@@ -43,6 +45,7 @@ public sealed class AnalysisController
     /// </summary>
     public async Task<ApiResponse<BatchAnalysisResponseDto>> AnalyzeAdvancedBatchAsync(List<AnalysisRequestDto> requests)
     {
+        ArgumentNullException.ThrowIfNull(requests);
         try
         {
             if (requests == null || requests.Count == 0)
@@ -188,6 +191,7 @@ public sealed class AnalysisController
     /// </summary>
     public async Task<ApiResponse<QueryAnalysisResult>> AnalyzeAsync(AnalysisRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
         try
         {
             if (string.IsNullOrEmpty(request.Query))
@@ -229,6 +233,7 @@ public sealed class AnalysisController
     /// </summary>
     public async Task<ApiResponse<List<QueryAnalysisResult>>> AnalyzeBatchAsync(BatchAnalysisRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
         try
         {
             if (request.Queries == null || request.Queries.Length == 0)
