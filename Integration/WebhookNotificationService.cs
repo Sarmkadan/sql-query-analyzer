@@ -23,6 +23,7 @@ public class WebhookNotificationService : IAnalysisEventSubscriber
 
     public WebhookNotificationService(ILogger<WebhookNotificationService> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
         _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
     }
@@ -32,6 +33,11 @@ public class WebhookNotificationService : IAnalysisEventSubscriber
     /// </summary>
     public void RegisterWebhook(WebhookConfiguration config)
     {
+        ArgumentNullException.ThrowIfNull(config);
+        if (string.IsNullOrEmpty(config.Name))
+        {
+            throw new ArgumentException("Name is required", nameof(config.Name));
+        }
         if (string.IsNullOrEmpty(config.Url))
         {
             _logger.LogWarning("Cannot register webhook with empty URL");
@@ -47,6 +53,7 @@ public class WebhookNotificationService : IAnalysisEventSubscriber
     /// </summary>
     public void UnregisterWebhook(string webhookName)
     {
+        ArgumentException.ThrowIfNullOrEmpty(webhookName);
         var removed = _webhooks.RemoveAll(w => w.Name == webhookName);
         if (removed > 0)
         {
@@ -60,6 +67,7 @@ public class WebhookNotificationService : IAnalysisEventSubscriber
     /// </summary>
     public async Task OnEventAsync(AnalysisEvent @event)
     {
+        ArgumentNullException.ThrowIfNull(@event);
         foreach (var webhook in _webhooks)
         {
             if (!ShouldNotifyWebhook(@event, webhook))
