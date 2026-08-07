@@ -4,6 +4,10 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Models;
 
@@ -64,6 +68,7 @@ public sealed class PluginManager
 
     public PluginManager(ILogger<PluginManager> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
     }
 
@@ -72,6 +77,8 @@ public sealed class PluginManager
     /// </summary>
     public async Task RegisterPluginAsync(IAnalysisPlugin plugin)
     {
+        ArgumentNullException.ThrowIfNull(plugin);
+
         try
         {
             await plugin.InitializeAsync();
@@ -90,6 +97,8 @@ public sealed class PluginManager
     /// </summary>
     public async Task UnregisterPluginAsync(string pluginId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(pluginId);
+
         var plugin = _plugins.FirstOrDefault(p => p.PluginId == pluginId);
         if (plugin == null)
         {
@@ -114,6 +123,8 @@ public sealed class PluginManager
     /// </summary>
     public async Task<QueryAnalysisResult> ProcessThroughPluginsAsync(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         var current = result;
 
         foreach (var plugin in _plugins.Where(p => p.IsEnabled))
@@ -146,8 +157,11 @@ public sealed class PluginManager
     /// <summary>
     /// Gets plugin by ID.
     /// </summary>
-    public IAnalysisPlugin? GetPlugin(string pluginId) =>
-        _plugins.FirstOrDefault(p => p.PluginId == pluginId);
+    public IAnalysisPlugin? GetPlugin(string pluginId)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(pluginId);
+        return _plugins.FirstOrDefault(p => p.PluginId == pluginId);
+    }
 }
 
 /// <summary>
@@ -212,6 +226,8 @@ public class CustomIssueDetectionPlugin : AnalysisPluginBase
 
     public override Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         // Add custom issue detection logic here
         // Example: detect specific pattern in query
 
@@ -242,6 +258,8 @@ public class ResultEnhancementPlugin : AnalysisPluginBase
 
     public override Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         // Enhance result with additional metadata
         if (result.Metadata == null)
         {
