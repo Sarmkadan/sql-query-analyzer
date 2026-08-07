@@ -30,6 +30,8 @@ public class AnalysisQueueProcessor
         ILogger<AnalysisQueueProcessor> logger,
         int maxConcurrentTasks = 5)
     {
+        ArgumentNullException.ThrowIfNull(analyzerService);
+        ArgumentNullException.ThrowIfNull(logger);
         _analyzerService = analyzerService;
         _logger = logger;
         _maxConcurrentTasks = maxConcurrentTasks;
@@ -41,6 +43,7 @@ public class AnalysisQueueProcessor
     /// </summary>
     public string EnqueueAnalysis(string query, Action<QueryAnalysisResult>? onComplete = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(query);
         var task = new AnalysisTask
         {
             TaskId = Guid.NewGuid().ToString(),
@@ -62,6 +65,8 @@ public class AnalysisQueueProcessor
     /// </summary>
     public void Start()
     {
+        ArgumentNullException.ThrowIfNull(_analyzerService);
+        ArgumentNullException.ThrowIfNull(_logger);
         if (_processingTask != null && !_processingTask.IsCompleted)
         {
             _logger.LogWarning("Processor already running");
@@ -80,6 +85,8 @@ public class AnalysisQueueProcessor
     /// </summary>
     public async Task StopAsync(TimeSpan timeout = default)
     {
+        ArgumentNullException.ThrowIfNull(_analyzerService);
+        ArgumentNullException.ThrowIfNull(_logger);
         if (_processingTask == null)
         {
             _logger.LogWarning("Processor not running");
@@ -109,6 +116,7 @@ public class AnalysisQueueProcessor
     /// </summary>
     public AnalysisTask? GetTaskStatus(string taskId)
     {
+        ArgumentNullException.ThrowIfNull(taskId);
         if (_activeTasks.TryGetValue(taskId, out var task))
             return task;
 
