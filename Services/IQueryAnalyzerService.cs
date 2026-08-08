@@ -159,6 +159,7 @@ public class QueryAnalyzerService : IQueryAnalyzerService, IDisposable
 
     public async Task<QueryAnalysisResult> AnalyzeQueryAsync(string queryText)
     {
+        ArgumentException.ThrowIfNullOrEmpty(queryText);
         var query = new DatabaseQuery { QueryText = queryText };
         query.Parse();
         return await AnalyzeQueryAsync(query);
@@ -166,6 +167,7 @@ public class QueryAnalyzerService : IQueryAnalyzerService, IDisposable
 
     public async Task<QueryAnalysisResult> AnalyzeQueryAsync(DatabaseQuery query)
     {
+        ArgumentNullException.ThrowIfNull(query);
         _logger.LogInformation($"Analyzing query: {query.QueryId}");
 
         var result = new QueryAnalysisResult
