@@ -22,6 +22,7 @@ public class DtoMapper : IDtoMapper
     // Map QueryAnalysisResult to AnalysisResponseDto
     public AnalysisResponseDto ToResponseDto(QueryAnalysisResult analysis, long analysisTimeMs)
     {
+        ArgumentNullException.ThrowIfNull(analysis);
         return new AnalysisResponseDto
         {
             QueryId = analysis.QueryId,
@@ -39,6 +40,7 @@ public class DtoMapper : IDtoMapper
     // Map PerformanceIssue to PerformanceIssueDto
     public PerformanceIssueDto ToIssueDto(PerformanceIssue issue)
     {
+        ArgumentNullException.ThrowIfNull(issue);
         return new PerformanceIssueDto
         {
             IssueType = issue.IssueType.ToString(),
@@ -53,6 +55,7 @@ public class DtoMapper : IDtoMapper
     // Map IndexSuggestion to IndexSuggestionDto
     public IndexSuggestionDto ToSuggestionDto(IndexSuggestion suggestion)
     {
+        ArgumentNullException.ThrowIfNull(suggestion);
         return new IndexSuggestionDto
         {
             TableName = suggestion.TableName,
@@ -68,6 +71,7 @@ public class DtoMapper : IDtoMapper
     // Map Index to IndexDetailDto
     public IndexDetailDto ToIndexDetailDto(ModelIndex index)
     {
+        ArgumentNullException.ThrowIfNull(index);
         return new IndexDetailDto
         {
             IndexName = index.IndexName,
@@ -88,6 +92,10 @@ public class DtoMapper : IDtoMapper
         List<IndexSuggestion> suggestions,
         List<string> scripts)
     {
+        ArgumentException.ThrowIfNullOrEmpty(tableName);
+        ArgumentNullException.ThrowIfNull(indexes);
+        ArgumentNullException.ThrowIfNull(suggestions);
+        ArgumentNullException.ThrowIfNull(scripts);
         return new IndexAnalysisResponseDto
         {
             TableName = tableName,
@@ -103,6 +111,7 @@ public class DtoMapper : IDtoMapper
     // Map DatabaseQuery for display
     public QueryDetailDto ToQueryDetailDto(DatabaseQuery query)
     {
+        ArgumentNullException.ThrowIfNull(query);
         return new QueryDetailDto
         {
             QueryId = query.QueryId,
@@ -122,6 +131,8 @@ public class DtoMapper : IDtoMapper
         List<string> nPlusOnePatterns,
         long totalTimeMs)
     {
+        ArgumentNullException.ThrowIfNull(results);
+        ArgumentNullException.ThrowIfNull(nPlusOnePatterns);
         var responses = results.Select(r => ToResponseDto(r, 0)).ToList();
 
         return new BatchAnalysisResponseDto
