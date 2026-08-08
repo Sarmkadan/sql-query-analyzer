@@ -30,6 +30,7 @@ public class RateLimitingMiddleware
         int maxQueriesPerSecond = 100,
         int maxConcurrentAnalysis = 10)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
         _maxQueriesPerSecond = maxQueriesPerSecond;
         _maxConcurrentAnalysis = maxConcurrentAnalysis;
@@ -41,6 +42,7 @@ public class RateLimitingMiddleware
     /// </summary>
     public async Task AcquireSlotAsync(string queryHash, TimeSpan timeout = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(queryHash);
         if (timeout == default)
             timeout = TimeSpan.FromSeconds(30);
 
@@ -132,6 +134,7 @@ public class RateLimitingMiddleware
     /// </summary>
     public QueryRateLimitStats GetQueryStats(string queryHash)
     {
+        ArgumentException.ThrowIfNullOrEmpty(queryHash);
         var limit = _perQueryLimits.GetValueOrDefault(queryHash) ?? new QueryRateLimit { QueryHash = queryHash };
         return new QueryRateLimitStats
         {
