@@ -46,6 +46,7 @@ public sealed partial class IndexRecommendationEngine : IIndexRecommendationEngi
     public IndexRecommendationEngine(ILogger<IndexRecommendationEngine> logger)
         : this(logger, AnalyzerSettingsFactory.CreateDefault())
     {
+        ArgumentNullException.ThrowIfNull(logger);
     }
 
     /// <summary>
@@ -53,6 +54,8 @@ public sealed partial class IndexRecommendationEngine : IIndexRecommendationEngi
     /// </summary>
     public IndexRecommendationEngine(ILogger<IndexRecommendationEngine> logger, AnalyzerSettings settings)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(settings);
         _logger = logger;
         _settings = settings;
     }
@@ -112,6 +115,7 @@ public sealed partial class IndexRecommendationEngine : IIndexRecommendationEngi
     /// <inheritdoc/>
     public List<IndexRecommendation> RankRecommendations(List<IndexRecommendation> recommendations)
     {
+        ArgumentNullException.ThrowIfNull(recommendations);
         return recommendations
             .GroupBy(r => $"{r.TableName}|{string.Join(",", r.KeyColumns)}|{r.Source}", StringComparer.OrdinalIgnoreCase)
             .Select(g => g.OrderByDescending(r => r.ImpactScore).First())
@@ -124,6 +128,7 @@ public sealed partial class IndexRecommendationEngine : IIndexRecommendationEngi
     /// <inheritdoc/>
     public List<string> DetectRedundancies(List<IndexRecommendation> recommendations)
     {
+        ArgumentNullException.ThrowIfNull(recommendations);
         var results = new List<string>();
 
         foreach (var group in recommendations.GroupBy(r => r.TableName, StringComparer.OrdinalIgnoreCase))
