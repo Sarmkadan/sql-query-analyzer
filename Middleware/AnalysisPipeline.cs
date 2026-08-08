@@ -72,6 +72,8 @@ public class AnalysisPipeline
         IQueryAnalyzerService analyzer,
         bool includeCachingMiddleware = true)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(analyzer);
         _logger = logger;
         _analyzer = analyzer;
 
