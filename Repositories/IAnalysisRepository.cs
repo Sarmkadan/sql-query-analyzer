@@ -60,6 +60,7 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
 
     public Task<QueryAnalysisResult> SaveAnalysisAsync(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(result);
         _logger.LogInformation("Saving analysis for query: {QueryId}", result.QueryId);
         lock (_lock)
         {
@@ -71,6 +72,7 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
 
     public Task<QueryAnalysisResult?> GetAnalysisAsync(string analysisId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(analysisId);
         _logger.LogDebug("Retrieving analysis: {AnalysisId}", analysisId);
         lock (_lock)
         {
@@ -101,6 +103,7 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
 
     public Task<List<QueryAnalysisResult>> GetAnalysesForQueryAsync(string queryHash)
     {
+        ArgumentException.ThrowIfNullOrEmpty(queryHash);
         lock (_lock)
         {
             var results = _analyses.Values
@@ -113,6 +116,7 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
 
     public Task DeleteAnalysisAsync(string analysisId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(analysisId);
         _logger.LogInformation("Deleting analysis: {AnalysisId}", analysisId);
         lock (_lock)
         {
