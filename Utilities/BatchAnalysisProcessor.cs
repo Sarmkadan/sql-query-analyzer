@@ -28,6 +28,8 @@ public class BatchAnalysisProcessor
         ILogger<BatchAnalysisProcessor> logger,
         int maxParallel = 0)
     {
+        ArgumentNullException.ThrowIfNull(analyzerService);
+        ArgumentNullException.ThrowIfNull(logger);
         _analyzerService = analyzerService;
         _logger = logger;
         _maxParallel = maxParallel > 0 ? maxParallel : Environment.ProcessorCount;
@@ -42,7 +44,9 @@ public class BatchAnalysisProcessor
         Action<BatchProgress>? onProgress = null,
         CancellationToken cancellationToken = default)
     {
-        if (queries == null || queries.Length == 0)
+        ArgumentNullException.ThrowIfNull(queries);
+
+        if (queries.Length == 0)
         {
             return new List<QueryAnalysisResult>();
         }
@@ -127,6 +131,8 @@ public class BatchAnalysisProcessor
         Action<BatchProgress>? onProgress = null,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(filePath);
+
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException($"Query file not found: {filePath}");
@@ -158,6 +164,9 @@ public class BatchAnalysisProcessor
         Action<BatchProgress>? onProgress = null,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(filePath);
+        ArgumentException.ThrowIfNullOrEmpty(delimiter);
+
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException($"Query file not found: {filePath}");
