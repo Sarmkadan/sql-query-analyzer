@@ -58,6 +58,7 @@ public class QueryCacheKeyGenerator
     public string GenerateMetadataKey(string query, Dictionary<string, string>? parameters = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(query);
+        ArgumentNullException.ThrowIfNull(parameters);
 
         var builder = new StringBuilder(query);
 
@@ -106,8 +107,11 @@ public class QueryCacheKeyGenerator
     /// same process) has generated it. Returns null for keys generated in a previous process
     /// or never seen by this generator.
     /// </summary>
-    public DateTimeOffset? GetKeyCreatedAt(string key) =>
-        s_keyCreatedAt.TryGetValue(key, out var createdAt) ? createdAt : null;
+    public DateTimeOffset? GetKeyCreatedAt(string key)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        return s_keyCreatedAt.TryGetValue(key, out var createdAt) ? createdAt : null;
+    }
 
     /// <summary>
     /// Normalizes query for consistent hashing.
@@ -154,9 +158,7 @@ public class QueryCacheKeyGenerator
     /// </summary>
     public bool IsValidCacheKey(string key)
     {
-        if (string.IsNullOrEmpty(key))
-            return false;
-
+        ArgumentException.ThrowIfNullOrEmpty(key);
         return key.StartsWith(KeyPrefix) &&
             (key.Contains(QueryHashPrefix) ||
              key.Contains(ResultHashPrefix) ||
@@ -170,6 +172,7 @@ public class QueryCacheKeyGenerator
     /// </summary>
     public string? ExtractHashFromKey(string key)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
         if (!IsValidCacheKey(key))
             return null;
 
@@ -182,6 +185,7 @@ public class QueryCacheKeyGenerator
     /// </summary>
     public CacheKeyType GetKeyType(string key)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
         if (key.Contains(QueryHashPrefix))
             return CacheKeyType.Query;
         if (key.Contains(ResultHashPrefix))
