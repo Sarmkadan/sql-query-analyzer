@@ -111,7 +111,7 @@ public sealed class QueryAnalysisCache
     /// </summary>
     public void Set(string query, QueryAnalysisResult result)
     {
-        ArgumentNullException.ThrowIfNull(query);
+        ArgumentException.ThrowIfNullOrEmpty(query);
         ArgumentNullException.ThrowIfNull(result);
 
         try
