@@ -21,6 +21,7 @@ public sealed class ValidationRuleEngine
 
     public ValidationRuleEngine(ILogger<ValidationRuleEngine> logger)
     {
+        ArgumentNullException.ThrowIfNull(nameof(logger));
         _logger = logger;
 
         // Register default rules
@@ -68,6 +69,7 @@ public sealed class ValidationRuleEngine
     /// </summary>
     public void RegisterRule(IValidationRule rule)
     {
+        ArgumentNullException.ThrowIfNull(nameof(rule));
         _rules.Add(rule);
         _logger.LogDebug($"Registered validation rule: {rule.Name}");
     }
