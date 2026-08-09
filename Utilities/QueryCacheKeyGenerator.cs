@@ -45,6 +45,7 @@ public class QueryCacheKeyGenerator
     public string GenerateResultKey(string query)
     {
         ArgumentException.ThrowIfNullOrEmpty(query);
+        ArgumentNullException.ThrowIfNull(query);
 
         var normalized = NormalizeForHashing(query);
         var hash = ComputeHash(normalized);
@@ -58,7 +59,6 @@ public class QueryCacheKeyGenerator
     public string GenerateMetadataKey(string query, Dictionary<string, string>? parameters = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(query);
-        ArgumentNullException.ThrowIfNull(parameters);
 
         var builder = new StringBuilder(query);
 
