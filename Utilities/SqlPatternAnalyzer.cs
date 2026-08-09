@@ -85,6 +85,7 @@ public static partial class SqlPatternAnalyzer
     // Detect N+1 query patterns
     public static bool DetectNPlusOnePattern(List<string> queries)
     {
+        if (queries == null) throw new ArgumentNullException(nameof(queries));
         if (queries.Count < 2)
             return false;
 
@@ -112,6 +113,7 @@ public static partial class SqlPatternAnalyzer
     /// </summary>
     public static HashSet<string> ExtractCteNames(string query)
     {
+        ArgumentException.ThrowIfNullOrEmpty(query);
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (Match match in CteNameRegex().Matches(query))
             names.Add(match.Groups[1].Value);
@@ -140,21 +142,29 @@ public static partial class SqlPatternAnalyzer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasMissingWhereClause(string query)
     {
+        ArgumentException.ThrowIfNullOrEmpty(query);
         var isSelect = query.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase);
         return isSelect && !query.Contains("WHERE", StringComparison.OrdinalIgnoreCase);
     }
 
     // Detect SELECT *
-    public static bool HasSelectStar(string query) =>
-        SelectStarRegex().IsMatch(query);
+    public static bool HasSelectStar(string query)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(query);
+        return SelectStarRegex().IsMatch(query);
+    }
 
     // Detect LIKE with leading wildcard
-    public static bool HasLeadingWildcardLike(string query) =>
-        LeadingWildcardRegex().IsMatch(query);
+    public static bool HasLeadingWildcardLike(string query)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(query);
+        return LeadingWildcardRegex().IsMatch(query);
+    }
 
     // Detect function on column in WHERE — was looping over array + per-function Regex.
     public static bool HasFunctionOnColumn(string query)
     {
+        ArgumentNullException.ThrowIfNull(query);
         if (!query.Contains("WHERE", StringComparison.OrdinalIgnoreCase))
             return false;
 
@@ -162,8 +172,11 @@ public static partial class SqlPatternAnalyzer
     }
 
     // Detect implicit JOIN (comma-separated tables in FROM)
-    public static bool HasImplicitJoin(string query) =>
-        ImplicitJoinRegex().IsMatch(query);
+    public static bool HasImplicitJoin(string query)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(query);
+        return ImplicitJoinRegex().IsMatch(query);
+    }
 
     // Detect DISTINCT without ORDER BY
     public static bool HasDistinctWithoutOrder(string query)
