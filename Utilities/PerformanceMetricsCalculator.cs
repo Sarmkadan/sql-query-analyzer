@@ -20,6 +20,7 @@ public static class PerformanceMetricsCalculator
     // Calculate combined performance score
     public static double CalculateCombinedScore(QueryAnalysisResult analysis, double weight = 1.0)
     {
+        ArgumentNullException.ThrowIfNull(analysis);
         var baseScore = analysis.PerformanceScore;
         var issueImpact = analysis.Issues.Sum(i => (double)i.Severity * i.EstimatedPerformanceImpact);
         var optimizationPotential = analysis.TotalOptimizationPotential * 0.5;
@@ -30,6 +31,8 @@ public static class PerformanceMetricsCalculator
     // Estimate total optimization potential
     public static double EstimateTotalOptimization(List<PerformanceIssue> issues, List<IndexSuggestion> suggestions)
     {
+        ArgumentNullException.ThrowIfNull(issues);
+        ArgumentNullException.ThrowIfNull(suggestions);
         var issueOptimization = issues.Sum(i => i.EstimatedPerformanceImpact) * 0.8;
         var indexOptimization = suggestions.Sum(s => s.EstimatedPerformanceGain) * 0.6;
 
@@ -39,6 +42,7 @@ public static class PerformanceMetricsCalculator
     // Calculate query complexity score
     public static int CalculateComplexityScore(DatabaseQuery query)
     {
+        ArgumentNullException.ThrowIfNull(query);
         var score = 0;
 
         // Line count
@@ -87,6 +91,7 @@ public static class PerformanceMetricsCalculator
     // Calculate index usage score (0-100)
     public static double CalculateIndexUsageScore(ModelIndex index)
     {
+        ArgumentNullException.ThrowIfNull(index);
         if (!index.IsValid())
             return 0;
 
@@ -109,6 +114,7 @@ public static class PerformanceMetricsCalculator
     // Calculate index maintenance effort
     public static int CalculateMaintenanceEffort(List<ModelIndex> indexes)
     {
+        ArgumentNullException.ThrowIfNull(indexes);
         if (indexes.Count == 0)
             return 0;
 
@@ -128,6 +134,7 @@ public static class PerformanceMetricsCalculator
     // Get performance trend (simulating trend calculation)
     public static string GetPerformanceTrend(List<QueryAnalysisResult> analysisHistory)
     {
+        ArgumentNullException.ThrowIfNull(analysisHistory);
         if (analysisHistory.Count < 2)
             return "Insufficient data";
 
@@ -141,6 +148,7 @@ public static class PerformanceMetricsCalculator
     // Calculate query execution time distribution
     public static Dictionary<string, int> CalculateExecutionTimeDistribution(QueryStatistics stats)
     {
+        ArgumentNullException.ThrowIfNull(stats);
         var distribution = new Dictionary<string, int>
         {
             { "< 10ms", 0 },
@@ -169,6 +177,7 @@ public static class PerformanceMetricsCalculator
     // Calculate ROI for index creation
     public static double CalculateIndexROI(IndexSuggestion suggestion, long tableSizeKB)
     {
+        ArgumentNullException.ThrowIfNull(suggestion);
         // ROI = (Performance gain * Query savings) / (Index size + Maintenance cost)
         var queryBenefit = suggestion.EstimatedPerformanceGain * 10; // Arbitrary benefit unit
         var indexCost = (suggestion.EstimatedIndexSizeKB ?? 1000) +
@@ -183,6 +192,7 @@ public static class PerformanceMetricsCalculator
     // Predict query execution time based on statistics
     public static TimeSpan PredictExecutionTime(QueryStatistics stats, int estimatedRows)
     {
+        ArgumentNullException.ThrowIfNull(stats);
         var averageMs = stats.AverageExecutionTime.TotalMilliseconds;
         var readsPerRow = stats.ExecutionCount > 0
             ? (double)stats.TotalLogicalReads / (stats.RowsAffected > 0 ? stats.RowsAffected : 1)
