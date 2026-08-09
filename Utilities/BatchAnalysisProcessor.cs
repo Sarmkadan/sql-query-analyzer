@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System;
 using Microsoft.Extensions.Logging;
 using SqlQueryAnalyzer.Models;
 using SqlQueryAnalyzer.Services;
