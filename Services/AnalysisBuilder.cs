@@ -23,6 +23,7 @@ public sealed class AnalysisBuilder
     // Set query text
     public AnalysisBuilder WithQuery(string queryText)
     {
+        ArgumentException.ThrowIfNullOrEmpty(queryText);
         if (string.IsNullOrWhiteSpace(queryText))
         {
             _validationErrors.Add("Query text cannot be empty");
@@ -42,6 +43,7 @@ public sealed class AnalysisBuilder
     // Set application context
     public AnalysisBuilder WithApplication(string applicationName)
     {
+        ArgumentException.ThrowIfNullOrEmpty(applicationName);
         if (!string.IsNullOrWhiteSpace(applicationName))
             _request.ApplicationName = applicationName;
         return this;
@@ -50,6 +52,7 @@ public sealed class AnalysisBuilder
     // Set procedure context
     public AnalysisBuilder WithProcedure(string procedureName)
     {
+        ArgumentException.ThrowIfNullOrEmpty(procedureName);
         if (!string.IsNullOrWhiteSpace(procedureName))
             _request.ProcedureName = procedureName;
         return this;
@@ -58,6 +61,7 @@ public sealed class AnalysisBuilder
     // Set module context
     public AnalysisBuilder WithModule(string moduleName)
     {
+        ArgumentException.ThrowIfNullOrEmpty(moduleName);
         if (!string.IsNullOrWhiteSpace(moduleName))
             _request.ModuleName = moduleName;
         return this;
@@ -87,6 +91,7 @@ public sealed class AnalysisBuilder
     // Set execution plan XML
     public AnalysisBuilder WithExecutionPlan(string planXml)
     {
+        ArgumentException.ThrowIfNullOrEmpty(planXml);
         if (!string.IsNullOrWhiteSpace(planXml))
             _request.ExecutionPlanXml = planXml;
         return this;
