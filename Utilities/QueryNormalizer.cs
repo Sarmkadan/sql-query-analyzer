@@ -94,6 +94,7 @@ public partial class QueryNormalizer
     /// </summary>
     public string Normalize(string query)
     {
+        ArgumentException.ThrowIfNullOrEmpty(query);
         if (string.IsNullOrWhiteSpace(query))
             return query;
 
@@ -189,6 +190,7 @@ public partial class QueryNormalizer
     /// </summary>
     public List<string> ExtractTableNames(string query)
     {
+        ArgumentException.ThrowIfNullOrEmpty(query);
         var tables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (Match m in FromTableRegex().Matches(query))
@@ -208,6 +210,7 @@ public partial class QueryNormalizer
     /// </summary>
     public List<string> ExtractColumnNames(string query)
     {
+        ArgumentException.ThrowIfNullOrEmpty(query);
         var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         var selectMatch = SelectColumnsRegex().Match(query);
@@ -243,7 +246,11 @@ public partial class QueryNormalizer
     /// Returns whether the given token is a recognized SQL keyword.
     /// Uses FrozenSet for O(1) lookup — suitable for hot-path validation.
     /// </summary>
-    public static bool IsSqlKeyword(string token) => s_sqlKeywords.Contains(token);
+    public static bool IsSqlKeyword(string token)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(token);
+        return s_sqlKeywords.Contains(token);
+    }
 
     /// <summary>
     /// Parameterizes a SQL query by replacing numeric and string literals with ? placeholders.
@@ -254,6 +261,7 @@ public partial class QueryNormalizer
     /// <returns>A parameterized version of the query with literals replaced by ? placeholders.</returns>
     public string ToParameterizedQuery(string query)
     {
+        ArgumentException.ThrowIfNullOrEmpty(query);
         if (string.IsNullOrWhiteSpace(query))
             return string.Empty;
 
