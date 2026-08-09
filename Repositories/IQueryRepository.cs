@@ -49,6 +49,7 @@ public class QueryRepository : IQueryRepository
 
     public Task<DatabaseQuery?> GetQueryByIdAsync(string queryId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(queryId);
         _logger.LogDebug("Retrieving query by ID: {QueryId}", queryId);
         lock (_lock)
         {
@@ -59,7 +60,6 @@ public class QueryRepository : IQueryRepository
 
     public Task<List<DatabaseQuery>> GetAllQueriesAsync()
     {
-        _logger.LogInformation("Retrieving all queries");
         lock (_lock)
         {
             return Task.FromResult(new List<DatabaseQuery>(_queries));
@@ -68,6 +68,7 @@ public class QueryRepository : IQueryRepository
 
     public Task<List<DatabaseQuery>> GetQueriesByTableAsync(string tableName)
     {
+        ArgumentException.ThrowIfNullOrEmpty(tableName);
         lock (_lock)
         {
             var queries = _queries
@@ -79,6 +80,7 @@ public class QueryRepository : IQueryRepository
 
     public Task<List<DatabaseQuery>> GetQueriesByTypeAsync(QueryType queryType)
     {
+        ArgumentNullException.ThrowIfNull(queryType);
         lock (_lock)
         {
             var queries = _queries.Where(q => q.QueryType == queryType).ToList();
@@ -88,6 +90,7 @@ public class QueryRepository : IQueryRepository
 
     public Task<DatabaseQuery> AddQueryAsync(DatabaseQuery query)
     {
+        ArgumentNullException.ThrowIfNull(query);
         _logger.LogInformation("Adding new query: {QueryId}", query.QueryId);
         lock (_lock)
         {
@@ -100,6 +103,7 @@ public class QueryRepository : IQueryRepository
 
     public Task UpdateQueryAsync(DatabaseQuery query)
     {
+        ArgumentNullException.ThrowIfNull(query);
         _logger.LogInformation("Updating query: {QueryId}", query.QueryId);
         lock (_lock)
         {
@@ -115,6 +119,7 @@ public class QueryRepository : IQueryRepository
 
     public Task DeleteQueryAsync(string queryId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(queryId);
         _logger.LogInformation("Deleting query: {QueryId}", queryId);
         lock (_lock)
         {
@@ -125,6 +130,7 @@ public class QueryRepository : IQueryRepository
 
     public Task<List<DatabaseQuery>> SearchQueriesAsync(string searchTerm)
     {
+        ArgumentException.ThrowIfNullOrEmpty(searchTerm);
         lock (_lock)
         {
             var results = _queries
@@ -137,6 +143,7 @@ public class QueryRepository : IQueryRepository
 
     public Task<List<DatabaseQuery>> GetQueriesByApplicationAsync(string applicationName)
     {
+        ArgumentException.ThrowIfNullOrEmpty(applicationName);
         lock (_lock)
         {
             var queries = _queries
