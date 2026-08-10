@@ -10,6 +10,7 @@ using SqlQueryAnalyzer.Caching;
 using SqlQueryAnalyzer.Middleware;
 using SqlQueryAnalyzer.Models;
 using SqlQueryAnalyzer.Services;
+using System;
 using Xunit;
 
 namespace SqlQueryAnalyzer.Tests;
@@ -381,12 +382,15 @@ public class AnalysisPipelineTests
 
         public TestMiddleware(List<string> executionOrder, string name)
         {
+            ArgumentNullException.ThrowIfNull(executionOrder);
+            ArgumentException.ThrowIfNullOrEmpty(name);
             _executionOrder = executionOrder;
             _name = name;
         }
 
         public Task ExecuteAsync(AnalysisContext context)
         {
+            ArgumentNullException.ThrowIfNull(context);
             _executionOrder.Add(_name);
             return Task.CompletedTask;
         }
@@ -398,11 +402,13 @@ public class AnalysisPipelineTests
 
         public StopExecutionMiddleware(List<string> executionOrder)
         {
+            ArgumentNullException.ThrowIfNull(executionOrder);
             _executionOrder = executionOrder;
         }
 
         public Task ExecuteAsync(AnalysisContext context)
         {
+            ArgumentNullException.ThrowIfNull(context);
             _executionOrder.Add("Middleware2");
             context.ShouldContinue = false;
             return Task.CompletedTask;
@@ -415,11 +421,13 @@ public class AnalysisPipelineTests
 
         public ThrowingMiddleware(string message)
         {
+            ArgumentException.ThrowIfNullOrEmpty(message);
             _message = message;
         }
 
         public Task ExecuteAsync(AnalysisContext context)
         {
+            ArgumentNullException.ThrowIfNull(context);
             throw new InvalidOperationException(_message);
         }
     }
@@ -428,6 +436,7 @@ public class AnalysisPipelineTests
     {
         public Task ExecuteAsync(AnalysisContext context)
         {
+            ArgumentNullException.ThrowIfNull(context);
             if (context.Result == null)
             {
                 context.Result = new QueryAnalysisResult
