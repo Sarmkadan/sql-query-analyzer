@@ -46,6 +46,7 @@ public class JsonResultFormatter : IResultFormatter
 
     public string Format(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(nameof(result));
         var dict = result.ToJsonDictionary();
         dict["issues"] = result.Issues.Select(i => new
         {
@@ -67,6 +68,7 @@ public class JsonResultFormatter : IResultFormatter
 
     public string FormatBatch(IEnumerable<QueryAnalysisResult> results)
     {
+        ArgumentNullException.ThrowIfNull(nameof(results));
         var list = results.Select(r => r.ToJsonDictionary()).ToList();
         return SerializeToJson(new { results = list });
     }
@@ -122,6 +124,7 @@ public class CsvResultFormatter : IResultFormatter
 {
     public string Format(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(nameof(result));
         var lines = new List<string>();
 
         // Header
@@ -147,6 +150,7 @@ public class CsvResultFormatter : IResultFormatter
 
     public string FormatBatch(IEnumerable<QueryAnalysisResult> results)
     {
+        ArgumentNullException.ThrowIfNull(nameof(results));
         var lines = new List<string> { "QueryId,IssueType,Severity,Description,ImpactPercentage" };
 
         foreach (var result in results)
@@ -190,6 +194,7 @@ public class XmlResultFormatter : IResultFormatter
 {
     public string Format(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(nameof(result));
         var lines = new List<string>
         {
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>",
@@ -266,6 +271,7 @@ public class HtmlResultFormatter : IResultFormatter
 {
     public string Format(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(nameof(result));
         return $@"
 <!DOCTYPE html>
 <html>
@@ -319,6 +325,7 @@ public class HtmlResultFormatter : IResultFormatter
 
     public string FormatBatch(IEnumerable<QueryAnalysisResult> results)
     {
+        ArgumentNullException.ThrowIfNull(nameof(results));
         var resultsList = results.ToList();
         var rows = string.Join("", resultsList.Select(r => $@"
         <tr>
@@ -361,6 +368,7 @@ public class TextResultFormatter : IResultFormatter
 {
     public string Format(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(nameof(result));
         var lines = new List<string>
         {
             "═══════════════════════════════════════════",
