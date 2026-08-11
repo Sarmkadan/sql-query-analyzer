@@ -291,6 +291,8 @@ public class WebhookConfiguration
     public bool NotifyOnCriticalIssues { get; set; } = true;
     public bool NotifyOnFailures { get; set; } = true;
     public Dictionary<string, string>? CustomHeaders { get; set; }
+
+    public override string ToString() => $"WebhookConfiguration {{ Name = {Name}, Url = {Url}, Type = {Type}, Enabled = {Enabled}, NotifyOnCompletion = {NotifyOnCompletion}, NotifyOnCriticalIssues = {NotifyOnCriticalIssues} }}";
 }
 
 /// <summary>
