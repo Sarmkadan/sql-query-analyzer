@@ -63,8 +63,14 @@ public sealed partial class IndexRecommendationEngine : IIndexRecommendationEngi
     /// <inheritdoc/>
     public Task<List<IndexRecommendation>> RecommendAsync(string queryText)
     {
+        _logger.LogInformation("Starting index recommendation analysis for query: {QueryText}", queryText);
+        try
+        {
         if (string.IsNullOrWhiteSpace(queryText))
+        {
+            _logger.LogWarning("Empty or whitespace-only query text provided");
             return Task.FromResult(new List<IndexRecommendation>());
+        }
 
         var aliases = ExtractAliases(queryText);
         _logger.LogDebug("Using {Count} table alias mappings", aliases.Count);
@@ -109,7 +115,14 @@ public sealed partial class IndexRecommendationEngine : IIndexRecommendationEngi
             _logger.LogInformation("Detected {Count} overlapping index recommendation(s)", redundancies.Count);
 
         _logger.LogInformation("Generated {Count} index recommendation(s)", ranked.Count);
+        _logger.LogInformation("Index recommendation analysis completed successfully");
         return Task.FromResult(ranked);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to analyze query for index recommendations");
+            throw;
+        }
     }
 
     /// <inheritdoc/>
