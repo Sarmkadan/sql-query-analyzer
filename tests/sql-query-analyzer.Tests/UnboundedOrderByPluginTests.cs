@@ -18,6 +18,7 @@ namespace SqlQueryAnalyzer.Tests;
 public class UnboundedOrderByPluginTests
 {
     private readonly ILoggerFactory _loggerFactory;
+    private readonly ILogger<UnboundedOrderByPluginTests> _logger;
 
     public UnboundedOrderByPluginTests()
     {
@@ -27,6 +28,7 @@ public class UnboundedOrderByPluginTests
             builder.AddConsole();
             builder.SetMinimumLevel(LogLevel.Warning); // Reduce noise in tests
         });
+        _logger = _loggerFactory.CreateLogger<UnboundedOrderByPluginTests>();
     }
 
     /// <summary>
@@ -35,6 +37,7 @@ public class UnboundedOrderByPluginTests
     [Fact]
     public async Task ProcessAsync_QueryWithOrderByWithoutPagination_AddsIssue()
     {
+        _logger.LogInformation("ProcessAsync_QueryWithOrderByWithoutPagination_AddsIssue started with {QueryId}", "test-1");
         // Arrange
         var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
         var result = new QueryAnalysisResult
@@ -52,6 +55,7 @@ public class UnboundedOrderByPluginTests
         processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.LargeResultSet);
         processedResult.Issues[0].Severity.Should().Be(Constants.IssueSeverity.Info);
         processedResult.Issues[0].Description.Should().Contain("ORDER BY without pagination");
+        _logger.LogInformation("ProcessAsync_QueryWithOrderByWithoutPagination_AddsIssue completed with {IssueCount} issue(s)", processedResult.Issues.Count);
     }
 
     /// <summary>
@@ -60,6 +64,7 @@ public class UnboundedOrderByPluginTests
     [Fact]
     public async Task ProcessAsync_QueryWithOrderByAndTop_DoesNotAddIssue()
     {
+        _logger.LogInformation("ProcessAsync_QueryWithOrderByAndTop_DoesNotAddIssue started with {QueryId}", "test-2");
         // Arrange
         var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
         var result = new QueryAnalysisResult
@@ -73,6 +78,7 @@ public class UnboundedOrderByPluginTests
 
         // Assert - TOP clause should be detected and no issue should be added
         processedResult.Issues.Should().BeEmpty();
+        _logger.LogInformation("ProcessAsync_QueryWithOrderByAndTop_DoesNotAddIssue completed with {IssueCount} issue(s)", processedResult.Issues.Count);
     }
 
     /// <summary>
@@ -81,6 +87,7 @@ public class UnboundedOrderByPluginTests
     [Fact]
     public async Task ProcessAsync_QueryWithOrderByAndLimit_DoesNotAddIssue()
     {
+        _logger.LogInformation("ProcessAsync_QueryWithOrderByAndLimit_DoesNotAddIssue started with {QueryId}", "test-3");
         // Arrange
         var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
         var result = new QueryAnalysisResult
@@ -94,6 +101,7 @@ public class UnboundedOrderByPluginTests
 
         // Assert
         processedResult.Issues.Should().BeEmpty();
+        _logger.LogInformation("ProcessAsync_QueryWithOrderByAndLimit_DoesNotAddIssue completed with {IssueCount} issue(s)", processedResult.Issues.Count);
     }
 
     /// <summary>
@@ -102,6 +110,7 @@ public class UnboundedOrderByPluginTests
     [Fact]
     public async Task ProcessAsync_QueryWithOrderByAndOffsetFetch_DoesNotAddIssue()
     {
+        _logger.LogInformation("ProcessAsync_QueryWithOrderByAndOffsetFetch_DoesNotAddIssue started with {QueryId}", "test-4");
         // Arrange
         var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
         var result = new QueryAnalysisResult
@@ -115,6 +124,7 @@ public class UnboundedOrderByPluginTests
 
         // Assert
         processedResult.Issues.Should().BeEmpty();
+        _logger.LogInformation("ProcessAsync_QueryWithOrderByAndOffsetFetch_DoesNotAddIssue completed with {IssueCount} issue(s)", processedResult.Issues.Count);
     }
 
     /// <summary>
