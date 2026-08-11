@@ -242,6 +242,8 @@ public class HttpQueryAnalysisClient
     {
         PropertyNameCaseInsensitive = true
     };
+
+    public override string ToString() => $"HttpQueryAnalysisClient {{ BaseUrl = {_baseUrl}, TimeoutSeconds = {_timeoutSeconds} }}";
 }
 
 /// <summary>
@@ -251,6 +253,8 @@ public class AnalysisRequest
 {
     public string Query { get; set; } = string.Empty;
     public Dictionary<string, string>? Options { get; set; }
+
+    public override string ToString() => $"AnalysisRequest {{ Query = {Query}, Options = {Options} }}";
 }
 
 /// <summary>
@@ -260,4 +264,6 @@ public class BatchAnalysisRequest
 {
     public string[] Queries { get; set; } = [];
     public int? MaxDegreeOfParallelism { get; set; }
+
+    public override string ToString() => $"BatchAnalysisRequest {{ Queries = {System.Text.Json.JsonSerializer.Serialize(Queries)}, MaxDegreeOfParallelism = {MaxDegreeOfParallelism} }}";
 }
