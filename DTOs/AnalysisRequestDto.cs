@@ -21,6 +21,9 @@ public sealed class AnalysisRequestDto
     public bool AnalyzeFragmentation { get; set; } = true;
     public bool AnalyzePlan { get; set; } = false;
     public string? ExecutionPlanXml { get; set; }
+
+    public override string ToString() =>
+        $"AnalysisRequestDto {{ QueryText = {QueryText}, ApplicationName = {ApplicationName}, ProcedureName = {ProcedureName}, ModuleName = {ModuleName}, IncludeIndexSuggestions = {IncludeIndexSuggestions}, AnalyzeFragmentation = {AnalyzeFragmentation} }}";
 }
 
 /// <summary>
