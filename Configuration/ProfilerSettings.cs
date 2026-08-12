@@ -147,6 +147,11 @@ public class ProfilerSettings
         errors.AddRange(Visualization.Validate());
         return errors;
     }
+
+    /// <summary>
+    /// Returns a concise, informative string representation of the current settings.
+    /// </summary>
+    public override string ToString() => $"ProfilerSettings {{ CaptureExecutionPlanByDefault = {CaptureExecutionPlanByDefault}, CaptureTimingsByDefault = {CaptureTimingsByDefault}, CaptureResourceUsageByDefault = {CaptureResourceUsageByDefault}, IncludePlanVisualizationByDefault = {IncludePlanVisualizationByDefault}, DefaultMaxDurationMs = {DefaultMaxDurationMs}, MaxQueryLengthChars = {MaxQueryLengthChars} }}";
 }
 
 /// <summary>
