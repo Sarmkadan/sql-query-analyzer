@@ -35,6 +35,9 @@ public class PerformanceMetricCollector
         bool cacheHit,
         bool successful)
     {
+        _logger.LogInformation("Recording analysis metric for {QueryId}: {ExecutionTimeMs}ms, {IssueCount} issues, cache hit: {CacheHit}, successful: {Successful}",
+            queryId, executionTimeMs, issueCount, cacheHit, successful);
+
         lock (_lock)
         {
             _metrics.Add(new AnalysisMetric
@@ -47,6 +50,8 @@ public class PerformanceMetricCollector
                 Timestamp = DateTime.UtcNow
             });
         }
+
+        _logger.LogInformation("Analysis metric recorded for {QueryId}", queryId);
     }
 
     /// <summary>
