@@ -33,6 +33,7 @@ public class DatabaseConnectionValidator
         string databaseType = "SqlServer",
         bool testConnection = true)
     {
+        _logger.LogInformation("Validating connection string for {DatabaseType} (testConnection: {TestConnection})", databaseType, testConnection);
         var result = new ConnectionValidationResult();
 
         try
@@ -43,10 +44,11 @@ public class DatabaseConnectionValidator
                 result.IsValid = false;
                 result.Errors.Add("Invalid connection string format");
                 result.Message = GetFormatHint(databaseType);
+                _logger.LogWarning("Connection string format validation failed for {DatabaseType}", databaseType);
                 return result;
             }
 
-            _logger.LogDebug($"Connection string format valid for {databaseType}");
+            _logger.LogDebug("Connection string format valid for {DatabaseType}", databaseType);
 
             // Test actual connection if requested
             if (testConnection)
@@ -56,6 +58,7 @@ public class DatabaseConnectionValidator
                 {
                     result.IsValid = false;
                     result.Errors.AddRange(connectionTest.Errors);
+                    _logger.LogWarning("Database connection test failed for {DatabaseType}", databaseType);
                     return result;
                 }
 
@@ -65,6 +68,7 @@ public class DatabaseConnectionValidator
 
             result.IsValid = true;
             result.Message = "Connection validation successful";
+            _logger.LogInformation("Connection validation successful for {DatabaseType}", databaseType);
         }
         catch (Exception ex)
         {
