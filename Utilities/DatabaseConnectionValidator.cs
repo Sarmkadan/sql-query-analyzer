@@ -24,6 +24,9 @@ public class DatabaseConnectionValidator
         _logger = logger;
     }
 
+    public override string ToString() => 
+        $"DatabaseConnectionValidator {{ IsValid = {false}, IsConnectionAlive = {false}, Message = {string.Empty}, DatabaseVersion = {string.Empty}, Errors = System.Collections.Generic.List<string>, Success = {false} }}";
+
     /// <summary>
     /// Validates a connection string format and optionally tests the connection.
     /// Returns validation result with detailed error information if validation fails.
