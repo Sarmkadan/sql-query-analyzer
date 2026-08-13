@@ -11,6 +11,9 @@ using SqlQueryAnalyzer.Middleware;
 using SqlQueryAnalyzer.Models;
 using SqlQueryAnalyzer.Services;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SqlQueryAnalyzer.Tests;
@@ -22,6 +25,7 @@ public class AnalysisPipelineTests
 {
     private readonly Mock<ILogger<AnalysisPipeline>> _mockLogger;
     private readonly Mock<IQueryAnalyzerService> _mockAnalyzer;
+    private readonly ILogger<AnalysisPipelineTests> _logger;
     private AnalysisPipeline _pipeline;
     private readonly AnalysisContext _context;
 
@@ -29,6 +33,7 @@ public class AnalysisPipelineTests
     {
         _mockLogger = new Mock<ILogger<AnalysisPipeline>>();
         _mockAnalyzer = new Mock<IQueryAnalyzerService>();
+        _logger = NullLogger<AnalysisPipelineTests>.Instance;
 
         _pipeline = new AnalysisPipeline(_mockLogger.Object, _mockAnalyzer.Object, includeCachingMiddleware: false);
         _context = new AnalysisContext
@@ -41,16 +46,22 @@ public class AnalysisPipelineTests
     [Fact]
     public void Constructor_RegistersDefaultMiddlewaresInCorrectOrder()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(Constructor_RegistersDefaultMiddlewaresInCorrectOrder));
+
         // Arrange & Act
         var pipeline = new AnalysisPipeline(NullLogger<AnalysisPipeline>.Instance, _mockAnalyzer.Object);
 
         // Assert - Verify all default middlewares are registered in the correct order
         pipeline.MiddlewareCount.Should().Be(5);
+
+        _logger.LogInformation("Finished test {TestName}", nameof(Constructor_RegistersDefaultMiddlewaresInCorrectOrder));
     }
 
     [Fact]
     public void Clear_RemovesAllRegisteredMiddlewares()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(Clear_RemovesAllRegisteredMiddlewares));
+
         // Arrange
         var pipeline = new AnalysisPipeline(NullLogger<AnalysisPipeline>.Instance, _mockAnalyzer.Object);
         pipeline.MiddlewareCount.Should().Be(5);
@@ -60,11 +71,15 @@ public class AnalysisPipelineTests
 
         // Assert
         pipeline.MiddlewareCount.Should().Be(0);
+
+        _logger.LogInformation("Finished test {TestName}", nameof(Clear_RemovesAllRegisteredMiddlewares));
     }
 
     [Fact]
     public void RegisterMiddleware_AddsMiddlewareToPipeline()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(RegisterMiddleware_AddsMiddlewareToPipeline));
+
         // Arrange
         var pipeline = new AnalysisPipeline(NullLogger<AnalysisPipeline>.Instance, _mockAnalyzer.Object);
         var initialCount = pipeline.MiddlewareCount;
@@ -75,11 +90,15 @@ public class AnalysisPipelineTests
 
         // Assert
         pipeline.MiddlewareCount.Should().Be(initialCount + 1);
+
+        _logger.LogInformation("Finished test {TestName}", nameof(RegisterMiddleware_AddsMiddlewareToPipeline));
     }
 
     [Fact]
     public async Task ExecuteAsync_ExecutesMiddlewaresInRegistrationOrder()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(ExecuteAsync_ExecutesMiddlewaresInRegistrationOrder));
+
         // Arrange
         var executionOrder = new List<string>();
         var pipeline = new AnalysisPipeline(NullLogger<AnalysisPipeline>.Instance, _mockAnalyzer.Object);
@@ -100,11 +119,15 @@ public class AnalysisPipelineTests
 
         // Assert
         executionOrder.Should().BeEquivalentTo(new[] { "Middleware1", "Middleware2", "Middleware3" });
+
+        _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_ExecutesMiddlewaresInRegistrationOrder));
     }
 
     [Fact]
     public async Task ExecuteAsync_StopsExecutionWhenShouldContinueIsFalse()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(ExecuteAsync_StopsExecutionWhenShouldContinueIsFalse));
+
         // Arrange
         var executionOrder = new List<string>();
         var pipeline = new AnalysisPipeline(NullLogger<AnalysisPipeline>.Instance, _mockAnalyzer.Object);
@@ -126,11 +149,15 @@ public class AnalysisPipelineTests
         // Assert - Only first two middlewares should execute
         executionOrder.Should().BeEquivalentTo(new[] { "Middleware1", "Middleware2" });
         context.ShouldContinue.Should().BeFalse();
+
+        _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_StopsExecutionWhenShouldContinueIsFalse));
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesMiddlewareExceptions()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(ExecuteAsync_HandlesMiddlewareExceptions));
+
         // Arrange
         var pipeline = new AnalysisPipeline(NullLogger<AnalysisPipeline>.Instance, _mockAnalyzer.Object);
         pipeline.RegisterMiddleware(new ThrowingMiddleware("Test exception"));
@@ -142,13 +169,28 @@ public class AnalysisPipelineTests
         };
 
         // Act & Assert - Exception should propagate
-        var act = async () => await pipeline.ExecuteAsync(context);
+        var act = async () =>
+        {
+            try
+            {
+                await pipeline.ExecuteAsync(context);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error executing pipeline in {TestName}", nameof(ExecuteAsync_HandlesMiddlewareExceptions));
+                throw;
+            }
+        };
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Test exception");
+
+        _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_HandlesMiddlewareExceptions));
     }
 
     [Fact]
     public async Task ExecuteAsync_LogsPipelineExecution()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(ExecuteAsync_LogsPipelineExecution));
+
         // Arrange
         var mockLogger = new Mock<ILogger<AnalysisPipeline>>();
         var pipeline = new AnalysisPipeline(mockLogger.Object, _mockAnalyzer.Object);
@@ -170,11 +212,15 @@ public class AnalysisPipelineTests
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.AtLeastOnce);
+
+        _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_LogsPipelineExecution));
     }
 
     [Fact]
     public async Task ExecuteAsync_WithRealAnalyzer_PopulatesResultInContext()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(ExecuteAsync_WithRealAnalyzer_PopulatesResultInContext));
+
         // Arrange
         var mockAnalyzer = new Mock<IQueryAnalyzerService>();
         var expectedResult = new QueryAnalysisResult
@@ -201,11 +247,15 @@ public class AnalysisPipelineTests
         context.Result.Should().NotBeNull();
         context.Result.Should().BeSameAs(expectedResult);
         mockAnalyzer.Verify(x => x.AnalyzeQueryAsync(It.IsAny<string>()), Times.Once);
+
+        _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_WithRealAnalyzer_PopulatesResultInContext));
     }
 
     [Fact]
     public async Task ExecuteAsync_WithMultipleMiddlewares_AggregatesResults()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(ExecuteAsync_WithMultipleMiddlewares_AggregatesResults));
+
         // Arrange
         var pipeline = new AnalysisPipeline(NullLogger<AnalysisPipeline>.Instance, _mockAnalyzer.Object);
 
@@ -225,11 +275,15 @@ public class AnalysisPipelineTests
         context.Result.Should().NotBeNull();
         context.Result!.Metadata.Should().ContainKey("MiddlewareExecuted");
         context.Result.Metadata["MiddlewareExecuted"].Should().Be("true");
+
+        _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_WithMultipleMiddlewares_AggregatesResults));
     }
 
     [Fact]
     public async Task ExecuteAsync_EmptyQuery_StillExecutesPipeline()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(ExecuteAsync_EmptyQuery_StillExecutesPipeline));
+
         // Arrange
         var pipeline = new AnalysisPipeline(NullLogger<AnalysisPipeline>.Instance, _mockAnalyzer.Object);
         var context = new AnalysisContext
@@ -238,14 +292,23 @@ public class AnalysisPipelineTests
             Arguments = new CommandLineArguments()
         };
 
+        if (string.IsNullOrEmpty(context.Query))
+        {
+            _logger.LogWarning("Query is empty in {TestName}", nameof(ExecuteAsync_EmptyQuery_StillExecutesPipeline));
+        }
+
         // Act & Assert - Should not throw, just execute
         var act = async () => await pipeline.ExecuteAsync(context);
         await act.Should().NotThrowAsync();
+
+        _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_EmptyQuery_StillExecutesPipeline));
     }
 
     [Fact]
     public async Task ExecuteAsync_NullQuery_StillExecutesPipeline()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(ExecuteAsync_NullQuery_StillExecutesPipeline));
+
         // Arrange
         var pipeline = new AnalysisPipeline(NullLogger<AnalysisPipeline>.Instance, _mockAnalyzer.Object);
         var context = new AnalysisContext
@@ -254,14 +317,23 @@ public class AnalysisPipelineTests
             Arguments = new CommandLineArguments()
         };
 
+        if (string.IsNullOrEmpty(context.Query))
+        {
+            _logger.LogWarning("Query is null or empty in {TestName}", nameof(ExecuteAsync_NullQuery_StillExecutesPipeline));
+        }
+
         // Act & Assert - Should not throw, just execute
         var act = async () => await pipeline.ExecuteAsync(context);
         await act.Should().NotThrowAsync();
+
+        _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_NullQuery_StillExecutesPipeline));
     }
 
     [Fact]
     public async Task ExecuteAsync_WithMetadata_PreservesMetadata()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(ExecuteAsync_WithMetadata_PreservesMetadata));
+
         // Arrange
         var pipeline = new AnalysisPipeline(NullLogger<AnalysisPipeline>.Instance, _mockAnalyzer.Object);
         var context = new AnalysisContext
@@ -277,11 +349,15 @@ public class AnalysisPipelineTests
         // Assert
         context.Metadata.Should().ContainKey("TestKey");
         context.Metadata["TestKey"].Should().Be("TestValue");
+
+        _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_WithMetadata_PreservesMetadata));
     }
 
     [Fact]
     public async Task ExecuteAsync_WithSeverityFilter_AppliesFilter()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(ExecuteAsync_WithSeverityFilter_AppliesFilter));
+
         // Arrange
         var mockAnalyzer = new Mock<IQueryAnalyzerService>();
         var issues = new List<PerformanceIssue>
@@ -315,11 +391,15 @@ public class AnalysisPipelineTests
         context.Result.Should().NotBeNull();
         context.Result!.Issues.Should().HaveCount(1);
         context.Result.Issues[0].Severity.Should().Be(Constants.IssueSeverity.Critical);
+
+        _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_WithSeverityFilter_AppliesFilter));
     }
 
     [Fact]
     public async Task ExecuteAsync_WithMaxResults_AppliesLimit()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(ExecuteAsync_WithMaxResults_AppliesLimit));
+
         // Arrange
         var mockAnalyzer = new Mock<IQueryAnalyzerService>();
         var issues = new List<PerformanceIssue>
@@ -355,11 +435,15 @@ public class AnalysisPipelineTests
         context.Result.Should().NotBeNull();
         context.Result!.Issues.Should().HaveCount(2);
         context.Result.Issues.Should().BeEquivalentTo(issues.Take(2));
+
+        _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_WithMaxResults_AppliesLimit));
     }
 
     [Fact]
     public async Task ExecuteAsync_WhenResultIsNull_OptimizationMiddlewareHandlesGracefully()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(ExecuteAsync_WhenResultIsNull_OptimizationMiddlewareHandlesGracefully));
+
         // Arrange
         var pipeline = new AnalysisPipeline(NullLogger<AnalysisPipeline>.Instance, _mockAnalyzer.Object);
         var context = new AnalysisContext
@@ -372,6 +456,8 @@ public class AnalysisPipelineTests
         // Act & Assert - Should not throw
         var act = async () => await pipeline.ExecuteAsync(context);
         await act.Should().NotThrowAsync();
+
+        _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_WhenResultIsNull_OptimizationMiddlewareHandlesGracefully));
     }
 
     // Test middleware implementations for tracking execution
