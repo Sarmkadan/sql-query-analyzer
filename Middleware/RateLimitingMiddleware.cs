@@ -46,6 +46,8 @@ public class RateLimitingMiddleware
         if (timeout == default)
             timeout = TimeSpan.FromSeconds(30);
 
+        _logger.LogInformation("AcquireSlotAsync called with {QueryHash} and timeout {TimeoutSeconds}s", queryHash, timeout.TotalSeconds);
+
         var deadline = DateTime.UtcNow.Add(timeout);
 
         // Evict old entries periodically (simple approach: every time we enter)
@@ -59,13 +61,14 @@ public class RateLimitingMiddleware
                 Interlocked.Increment(ref limit.RequestCount);
                 limit.LastRequestTime = DateTime.UtcNow;
 
-                _logger.LogDebug($"Rate limit slot acquired. Active: {Volatile.Read(ref _activeAnalysis)}/{_maxConcurrentAnalysis}");
+                _logger.LogInformation("Rate limit slot acquired for {QueryHash}. Active: {ActiveCount}/{MaxConcurrent}", queryHash, Volatile.Read(ref _activeAnalysis), _maxConcurrentAnalysis);
                 return;
             }
 
             await Task.Delay(100);
         }
 
+        _logger.LogWarning("Rate limit timeout after {TimeoutSeconds}s for {QueryHash}. System is at capacity.", timeout.TotalSeconds, queryHash);
         throw new TimeoutException(
             $"Rate limit timeout after {timeout.TotalSeconds}s. System is at capacity.");
     }
@@ -74,7 +77,7 @@ public class RateLimitingMiddleware
     {
         if (Volatile.Read(ref _activeAnalysis) >= _maxConcurrentAnalysis)
         {
-            _logger.LogWarning($"Rate limit: {Volatile.Read(ref _activeAnalysis)}/{_maxConcurrentAnalysis} concurrent analysis slots in use");
+            _logger.LogWarning("Rate limit: {ActiveCount}/{MaxConcurrent} concurrent analysis slots in use", Volatile.Read(ref _activeAnalysis), _maxConcurrentAnalysis);
             return false;
         }
 
@@ -94,7 +97,7 @@ public class RateLimitingMiddleware
                 return true;
             }
 
-            _logger.LogWarning($"Rate limit: {_requestsInWindow}/{_maxQueriesPerSecond} requests in window");
+            _logger.LogWarning("Rate limit: {RequestsInWindow}/{MaxQueriesPerSecond} requests in window", _requestsInWindow, _maxQueriesPerSecond);
             return false;
         }
     }
@@ -104,13 +107,18 @@ public class RateLimitingMiddleware
         var now = DateTime.UtcNow;
         var expiration = TimeSpan.FromMinutes(5); // Evict entries older than 5 minutes
 
+        var evicted = 0;
         foreach (var entry in _perQueryLimits)
         {
             if (now - entry.Value.LastRequestTime > expiration)
             {
-                _perQueryLimits.TryRemove(entry.Key, out _);
+                if (_perQueryLimits.TryRemove(entry.Key, out _))
+                    evicted++;
             }
         }
+
+        if (evicted > 0)
+            _logger.LogDebug("Evicted {EvictedCount} stale query rate limit entries", evicted);
     }
 
     /// <summary>
@@ -120,14 +128,19 @@ public class RateLimitingMiddleware
     public void ReleaseSlot()
     {
         Interlocked.Decrement(ref _activeAnalysis);
-        _logger.LogDebug($"Rate limit slot released. Active: {Volatile.Read(ref _activeAnalysis)}/{_maxConcurrentAnalysis}");
+        _logger.LogInformation("Rate limit slot released. Active: {ActiveCount}/{MaxConcurrent}", Volatile.Read(ref _activeAnalysis), _maxConcurrentAnalysis);
     }
 
     /// <summary>
     /// Returns current system load as percentage (0-100).
     /// Useful for monitoring and alerting.
     /// </summary>
-    public double GetSystemLoad() => (Volatile.Read(ref _activeAnalysis) * 100.0) / _maxConcurrentAnalysis;
+    public double GetSystemLoad()
+    {
+        var load = (Volatile.Read(ref _activeAnalysis) * 100.0) / _maxConcurrentAnalysis;
+        _logger.LogDebug("System load is {LoadPercent}% ({ActiveCount}/{MaxConcurrent})", load, Volatile.Read(ref _activeAnalysis), _maxConcurrentAnalysis);
+        return load;
+    }
 
     /// <summary>
     /// Gets rate limit statistics for a specific query hash.
@@ -135,7 +148,13 @@ public class RateLimitingMiddleware
     public QueryRateLimitStats GetQueryStats(string queryHash)
     {
         ArgumentException.ThrowIfNullOrEmpty(queryHash);
+        _logger.LogInformation("Fetching stats for {QueryHash}", queryHash);
         var limit = _perQueryLimits.GetValueOrDefault(queryHash) ?? new QueryRateLimit { QueryHash = queryHash };
+        _logger.LogDebug("Query stats: TotalRequests={TotalRequests}, LastRequestTime={LastRequestTime:O}, AverageIntervalMs={AverageIntervalMs}, IsThrottled={IsThrottled}",
+            limit.RequestCount,
+            limit.LastRequestTime,
+            limit.GetAverageInterval(),
+            limit.RequestCount > 100);
         return new QueryRateLimitStats
         {
             QueryHash = queryHash,
@@ -150,7 +169,12 @@ public class RateLimitingMiddleware
     /// Gets all per-query rate limit tracking dictionaries.
     /// </summary>
     /// <returns>Collection of query rate limits.</returns>
-    internal IReadOnlyCollection<QueryRateLimit> GetPerQueryLimits() => _perQueryLimits.Values.ToArray();
+    internal IReadOnlyCollection<QueryRateLimit> GetPerQueryLimits()
+{
+    var limits = _perQueryLimits.Values.ToArray();
+    _logger.LogDebug("Returning {Count} per-query rate limit entries", limits.Length);
+    return limits;
+}
 }
 
 /// <summary>
