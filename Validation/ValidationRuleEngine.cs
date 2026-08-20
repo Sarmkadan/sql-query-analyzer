@@ -34,11 +34,13 @@ public sealed class ValidationRuleEngine
     public ValidationResult ValidateQuery(string query)
     {
         var result = new ValidationResult();
-
+        _logger.LogInformation("ValidateQuery called with query length {Length}", query?.Length ?? 0);
+                    
         if (string.IsNullOrEmpty(query))
         {
             result.Errors.Add("Query cannot be empty");
             result.IsValid = false;
+            _logger.LogInformation("ValidateQuery completed with empty query, isValid={IsValid}", result.IsValid);
             return result;
         }
 
@@ -55,12 +57,13 @@ public sealed class ValidationRuleEngine
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error executing validation rule: {rule.Name}");
+                _logger.LogError(ex, "Error executing validation rule: {RuleName}", rule.Name);
                 result.Errors.Add($"Validation error: {ex.Message}");
             }
         }
 
         result.IsValid = result.Errors.Count == 0;
+        _logger.LogInformation("ValidateQuery completed, isValid={IsValid}", result.IsValid);
         return result;
     }
 
@@ -69,9 +72,10 @@ public sealed class ValidationRuleEngine
     /// </summary>
     public void RegisterRule(IValidationRule rule)
     {
+        _logger.LogInformation("RegisterRule called with rule {RuleName}", rule.Name);
         ArgumentNullException.ThrowIfNull(nameof(rule));
         _rules.Add(rule);
-        _logger.LogDebug($"Registered validation rule: {rule.Name}");
+        _logger.LogDebug("Registered validation rule: {RuleName}", rule.Name);
     }
 
     /// <summary>
@@ -130,7 +134,7 @@ public sealed class SqlSyntaxRule : IValidationRule
         }
 
         result.IsValid = result.Errors.Count == 0;
-        return result;
+                    return result;
     }
 
     private bool HasMatchingParentheses(string query)
@@ -187,7 +191,7 @@ public class QueryLengthRule : IValidationRule
         }
 
         result.IsValid = result.Errors.Count == 0;
-        return result;
+                    return result;
     }
 }
 
@@ -223,7 +227,7 @@ public class DangerousOperationRule : IValidationRule
         }
 
         result.IsValid = result.Errors.Count == 0;
-        return result;
+                    return result;
     }
 }
 
