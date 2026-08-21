@@ -38,6 +38,7 @@ public class AnalysisEventPublisherTests
         var subscriber = new Mock<IAnalysisEventSubscriber>().Object;
 
         // Act
+        _loggerMock.Object.LogInformation("Subscribing subscriber to publisher");
         _publisher.Subscribe(subscriber);
 
         // Assert
@@ -46,6 +47,7 @@ public class AnalysisEventPublisherTests
         _publisher.Subscribe(subscriber2);
 
         // If we can subscribe without exception, it means the first subscription succeeded
+        _loggerMock.Object.LogInformation("Subscription completed successfully");
         Assert.True(true);
     }
 
@@ -62,6 +64,7 @@ public class AnalysisEventPublisherTests
         _publisher.Subscribe(subscriber);
 
         // Act - subscribe the same subscriber again
+        _loggerMock.Object.LogInformation("Subscribing duplicate subscriber");
         _publisher.Subscribe(subscriber);
 
         // Assert - should only have one subscriber (no exception means duplicates handled)
@@ -69,6 +72,7 @@ public class AnalysisEventPublisherTests
         _publisher.Subscribe(subscriber2);
 
         // This test verifies no exception is thrown, meaning duplicates are handled
+        _loggerMock.Object.LogInformation("Duplicate subscription handled without exception");
         Assert.True(true);
     }
 
@@ -85,6 +89,7 @@ public class AnalysisEventPublisherTests
         _publisher.Subscribe(subscriber);
 
         // Act
+        _loggerMock.Object.LogInformation("Unsubscribing subscriber from publisher");
         _publisher.Unsubscribe(subscriber);
 
         // Assert - we can't directly verify, but we can check that publishing doesn't throw
@@ -92,6 +97,7 @@ public class AnalysisEventPublisherTests
         await _publisher.PublishAsync(@event);
 
         // If no exception, unsubscription worked
+        _loggerMock.Object.LogInformation("Unsubscription completed successfully");
         Assert.True(true);
     }
 
@@ -136,6 +142,7 @@ public class AnalysisEventPublisherTests
         };
 
         // Act
+        _loggerMock.Object.LogInformation("Publishing event {EventType} to all subscribers", @event.EventType);
         await _publisher.PublishAsync(@event);
 
         // Assert
@@ -164,6 +171,7 @@ public class AnalysisEventPublisherTests
         };
 
         // Act
+        _loggerMock.Object.LogInformation("Publishing event {EventType} to single subscriber", @event.EventType);
         await _publisher.PublishAsync(@event);
 
         // Assert
@@ -199,6 +207,7 @@ public class AnalysisEventPublisherTests
         };
 
         // Act - should not throw even though one subscriber throws
+        _loggerMock.Object.LogWarning("Subscriber {SubscriberName} threw exception during event handling", "First subscriber");
         var act = async () => await _publisher.PublishAsync(@event);
         await act.Should().NotThrowAsync();
 
@@ -241,6 +250,7 @@ public class AnalysisEventPublisherTests
         };
 
         // Act - should not throw even though multiple subscribers throw
+        _loggerMock.Object.LogWarning("Multiple subscribers threw exceptions during event handling, continuing to remaining subscribers");
         var act = async () => await _publisher.PublishAsync(@event);
         await act.Should().NotThrowAsync();
 
@@ -260,6 +270,7 @@ public class AnalysisEventPublisherTests
         var @event = new AnalysisStartedEvent();
 
         // Act & Assert - should not throw when there are no subscribers
+        _loggerMock.Object.LogInformation("Publishing event {EventType} with no subscribers", @event.EventType);
         var act = async () => await _publisher.PublishAsync(@event);
         await act.Should().NotThrowAsync();
     }
@@ -282,6 +293,7 @@ public class AnalysisEventPublisherTests
         _publisher.Subscribe(subscriber);
 
         // Act
+        _loggerMock.Object.LogInformation("Publishing multiple event types to subscriber");
         await _publisher.PublishAsync(startedEvent);
         await _publisher.PublishAsync(completedEvent);
         await _publisher.PublishAsync(criticalEvent);
@@ -310,6 +322,7 @@ public class AnalysisEventPublisherTests
         };
 
         // Act
+        _loggerMock.Object.LogInformation("Publishing event {EventType} to verify properties", startedEvent.EventType);
         await _publisher.PublishAsync(startedEvent);
 
         // Assert
