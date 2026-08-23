@@ -15,6 +15,23 @@ public class SqlQueryAnalyzerException : Exception
 {
     public SqlQueryAnalyzerException(string message) : base(message) { }
     public SqlQueryAnalyzerException(string message, Exception innerException) : base(message, innerException) { }
+
+    public override string ToString()
+    {
+        var propertyNames = new[] { "ErrorCode", "ErrorDetails", "Query", "LineNumber", "ColumnNumber", "ConnectionString" };
+        var props = new List<string>();
+        foreach (var name in propertyNames)
+        {
+            var prop = this.GetType().GetProperty(name);
+            if (prop != null)
+            {
+                var value = prop.GetValue(this);
+                props.Add($"{name} = {value}");
+            }
+        }
+
+        return $"SqlQueryAnalyzerException {{ {string.Join(", ", props)} }}";
+    }
 }
 
 /// <summary>
