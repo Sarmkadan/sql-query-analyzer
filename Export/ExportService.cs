@@ -231,6 +231,16 @@ RECOMMENDATION: {result.GetRecommendation()}
     {
         return _formatters.ContainsKey(format.ToLower());
     }
+
+    /// <summary>
+    /// Returns a concise, informative representation of the service,
+    /// including the current export configuration options.
+    /// </summary>
+    public override string ToString()
+    {
+        var options = new ExportOptions();
+        return $"ExportService {{ Formats = [{string.Join(", ", options.Formats)}], OutputDirectory = {options.OutputDirectory}, IncludeReport = {options.IncludeReport}, Compress = {options.Compress}, CompressionPassword = {options.CompressionPassword ?? "none"} }}";
+    }
 }
 
 /// <summary>
