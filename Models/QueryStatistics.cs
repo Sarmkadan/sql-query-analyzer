@@ -116,4 +116,9 @@ public sealed class QueryStatistics
 
         return recommendations;
     }
+
+    public override string ToString()
+    {
+        return $"QueryStatistics {{ ExecutionCount = {ExecutionCount}, TotalExecutionTime = {TotalExecutionTime}, MinimumExecutionTime = {MinimumExecutionTime}, MaximumExecutionTime = {MaximumExecutionTime}, TotalLogicalReads = {TotalLogicalReads}, TotalPhysicalReads = {TotalPhysicalReads} }}";
+    }
 }
