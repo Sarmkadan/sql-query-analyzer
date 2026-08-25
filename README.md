@@ -33,3 +33,19 @@ var result = new QueryAnalysisResult
 var score = QueryComplexityScorer.ComputeScore(result);
 // score = 1 (Users) + 5 (table scan) + 3 (missing index) + 2 (subquery) = 11
 ```
+## CartesianJoinPluginTests
+
+The `CartesianJoinPluginTests` class contains unit tests for the cartesian join detection plugin. It verifies that implicit cartesian products (comma-separated table lists) and explicit `CROSS JOIN` usage — including lower-case spellings and occurrences inside single-line comments — cause the corresponding issue to be added to the analysis result, while proper `INNER`/`LEFT` joins, single-table queries, multi-line comments, and queries without a `FROM` clause do not. It also covers plugin lifecycle and shutdown, metadata correctness, disabled-plugin behavior, multiple issues for combined implicit and explicit cross joins, and safe handling of null or empty queries.
+
+Here's an example of how to use it:
+```csharp
+var tests = new CartesianJoinPluginTests();
+
+await tests.ProcessAsync_QueryWithCommaSeparatedTables_AddsIssue();
+await tests.ProcessAsync_QueryWithExplicitCrossJoin_AddsIssue();
+await tests.ProcessAsync_QueryWithCrossJoinInComment_StillDetectsIssue();
+await tests.ProcessAsync_QueryWithProperInnerJoin_DoesNotAddIssue();
+await tests.ProcessAsync_QueryWithBothImplicitAndExplicitCrossJoin_AddsTwoIssues();
+await tests.InitializeAsync_And_ShutdownAsync_ShouldNotThrow();
+tests.PluginMetadata_IsCorrect();
+```
