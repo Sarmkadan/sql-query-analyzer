@@ -122,6 +122,8 @@ public class AnalyzerSettings
 
         return errors;
     }
+     public override string ToString() => $"AnalyzerSettings {{ Database = {Database}, Analysis = {Analysis}, Cache = {Cache}, Performance = {Performance}, Logging = {Logging}, Provider = {Database.Provider} }}";
+ => "AnalyzerSettings { Database = {Database}, Analysis = {Analysis}, Cache = {Cache}, Performance = {Performance}, Logging = {Logging}, Provider = {Database.Provider} }";
 }
 
 /// <summary>
