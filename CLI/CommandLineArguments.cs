@@ -74,4 +74,6 @@ public class CommandLineArguments
     /// Gets the effective number of parallel tasks based on mode and available resources.
     /// </summary>
     public int GetEffectiveThreadCount() => BatchMode ? ThreadCount : 1;
+
+    public override string ToString() => $"CommandLineArguments {{ Query = {Query}, QueryFile = {QueryFile}, OutputFormat = {OutputFormat}, OutputPath = {OutputPath}, DatabaseConnection = {DatabaseConnection}, Verbose = {Verbose} }}";
 }
