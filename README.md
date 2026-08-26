@@ -49,3 +49,20 @@ await tests.ProcessAsync_QueryWithBothImplicitAndExplicitCrossJoin_AddsTwoIssues
 await tests.InitializeAsync_And_ShutdownAsync_ShouldNotThrow();
 tests.PluginMetadata_IsCorrect();
 ```
+## ErrorHandlingMiddlewareTests
+
+The `ErrorHandlingMiddlewareTests` class contains unit tests for the error handling middleware. It verifies retry semantics around transient analysis exceptions (including fallback to default values when a connection is supplied), immediate propagation of non-transient failures, logging and rethrowing of generic exceptions, classification of transient error types, construction of complete and recoverable error reports with type-specific suggestions, error report formatting, and graceful degradation when primary operations fail.
+
+Here's an example of how to use it:
+```csharp
+var tests = new ErrorHandlingMiddlewareTests();
+
+var result = await tests.ExecuteWithErrorHandlingAsync_SuccessfulOperation_ReturnsResult();
+await tests.ExecuteWithErrorHandlingAsync_TransientAnalysisException_RetriesThenSucceeds();
+await tests.ExecuteWithErrorHandlingAsync_NonTransientAnalysisException_ThrowsImmediately();
+
+tests.IsTransientError_TimeoutError_ReturnsTrue();
+tests.CreateErrorReport_WithFileNotFoundException_HasCorrectSuggestion();
+
+await tests.DegradationStrategy_ExecuteWithDegradationAsync_PrimaryFailsDegradedSucceeds();
+```
