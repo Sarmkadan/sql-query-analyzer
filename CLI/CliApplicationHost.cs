@@ -50,6 +50,8 @@ public class CliApplicationHost
     /// </summary>
     public Dictionary<string, object> Metadata { get; set; } = new();
 
+    public override string ToString() => $"CliApplicationHost {{ Query = {Query}, Arguments = {Arguments}, Result = {Result}, ShouldContinue = {ShouldContinue}, Metadata = {Metadata} }}";
+
     public CliApplicationHost(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
