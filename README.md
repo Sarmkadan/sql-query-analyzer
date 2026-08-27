@@ -80,3 +80,19 @@ tests.ExtractColumnNames_QueryWithSelectColumns_ReturnsColumnNames();
 tests.IsSqlKeyword_RecognizesKeywords();
 tests.IsSqlKeyword_NotAKeyword_ReturnsFalse();
 ```
+
+## QueryNormalizerParameterizationTests
+
+The `QueryNormalizerParameterizationTests` class contains unit tests for the `ToParameterizedQuery` method of `QueryNormalizer`. It verifies that numeric literals, string literals, decimal literals, and other literal values are replaced with `?` placeholders while preserving SQL structure, handling comments, whitespace normalization, and keyword case normalization.
+
+Here's an example of how to use it:
+```csharp
+var tests = new QueryNormalizerParameterizationTests();
+
+tests.ToParameterizedQuery_SimpleQueryWithNumericLiteral_ReplacesWithPlaceholder();
+tests.ToParameterizedQuery_QueryWithStringLiteral_ReplacesWithPlaceholder();
+tests.ToParameterizedQuery_QueryWithMixedLiterals_ReplacesAll();
+tests.ToParameterizedQuery_QueryWithBlockComments_CommentsRemoved();
+tests.ToParameterizedQuery_QueryWithKeywordsInMixedCase_NormalizesToLowercase();
+tests.ToParameterizedQueryAndTrim_ExtensionMethod_TrimsResult();
+```
