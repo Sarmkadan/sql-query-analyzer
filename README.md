@@ -66,3 +66,17 @@ tests.CreateErrorReport_WithFileNotFoundException_HasCorrectSuggestion();
 
 await tests.DegradationStrategy_ExecuteWithDegradationAsync_PrimaryFailsDegradedSucceeds();
 ```
+## QueryNormalizerTests
+
+The `QueryNormalizerTests` class contains unit tests for the `QueryNormalizer` utility class. It verifies that SQL normalization lowercases keywords while preserving string-literal case and escaped quotes, strips line and block comments, and collapses whitespace, and that table/column extraction and keyword detection behave correctly across `FROM`/`JOIN`/`INTO` clauses, `SELECT` columns, and the `*` wildcard.
+
+Here's an example of how to use it:
+```csharp
+var tests = new QueryNormalizerTests();
+
+tests.Normalize_StringLiteralInQuery_LiteralCaseIsPreserved();
+tests.ExtractTableNames_QueryWithFromAndJoin_ReturnsBothTableNames();
+tests.ExtractColumnNames_QueryWithSelectColumns_ReturnsColumnNames();
+tests.IsSqlKeyword_RecognizesKeywords();
+tests.IsSqlKeyword_NotAKeyword_ReturnsFalse();
+```
