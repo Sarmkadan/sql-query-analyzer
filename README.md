@@ -124,3 +124,14 @@ var isKeyword = QueryNormalizer.IsSqlKeyword("SELECT");
 var parameterized = normalizer.ToParameterizedQuery(query);
 // "select id, name from users where age > ? and status = ?"
 ```
+## AnalysisPipelineTests
+
+The `AnalysisPipelineTests` class contains unit tests for the `AnalysisPipeline` class. It verifies the registration and execution of middlewares, including order, early termination, exception handling, logging, and integration with the analyzer service.
+
+Here's an example of how to use it:
+```csharp
+var tests = new AnalysisPipelineTests();
+tests.Constructor_RegistersDefaultMiddlewaresInCorrectOrder();
+await tests.ExecuteAsync_ExecutesMiddlewaresInRegistrationOrder();
+await tests.ExecuteAsync_StopsExecutionWhenShouldContinueIsFalse();
+```
