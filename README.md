@@ -96,3 +96,31 @@ tests.ToParameterizedQuery_QueryWithBlockComments_CommentsRemoved();
 tests.ToParameterizedQuery_QueryWithKeywordsInMixedCase_NormalizesToLowercase();
 tests.ToParameterizedQueryAndTrim_ExtensionMethod_TrimsResult();
 ```
+
+## QueryNormalizer
+
+The `QueryNormalizer` utility class normalizes SQL queries for consistent analysis: it removes redundant whitespace, lowercases keywords, strips comments, and collapses line breaks without changing query logic. It also exposes helpers for extracting table and column names, detecting SQL keywords, and producing parameterized query representations for comparison and caching.
+
+Here's an example of how to use it:
+```csharp
+using SqlQueryAnalyzer.Utilities;
+
+var normalizer = new QueryNormalizer();
+
+var query = "SELECT Id, Name FROM Users WHERE Age > 21 AND Status = 'active'";
+
+var normalized = normalizer.Normalize(query);
+// "select id, name from users where age > 21 and status = 'active'"
+
+var tables = normalizer.ExtractTableNames(query);
+// ["Users"]
+
+var columns = normalizer.ExtractColumnNames(query);
+// ["Id", "Name"]
+
+var isKeyword = QueryNormalizer.IsSqlKeyword("SELECT");
+// true
+
+var parameterized = normalizer.ToParameterizedQuery(query);
+// "select id, name from users where age > ? and status = ?"
+```
