@@ -27,12 +27,12 @@ public interface IAnalysisEventPublisher
 public class AnalysisEventPublisher : IAnalysisEventPublisher
 {
     private readonly ConcurrentBag<IAnalysisEventSubscriber> _subscribers = new();
-    private readonly ILogger<AnalysisEventPublisher> _logger;
+    private readonly ILogger<AnalysisEventPublisher>? _logger;
     private readonly ConcurrentDictionary<IAnalysisEventSubscriber, int> _exceptionCounts = new();
 
-    public AnalysisEventPublisher(ILogger<AnalysisEventPublisher> logger)
+    public AnalysisEventPublisher(ILogger<AnalysisEventPublisher>? logger = null)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _logger = logger;
     }
 
     /// <summary>
@@ -45,7 +45,10 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
     {
         ArgumentNullException.ThrowIfNull(subscriber);
         _subscribers.Add(subscriber);
-        _logger.LogDebug("Subscribed: {SubscriberType}", subscriber.GetType().Name);
+        _logger?.LogDebug(
+            "Subscribed {SubscriberType}; subscriber count is {SubscriberCount}",
+            subscriber.GetType().Name,
+            _subscribers.Count);
     }
 
     /// <summary>
@@ -58,9 +61,13 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
         ArgumentNullException.ThrowIfNull(subscriber);
         if (_subscribers.TryTake(out var removed) && removed == subscriber)
         {
-            _logger.LogDebug("Unsubscribed: {SubscriberType}", subscriber.GetType().Name);
             _exceptionCounts.TryRemove(subscriber, out _);
         }
+
+        _logger?.LogDebug(
+            "Unsubscribed {SubscriberType}; subscriber count is {SubscriberCount}",
+            subscriber.GetType().Name,
+            _subscribers.Count);
     }
 
     /// <summary>
@@ -77,9 +84,12 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
     public async Task PublishAsync(AnalysisEvent @event, int maxConsecutiveFailures = 3)
     {
         ArgumentNullException.ThrowIfNull(@event);
-        _logger.LogDebug("Publishing event: {EventType}", @event.EventType);
         var exceptions = new List<Exception>();
         var snapshot = _subscribers.ToList();
+        _logger?.LogInformation(
+            "Publishing event {EventType} to {SubscriberCount} subscribers",
+            @event.EventType,
+            snapshot.Count);
 
         foreach (var subscriber in snapshot)
         {
@@ -96,7 +106,7 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
 
         if (exceptions.Count > 0)
         {
-            _logger.LogError("Failed to publish event to {Count} subscriber(s)", exceptions.Count);
+            _logger?.LogError("Failed to publish event to {Count} subscriber(s)", exceptions.Count);
             throw new AggregateException("One or more subscribers failed to process the event", exceptions);
         }
     }
@@ -128,7 +138,7 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
             1,
             (_, current) => current + 1);
 
-        _logger.LogWarning(exception, "Subscriber {SubscriberType} failed ({FailureCount}/{MaxFailures} failures): {ErrorMessage}",
+        _logger?.LogWarning(exception, "Subscriber {SubscriberType} failed ({FailureCount}/{MaxFailures} failures): {ErrorMessage}",
             subscriber.GetType().Name,
             failureCount,
             maxConsecutiveFailures,
@@ -138,7 +148,7 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
 
         if (failureCount >= maxConsecutiveFailures)
         {
-            _logger.LogWarning("Auto-unsubscribing {SubscriberType} after {FailureCount} consecutive failures",
+            _logger?.LogWarning("Auto-unsubscribing {SubscriberType} after {FailureCount} consecutive failures",
                 subscriber.GetType().Name,
                 failureCount);
             _subscribers.TryTake(out _);
