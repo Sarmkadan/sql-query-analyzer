@@ -27,6 +27,26 @@ namespace SqlQueryAnalyzer.Scoring;
 /// </remarks>
 public static partial class QueryComplexityScorer
 {
+    /// <summary>
+    /// The complexity points added for each full-table-scan issue.
+    /// </summary>
+    private const int TableScanWeight = 5;
+
+    /// <summary>
+    /// The complexity points added for each missing-index issue.
+    /// </summary>
+    private const int MissingIndexWeight = 3;
+
+    /// <summary>
+    /// The complexity points added for each N+1 detection.
+    /// </summary>
+    private const int NPlusOneWeight = 10;
+
+    /// <summary>
+    /// The complexity points added for each subquery.
+    /// </summary>
+    private const int SubqueryWeight = 2;
+
     // Matches inline SELECT statements used as subqueries: (SELECT …)
     [GeneratedRegex(@"\(\s*SELECT\b", RegexOptions.IgnoreCase)]
     private static partial Regex SubqueryCountRegex();
@@ -43,16 +63,16 @@ public static partial class QueryComplexityScorer
         int score = tableCount;
 
         // +5 for each full table scan
-        score += result.Issues.Count(i => i.IssueType == IssueType.TableScan) * 5;
+        score += result.Issues.Count(i => i.IssueType == IssueType.TableScan) * TableScanWeight;
 
         // +3 for each missing index warning
-        score += result.Issues.Count(i => i.IssueType == IssueType.MissingIndex) * 3;
+        score += result.Issues.Count(i => i.IssueType == IssueType.MissingIndex) * MissingIndexWeight;
 
         // +10 for each N+1 detection
-        score += result.Issues.Count(i => i.IssueType == IssueType.NPlusOne) * 10;
+        score += result.Issues.Count(i => i.IssueType == IssueType.NPlusOne) * NPlusOneWeight;
 
         // +2 for each subquery
-        score += SubqueryCountRegex().Matches(result.Query).Count * 2;
+        score += SubqueryCountRegex().Matches(result.Query).Count * SubqueryWeight;
 
         return score;
     }
