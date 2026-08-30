@@ -42,16 +42,15 @@ public sealed partial class SlowQueryLogParser : ISlowQueryLogParser
     /// </summary>
     public SlowQueryLogParser(ILogger<SlowQueryLogParser> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+
         _logger = logger;
     }
 
     /// <inheritdoc/>
     public Task<List<SlowQueryEntry>> ParseMySqlLogAsync(string logContent)
     {
-        if (logContent == null)
-        {
-            throw new ArgumentNullException(nameof(logContent), "Log content cannot be null.");
-        }
+        ArgumentNullException.ThrowIfNull(logContent);
         
         var entries = new List<SlowQueryEntry>();
         foreach (var block in SplitMySqlBlocks(logContent))
@@ -110,10 +109,7 @@ public sealed partial class SlowQueryLogParser : ISlowQueryLogParser
     /// <inheritdoc/>
     public Task<List<SlowQueryEntry>> ParsePostgreSqlLogAsync(string logContent)
     {
-        if (logContent == null)
-        {
-            throw new ArgumentNullException(nameof(logContent), "Log content cannot be null.");
-        }
+        ArgumentNullException.ThrowIfNull(logContent);
 
         var entries = new List<SlowQueryEntry>();
         foreach (Match match in PostgreSqlLogRegex().Matches(logContent))
@@ -142,10 +138,7 @@ public sealed partial class SlowQueryLogParser : ISlowQueryLogParser
     /// <inheritdoc/>
     public Task<List<SlowQueryEntry>> ParseSqlServerLogAsync(string logContent)
     {
-        if (logContent == null)
-        {
-            throw new ArgumentNullException(nameof(logContent), "Log content cannot be null.");
-        }
+        ArgumentNullException.ThrowIfNull(logContent);
 
         var entries = new List<SlowQueryEntry>();
         var lines = logContent.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n', StringSplitOptions.RemoveEmptyEntries);
@@ -190,6 +183,9 @@ public sealed partial class SlowQueryLogParser : ISlowQueryLogParser
     /// <inheritdoc/>
     public List<SlowQueryEntry> GetTopSlowQueries(List<SlowQueryEntry> entries, int topN = 10, TimeSpan? minDuration = null)
     {
+        ArgumentNullException.ThrowIfNull(entries);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(topN);
+
         var threshold = minDuration ?? TimeSpan.Zero;
         return entries
             .Where(e => e.Duration >= threshold)
