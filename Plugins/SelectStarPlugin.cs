@@ -18,6 +18,20 @@ namespace SqlQueryAnalyzer.Plugins;
 /// </summary>
 public class SelectStarPlugin : AnalysisPluginBase
 {
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
+    private static readonly Regex SelectClauseRegex = new(
+        @"SELECT\s+(.*?)\s+FROM",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline,
+        RegexTimeout);
+    private static readonly Regex StarRegex = new(
+        @"^\*$",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline,
+        RegexTimeout);
+    private static readonly Regex TableStarRegex = new(
+        @"^\w+\.\*$",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline,
+        RegexTimeout);
+
     private readonly ILogger<SelectStarPlugin>? _logger;
 
     public override string PluginId => "select-star-detection";
@@ -29,56 +43,61 @@ public class SelectStarPlugin : AnalysisPluginBase
         _logger = logger;
     }
 
-    public override async Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
+    public override Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
     {
-        if (result.Query == null || string.IsNullOrWhiteSpace(result.Query))
-        {
-            _logger?.LogDebug("Query is null or empty, skipping SELECT * detection");
-            return result;
-        }
-
-        var query = result.Query;
-
         // Skip analysis if plugin is disabled
         if (!IsEnabled)
         {
             _logger?.LogDebug("Plugin {PluginName} is disabled, skipping", Name);
-            return result;
+            return Task.FromResult(result);
         }
+
+        if (result.Query == null || string.IsNullOrWhiteSpace(result.Query))
+        {
+            _logger?.LogDebug("Query is null or empty, skipping SELECT * detection");
+            return Task.FromResult(result);
+        }
+
+        var query = result.Query;
 
         _logger?.LogDebug("Processing query for SELECT * patterns: {QueryId}", result.QueryId);
 
         // Find all SELECT statements in the query
-        var selectMatches = Regex.Matches(query, @"SELECT\s+(.*?)\s+FROM", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        var selectMatches = SelectClauseRegex.Matches(query);
 
         if (selectMatches.Count == 0)
         {
             _logger?.LogDebug("No SELECT statements found in query");
-            return result;
+            return Task.FromResult(result);
         }
 
         foreach (Match match in selectMatches)
         {
-            if (!match.Success) continue;
-
-            var selectClause = match.Groups[1].Value.Trim();
-
-            // Skip if the select clause is empty (shouldn't happen but just in case)
-            if (string.IsNullOrWhiteSpace(selectClause))
-            {
-                continue;
-            }
-
-            // Check if this is a SELECT * pattern
-            if (IsSelectStarPattern(selectClause))
-            {
-                var issue = CreateSelectStarIssue(selectClause, match.Index);
-                result.Issues.Add(issue);
-                _logger?.LogInformation("Detected SELECT * pattern in query {QueryId}", result.QueryId);
-            }
+            AddIssueForMatch(result, match);
         }
 
-        return await Task.FromResult(result);
+        return Task.FromResult(result);
+    }
+
+    private void AddIssueForMatch(QueryAnalysisResult result, Match match)
+    {
+        if (!match.Success) return;
+
+        var selectClause = match.Groups[1].Value.Trim();
+
+        // Skip if the select clause is empty (shouldn't happen but just in case)
+        if (string.IsNullOrWhiteSpace(selectClause))
+        {
+            return;
+        }
+
+        // Check if this is a SELECT * pattern
+        if (IsSelectStarPattern(selectClause))
+        {
+            var issue = CreateSelectStarIssue(selectClause, match.Index);
+            result.Issues.Add(issue);
+            _logger?.LogInformation("Detected SELECT * pattern in query {QueryId}", result.QueryId);
+        }
     }
 
     /// <summary>
@@ -89,20 +108,13 @@ public class SelectStarPlugin : AnalysisPluginBase
         // Normalize the clause: remove comments and collapse whitespace via the shared normalizer.
         var normalized = selectClause.RemoveSqlComments().NormalizeSqlWhitespace();
 
-        // Check for SELECT * (case-insensitive)
-        // Pattern: SELECT followed by * (with optional whitespace)
-        var starPattern = @"^\*$";
-
-        // Also check for SELECT table.* patterns
-        var tableStarPattern = @"^\w+\.\*$";
-
         // Check if the normalized clause is just "*" or "table.*"
-        if (Regex.IsMatch(normalized, starPattern, RegexOptions.IgnoreCase))
+        if (StarRegex.IsMatch(normalized))
         {
             return true;
         }
 
-        if (Regex.IsMatch(normalized, tableStarPattern, RegexOptions.IgnoreCase))
+        if (TableStarRegex.IsMatch(normalized))
         {
             return true;
         }
@@ -112,8 +124,7 @@ public class SelectStarPlugin : AnalysisPluginBase
         foreach (var column in columns)
         {
             var trimmedColumn = column.Trim();
-            if (Regex.IsMatch(trimmedColumn, @"^\*$", RegexOptions.IgnoreCase) ||
-                Regex.IsMatch(trimmedColumn, @"^\w+\.\*$", RegexOptions.IgnoreCase))
+            if (StarRegex.IsMatch(trimmedColumn) || TableStarRegex.IsMatch(trimmedColumn))
             {
                 return true;
             }
