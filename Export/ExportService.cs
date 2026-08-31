@@ -19,11 +19,12 @@ namespace SqlQueryAnalyzer.Export;
 public sealed class ExportService
 {
     private readonly ILogger<ExportService> _logger;
-    private readonly Dictionary<string, IResultFormatter> _formatters = new();
+    private readonly Dictionary<string, IResultFormatter> _formatters =
+        new(StringComparer.OrdinalIgnoreCase);
 
     public ExportService(ILogger<ExportService> logger)
     {
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Register default formatters
         RegisterFormatter("json", new JsonResultFormatter());
@@ -39,8 +40,11 @@ public sealed class ExportService
     /// </summary>
     public void RegisterFormatter(string format, IResultFormatter formatter)
     {
-        _formatters[format.ToLower()] = formatter;
-        _logger.LogDebug($"Registered formatter: {format}");
+        ArgumentException.ThrowIfNullOrWhiteSpace(format);
+        ArgumentNullException.ThrowIfNull(formatter);
+
+        _formatters[format] = formatter;
+        _logger.LogDebug("Registered formatter: {Format}", format);
     }
 
     /// <summary>
@@ -51,9 +55,13 @@ public sealed class ExportService
         string filePath,
         string format = "json")
     {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(format);
+
         try
         {
-            if (!_formatters.TryGetValue(format.ToLower(), out var formatter))
+            if (!_formatters.TryGetValue(format, out var formatter))
             {
                 throw new ArgumentException($"Unsupported format: {format}");
             }
@@ -68,11 +76,11 @@ public sealed class ExportService
             }
 
             await File.WriteAllTextAsync(filePath, content);
-            _logger.LogInformation($"Exported analysis to {filePath} ({format})");
+            _logger.LogInformation("Exported analysis to {FilePath} ({Format})", filePath, format);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Export failed to {filePath}");
+            _logger.LogError(ex, "Export failed to {FilePath}", filePath);
             throw;
         }
     }
@@ -85,13 +93,13 @@ public sealed class ExportService
         string filePath,
         string format = "json")
     {
-        // Fix: Prevent ArgumentNullException on results count logging and formatting
-        if (results == null)
-            throw new ArgumentNullException(nameof(results), "Cannot export a null list of analysis results.");
+        ArgumentNullException.ThrowIfNull(results);
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(format);
 
         try
         {
-            if (!_formatters.TryGetValue(format.ToLower(), out var formatter))
+            if (!_formatters.TryGetValue(format, out var formatter))
             {
                 throw new ArgumentException($"Unsupported format: {format}");
             }
@@ -105,11 +113,15 @@ public sealed class ExportService
             }
 
             await File.WriteAllTextAsync(filePath, content);
-            _logger.LogInformation($"Exported {results.Count} results to {filePath} ({format})");
+            _logger.LogInformation(
+                "Exported {ResultCount} results to {FilePath} ({Format})",
+                results.Count,
+                filePath,
+                format);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Batch export failed to {filePath}");
+            _logger.LogError(ex, "Batch export failed to {FilePath}", filePath);
             throw;
         }
     }
@@ -122,11 +134,15 @@ public sealed class ExportService
         string outputDirectory,
         params string[] formats)
     {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
+        ArgumentNullException.ThrowIfNull(formats);
+
         var tasks = formats.Select(format =>
             ExportAsync(result, Path.Combine(outputDirectory, $"analysis.{format}"), format));
 
         await Task.WhenAll(tasks);
-        _logger.LogInformation($"Exported to {formats.Length} formats");
+        _logger.LogInformation("Exported to {FormatCount} formats", formats.Length);
     }
 
     /// <summary>
@@ -136,6 +152,9 @@ public sealed class ExportService
         QueryAnalysisResult result,
         string outputDirectory)
     {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
+
         try
         {
             // Ensure output directory exists
@@ -158,7 +177,9 @@ public sealed class ExportService
             var recommendations = GenerateRecommendations(result);
             await File.WriteAllTextAsync(recommendationsPath, recommendations);
 
-            _logger.LogInformation($"Complete export package created in {outputDirectory}");
+            _logger.LogInformation(
+                "Complete export package created in {OutputDirectory}",
+                outputDirectory);
         }
         catch (Exception ex)
         {
@@ -229,7 +250,9 @@ RECOMMENDATION: {result.GetRecommendation()}
     /// </summary>
     public bool IsFormatSupported(string format)
     {
-        return _formatters.ContainsKey(format.ToLower());
+        ArgumentException.ThrowIfNullOrWhiteSpace(format);
+
+        return _formatters.ContainsKey(format);
     }
 
     /// <summary>
