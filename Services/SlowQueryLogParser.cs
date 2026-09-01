@@ -28,6 +28,9 @@ public interface ISlowQueryLogParser
 
     /// <summary>Returns the slowest entries after optional filtering.</summary>
     List<SlowQueryEntry> GetTopSlowQueries(List<SlowQueryEntry> entries, int topN = 10, TimeSpan? minDuration = null);
+
+    /// <summary>Aggregates entries that have the same normalized query text.</summary>
+    List<SlowQueryEntry> GetAggregatedByNormalizedQuery(List<SlowQueryEntry> entries);
 }
 
 /// <summary>
@@ -194,6 +197,49 @@ public sealed partial class SlowQueryLogParser : ISlowQueryLogParser
             .ToList();
     }
 
+    /// <inheritdoc/>
+    public List<SlowQueryEntry> GetAggregatedByNormalizedQuery(List<SlowQueryEntry> entries)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+
+        return entries
+            .GroupBy(entry => NormalizeQuery(entry.QueryText), StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var representative = group.First();
+                var durations = group.Select(entry => entry.Duration).ToList();
+                var metadata = new Dictionary<string, string>(representative.Metadata, StringComparer.OrdinalIgnoreCase)
+                {
+                    ["occurrence_count"] = durations.Count.ToString(CultureInfo.InvariantCulture),
+                    ["max_duration_ms"] = durations.Max().TotalMilliseconds.ToString(CultureInfo.InvariantCulture)
+                };
+
+                return new SlowQueryEntry
+                {
+                    EntryId = representative.EntryId,
+                    QueryText = representative.QueryText,
+                    Duration = TimeSpan.FromTicks(durations.Sum(duration => duration.Ticks)),
+                    LockTime = TimeSpan.FromTicks(group.Sum(entry => entry.LockTime.Ticks)),
+                    RowsExamined = group.Sum(entry => entry.RowsExamined),
+                    RowsSent = group.Sum(entry => entry.RowsSent),
+                    Timestamp = representative.Timestamp,
+                    UserHost = representative.UserHost,
+                    Database = representative.Database,
+                    LogSource = representative.LogSource,
+                    Metadata = metadata
+                };
+            })
+            .OrderByDescending(entry => entry.Duration)
+            .ToList();
+    }
+
+    private static string NormalizeQuery(string queryText)
+    {
+        var normalized = QuotedLiteralRegex().Replace(queryText.ToLowerInvariant(), "?");
+        normalized = NumericLiteralRegex().Replace(normalized, "?");
+        return WhitespaceRegex().Replace(normalized, " ").Trim();
+    }
+
     private static IEnumerable<string> SplitMySqlBlocks(string logContent)
     {
         var normalized = logContent.Replace("\r\n", "\n", StringComparison.Ordinal);
@@ -219,4 +265,13 @@ public sealed partial class SlowQueryLogParser : ISlowQueryLogParser
 
     [GeneratedRegex(@"^(?<timestamp>\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+\s+\w+)\s+\[\d+\]\s+(?<user>[^@\s]+)@(?<database>[^\s]+)\s+LOG:\s+duration:\s+(?<duration>[\d\.]+)\s+ms\s+statement:\s+(?<statement>.+)$", RegexOptions.Multiline)]
     private static partial Regex PostgreSqlLogRegex();
+
+    [GeneratedRegex("'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"", RegexOptions.Compiled)]
+    private static partial Regex QuotedLiteralRegex();
+
+    [GeneratedRegex(@"(?<![\w$])[-+]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?(?![\w$])", RegexOptions.Compiled)]
+    private static partial Regex NumericLiteralRegex();
+
+    [GeneratedRegex(@"\s+", RegexOptions.Compiled)]
+    private static partial Regex WhitespaceRegex();
 }
