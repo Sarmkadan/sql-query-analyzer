@@ -17,7 +17,6 @@ namespace SqlQueryAnalyzer.Utilities;
 /// </summary>
 public static class StringExtensions
 {
-    // Normalize whitespace in SQL queries
     /// <summary>
     /// Normalizes whitespace in SQL queries by replacing multiple whitespace characters with single spaces,
     /// normalizing line breaks, and trimming the result.
@@ -42,7 +41,6 @@ public static class StringExtensions
         return normalized.Trim();
     }
 
-    // Remove SQL comments
     /// <summary>
     /// Removes both line comments (-- to end of line) and block comments (/* ... */) from SQL queries.
     /// </summary>
@@ -65,7 +63,6 @@ public static class StringExtensions
         return withoutBlockComments;
     }
 
-    // Truncate string with ellipsis
     /// <summary>
     /// Truncates a string to the specified maximum length, adding an ellipsis (...) if the string is longer.
     /// </summary>
@@ -85,7 +82,6 @@ public static class StringExtensions
         return text[..Math.Min(maxLength, text.Length)] + "...";
     }
 
-    // Check if string is SQL keyword
     /// <summary>
     /// Determines whether the specified word is a common SQL keyword.
     /// </summary>
@@ -108,7 +104,6 @@ public static class StringExtensions
         };
     }
 
-    // Capitalize first letter
     /// <summary>
     /// Capitalizes the first character of the string.
     /// </summary>
@@ -125,7 +120,6 @@ public static class StringExtensions
         return char.ToUpperInvariant(text[0]) + text[1..];
     }
 
-    // Convert to snake_case
     /// <summary>
     /// Converts a PascalCase or camelCase string to snake_case.
     /// </summary>
@@ -143,7 +137,6 @@ public static class StringExtensions
         return withUnderscores.ToLowerInvariant();
     }
 
-    // Count occurrences of substring
     /// <summary>
     /// Counts the number of occurrences of a substring within a string.
     /// </summary>
@@ -162,7 +155,6 @@ public static class StringExtensions
         return (text.Length - text.Replace(substring, string.Empty).Length) / substring.Length;
     }
 
-    // Check if contains SQL injection patterns
     /// <summary>
     /// Checks if the query contains common SQL injection patterns.
     /// </summary>
@@ -187,7 +179,6 @@ public static class StringExtensions
             Regex.IsMatch(query, pattern, RegexOptions.IgnoreCase));
     }
 
-    // Extract query type
     /// <summary>
     /// Extracts the query type (SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, UNKNOWN) from a SQL query.
     /// </summary>
@@ -212,7 +203,6 @@ public static class StringExtensions
         };
     }
 
-    // Split query into statements
     /// <summary>
     /// Splits a SQL query into individual statements using semicolon as a delimiter.
     /// </summary>
@@ -230,7 +220,6 @@ public static class StringExtensions
         return statements.Select(s => s.Trim()).Where(s => s.Length > 0).ToList();
     }
 
-    // Get line and column position
     /// <summary>
     /// Gets the line and column position for a given character index in the string.
     /// </summary>
