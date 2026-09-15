@@ -4,6 +4,7 @@
 Provides JSON serialization and deserialization extensions for the `CommandLineArguments` class, enabling conversion to and from JSON format with configurable options.
 
 ## Members
+
 ### ToJson(value, indented=false)
 Converts a `CommandLineArguments` instance to a JSON string.
 
@@ -48,6 +49,7 @@ var args = new CommandLineArguments
 
 // Serialize to JSON (compact)
 string json = args.ToJson();
+
 // Serialize to JSON (indented)
 string indentedJson = args.ToJson(indented: true);
 
