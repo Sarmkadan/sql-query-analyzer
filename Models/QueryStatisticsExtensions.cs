@@ -220,4 +220,38 @@ public static class QueryStatisticsExtensions
 
         return string.Join(" | ", summaryParts);
     }
+
+    /// <summary>
+    /// Calculates the buffer cache hit ratio as a percentage, indicating how often
+    /// requested pages were found in memory rather than read from disk.
+    /// A ratio below 90% typically signals insufficient buffer pool or missing indexes.
+    /// </summary>
+    /// <param name="statistics">The query statistics to analyze</param>
+    /// <returns>Cache hit ratio between 0 and 100, or 100 if there were no reads at all</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="statistics"/> is null</exception>
+    public static double GetBufferCacheHitRatio(this QueryStatistics statistics)
+    {
+        ArgumentNullException.ThrowIfNull(statistics);
+
+        var totalReads = statistics.TotalLogicalReads + statistics.TotalPhysicalReads;
+        if (totalReads <= 0)
+            return 100.0;
+
+        return (double)statistics.TotalLogicalReads / totalReads * 100.0;
+    }
+
+    /// <summary>
+    /// Returns the wall-clock duration between the first and last recorded execution,
+    /// useful for understanding the active observation window of the query.
+    /// </summary>
+    /// <param name="statistics">The query statistics to analyze</param>
+    /// <returns>Time span between the first and last execution; <see cref="TimeSpan.Zero"/> when they are equal</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="statistics"/> is null</exception>
+    public static TimeSpan GetObservationWindow(this QueryStatistics statistics)
+    {
+        ArgumentNullException.ThrowIfNull(statistics);
+
+        var span = statistics.LastExecution - statistics.FirstExecution;
+        return span < TimeSpan.Zero ? TimeSpan.Zero : span;
+    }
 }
