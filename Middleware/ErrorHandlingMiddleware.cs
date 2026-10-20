@@ -25,6 +25,7 @@ public class ErrorHandlingMiddleware
         int maxRetries = 3,
         int retryDelayMs = 1000)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
         _maxRetries = maxRetries;
         _retryDelay = TimeSpan.FromMilliseconds(retryDelayMs);
@@ -39,6 +40,9 @@ public class ErrorHandlingMiddleware
         string operationName,
         T? defaultValue = default)
     {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(operationName);
+
         int attempt = 0;
 
         while (attempt < _maxRetries)
@@ -94,6 +98,9 @@ public class ErrorHandlingMiddleware
     /// </summary>
     public ErrorReport CreateErrorReport(Exception ex, string context)
     {
+        ArgumentNullException.ThrowIfNull(ex);
+        ArgumentNullException.ThrowIfNull(context);
+
         return new ErrorReport
         {
             ErrorMessage = ex.Message,
@@ -160,6 +167,7 @@ public class DegradationStrategy
 
     public DegradationStrategy(ILogger<DegradationStrategy> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
     }
 
@@ -172,6 +180,10 @@ public class DegradationStrategy
         Func<Task<T>> degradedOperation,
         string operationName)
     {
+        ArgumentNullException.ThrowIfNull(primaryOperation);
+        ArgumentNullException.ThrowIfNull(degradedOperation);
+        ArgumentNullException.ThrowIfNull(operationName);
+
         try
         {
             return await primaryOperation();
