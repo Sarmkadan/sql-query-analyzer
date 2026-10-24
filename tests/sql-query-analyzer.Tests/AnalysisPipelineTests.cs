@@ -168,20 +168,15 @@ public class AnalysisPipelineTests
             Arguments = new CommandLineArguments()
         };
 
-        // Act & Assert - Exception should propagate
-        var act = async () =>
-        {
-            try
-            {
-                await pipeline.ExecuteAsync(context);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error executing pipeline in {TestName}", nameof(ExecuteAsync_HandlesMiddlewareExceptions));
-                throw;
-            }
-        };
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Test exception");
+        // Act - a failing middleware is isolated: the pipeline must not throw
+        var act = async () => await pipeline.ExecuteAsync(context);
+        await act.Should().NotThrowAsync();
+
+        // Assert - the failure is recorded as a diagnostic and the result is flagged as partial
+        context.Result.Should().NotBeNull();
+        context.Result!.IsPartial.Should().BeTrue();
+        context.Result.Diagnostics.Should().ContainSingle(d =>
+            d.RuleId == nameof(ThrowingMiddleware) && d.Message == "Test exception" && !d.TimedOut);
 
         _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_HandlesMiddlewareExceptions));
     }

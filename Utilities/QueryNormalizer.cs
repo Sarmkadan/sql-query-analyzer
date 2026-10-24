@@ -51,17 +51,24 @@ public partial class QueryNormalizer
         RegexOptions.IgnoreCase)]
     private static partial Regex SqlKeywordsRegex();
 
-    [GeneratedRegex(@" +")]
-    private static partial Regex MultipleSpacesRegex();
+    // Any run of whitespace (spaces, tabs, CR/LF) collapses to a single space.
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespaceRunRegex();
 
-    [GeneratedRegex(@" *(,|;|\(|\)) *")]
-    private static partial Regex PunctuationSpacingRegex();
+    // Comma/semicolon get exactly one space after them; no space before them.
+    [GeneratedRegex(@" *([,;]) *")]
+    private static partial Regex CommaSemicolonSpacingRegex();
+
+    // Parentheses hug their contents. Only the space *before* ')' is removed:
+    // "count(*) from" must keep the space that separates ')' from the next keyword.
+    [GeneratedRegex(@" *\( *")]
+    private static partial Regex OpenParenSpacingRegex();
+
+    [GeneratedRegex(@" +\)")]
+    private static partial Regex CloseParenSpacingRegex();
 
     [GeneratedRegex(@" *(=|<>|<=|>=|<|>) *")]
     private static partial Regex OperatorSpacingRegex();
-
-    [GeneratedRegex(@"[\r\n]+")]
-    private static partial Regex LineBreaksRegex();
 
     [GeneratedRegex(@"--.*?(?=\n|$)")]
     private static partial Regex LineCommentsRegex();
@@ -85,7 +92,8 @@ public partial class QueryNormalizer
     private static partial Regex ColumnAliasRegex();
 
     // Matches integers, decimals, and scientific notation for numeric literal parameterization.
-    [GeneratedRegex(@"\b-?\d+(\.\d+)?([eE][+-]?\d+)?\b")]
+    // The sign is only part of the literal when it is not glued to an identifier or number (a-1 keeps its minus operator).
+    [GeneratedRegex(@"(?<![\w.])-?\d+(\.\d+)?([eE][+-]?\d+)?\b")]
     private static partial Regex NumericLiteralRegex();
 
     /// <summary>
@@ -101,10 +109,11 @@ public partial class QueryNormalizer
         // Single-pass extraction+replacement — previously done in two separate Regex scans.
         var (working, literals) = ExtractAndReplaceLiterals(query);
 
+        // Comments must go before whitespace collapsing: a line comment ends at a newline,
+        // and collapsing newlines first would make it swallow the rest of the query.
+        working = RemoveTrailingComments(working);
         working = NormalizeWhitespace(working);
         working = StandardizeKeywordCapitalization(working);
-        working = NormalizeLineBreaks(working);
-        working = RemoveTrailingComments(working);
 
         working = RestoreStringLiterals(working, literals);
 
@@ -156,10 +165,12 @@ public partial class QueryNormalizer
 
     private static string NormalizeWhitespace(string query)
     {
-        var result = MultipleSpacesRegex().Replace(query, " ");
-        result = PunctuationSpacingRegex().Replace(result, "$1");
+        var result = WhitespaceRunRegex().Replace(query, " ");
+        result = CommaSemicolonSpacingRegex().Replace(result, "$1 ");
+        result = OpenParenSpacingRegex().Replace(result, "(");
+        result = CloseParenSpacingRegex().Replace(result, ")");
         result = OperatorSpacingRegex().Replace(result, " $1 ");
-        return result;
+        return result.Trim();
     }
 
     /// <summary>
@@ -172,16 +183,11 @@ public partial class QueryNormalizer
         return SqlKeywordsRegex().Replace(query, static m => m.Value.ToLowerInvariant());
     }
 
-    private static string NormalizeLineBreaks(string query)
-    {
-        var result = LineBreaksRegex().Replace(query, " ");
-        return MultipleSpacesRegex().Replace(result, " ");
-    }
-
     private static string RemoveTrailingComments(string query)
     {
         var result = LineCommentsRegex().Replace(query, "");
-        return BlockCommentsRegex().Replace(result, "");
+        // Replace block comments with a space so "a/* x */b" does not fuse into "ab".
+        return BlockCommentsRegex().Replace(result, " ");
     }
 
     /// <summary>
@@ -261,7 +267,7 @@ public partial class QueryNormalizer
     /// <returns>A parameterized version of the query with literals replaced by ? placeholders.</returns>
     public string ToParameterizedQuery(string query)
     {
-        ArgumentException.ThrowIfNullOrEmpty(query);
+        ArgumentNullException.ThrowIfNull(query);
         if (string.IsNullOrWhiteSpace(query))
             return string.Empty;
 

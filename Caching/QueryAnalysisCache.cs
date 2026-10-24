@@ -32,6 +32,12 @@ public sealed class QueryAnalysisCache
 
     public static QueryAnalysisCache Instance => _instance ?? throw new InvalidOperationException("QueryAnalysisCache not initialized. Register with DI first.");
 
+    /// <summary>
+    /// Gets a value indicating whether the static <see cref="Instance"/> has been registered (via DI).
+    /// Lets callers use the cache opportunistically without throwing when it is absent.
+    /// </summary>
+    public static bool IsInitialized => _instance is not null;
+
     public QueryAnalysisCache(
         ILogger<QueryAnalysisCache> logger,
         QueryCacheKeyGenerator keyGenerator,

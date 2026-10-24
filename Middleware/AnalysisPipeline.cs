@@ -51,7 +51,7 @@ public class AnalysisPipeline
     public AnalysisPipeline(
         ILogger<AnalysisPipeline> logger,
         IQueryAnalyzerService analyzer)
-        : this(logger, analyzer, includeCachingMiddleware: true)
+        : this(logger, analyzer, includeCachingMiddleware: false)
     {
     }
 
@@ -344,8 +344,11 @@ public class OptimizationMiddleware : IAnalysisMiddleware
 
         try
         {
-            // Store result in cache after analysis
-            QueryAnalysisCache.Instance.Set(context.Query, context.Result);
+            // Store result in cache after analysis (only when the process-wide cache is registered)
+            if (QueryAnalysisCache.IsInitialized)
+            {
+                QueryAnalysisCache.Instance.Set(context.Query, context.Result);
+            }
 
             // Apply severity filter if specified
             if (!string.IsNullOrEmpty(context.Arguments.FilterBySeverity))

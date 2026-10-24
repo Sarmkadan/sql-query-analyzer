@@ -221,16 +221,16 @@ public class DtoMapperTests
     }
 
     [Fact]
-    public void AnalysisRequestDto_FromJsonToAnalysisRequest_WithInvalidJson_ReturnsNull()
+    public void AnalysisRequestDto_FromJsonToAnalysisRequest_WithInvalidJson_ThrowsJsonException()
     {
         // Arrange
         var invalidJson = "invalid json {{{";
 
         // Act
-        var result = DtoMapperJsonExtensions.FromJsonToAnalysisRequest(invalidJson);
+        var act = () => DtoMapperJsonExtensions.FromJsonToAnalysisRequest(invalidJson);
 
-        // Assert
-        result.Should().BeNull();
+        // Assert - the non-throwing alternative is TryFromJsonToAnalysisRequest
+        act.Should().Throw<JsonException>();
     }
 
     [Fact]
@@ -282,8 +282,8 @@ public class DtoMapperTests
 
         // Assert
         indentedJson.Should().Contain(Environment.NewLine);
-        indentedJson.Should().Contain("QueryText");
-        indentedJson.Should().Contain("ApplicationName");
+        indentedJson.Should().Contain("queryText");
+        indentedJson.Should().Contain("applicationName");
 
         compactJson.Should().NotContain(Environment.NewLine);
         compactJson.Should().Contain("queryText");

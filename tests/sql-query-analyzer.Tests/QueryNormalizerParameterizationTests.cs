@@ -153,7 +153,7 @@ public class QueryNormalizerParameterizationTests
     public void ToParameterizedQuery_QueryWithStringLiteralContainingQuotes_PreservesEscapedQuotes()
     {
         // Arrange
-        var query = "select name from users where status = 'O'Reilly'";
+        var query = "select name from users where status = 'O''Reilly'";
 
         // Act
         var result = _normalizer.ToParameterizedQuery(query);
@@ -237,7 +237,7 @@ public class QueryNormalizerParameterizationTests
         var result = _normalizer.ToParameterizedQuery(query);
 
         // Assert
-        result.Should().Be("select u.id, u.name from users u where u.status = ? and u.age > ? order by u.name");
+        result.Should().Be("select u.id, u.name from users u where u.status = ? and u.age > ? order by u.name limit ?");
     }
 
     [Fact]

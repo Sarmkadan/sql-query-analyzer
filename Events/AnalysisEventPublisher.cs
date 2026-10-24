@@ -26,7 +26,9 @@ public interface IAnalysisEventPublisher
 /// </summary>
 public class AnalysisEventPublisher : IAnalysisEventPublisher
 {
-    private readonly ConcurrentBag<IAnalysisEventSubscriber> _subscribers = new();
+    // Guarded by _subscribersLock: subscription order matters and failing subscribers must be removed by identity.
+    private readonly List<IAnalysisEventSubscriber> _subscribers = new();
+    private readonly object _subscribersLock = new();
     private readonly ILogger<AnalysisEventPublisher>? _logger;
     private readonly ConcurrentDictionary<IAnalysisEventSubscriber, int> _exceptionCounts = new();
 
@@ -37,18 +39,27 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
 
     /// <summary>
     /// Registers an event subscriber.
-    /// Subscriber will receive all published events.
+    /// Subscriber will receive all published events. Registering the same subscriber twice is a no-op.
     /// </summary>
     /// <param name="subscriber">The subscriber to register. Must not be null.</param>
     /// <exception cref="ArgumentNullException">Thrown if subscriber is null.</exception>
     public void Subscribe(IAnalysisEventSubscriber subscriber)
     {
         ArgumentNullException.ThrowIfNull(subscriber);
-        _subscribers.Add(subscriber);
+        int count;
+        lock (_subscribersLock)
+        {
+            if (_subscribers.Contains(subscriber))
+                return;
+
+            _subscribers.Add(subscriber);
+            count = _subscribers.Count;
+        }
+
         _logger?.LogDebug(
             "Subscribed {SubscriberType}; subscriber count is {SubscriberCount}",
             subscriber.GetType().Name,
-            _subscribers.Count);
+            count);
     }
 
     /// <summary>
@@ -59,38 +70,45 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
     public void Unsubscribe(IAnalysisEventSubscriber subscriber)
     {
         ArgumentNullException.ThrowIfNull(subscriber);
-        if (_subscribers.TryTake(out var removed) && removed == subscriber)
+        int count;
+        lock (_subscribersLock)
         {
-            _exceptionCounts.TryRemove(subscriber, out _);
+            _subscribers.Remove(subscriber);
+            count = _subscribers.Count;
         }
 
+        _exceptionCounts.TryRemove(subscriber, out _);
         _logger?.LogDebug(
             "Unsubscribed {SubscriberType}; subscriber count is {SubscriberCount}",
             subscriber.GetType().Name,
-            _subscribers.Count);
+            count);
     }
 
     /// <summary>
     /// Publishes an event to all subscribers.
     /// Uses sequential, ordered dispatch to ensure subscribers receive events in subscription order.
-    /// If any subscriber throws, the exception is caught and aggregated with other exceptions.
-    /// Subscribers that throw repeatedly may be automatically unsubscribed based on <paramref name="maxConsecutiveFailures"/>.
+    /// A failing subscriber is isolated: its exception is logged, and the remaining subscribers still receive the event.
+    /// Subscribers that fail repeatedly are automatically unsubscribed based on <paramref name="maxConsecutiveFailures"/>.
     /// </summary>
     /// <param name="event">The event to publish. Must not be null.</param>
     /// <param name="maxConsecutiveFailures">Maximum consecutive failures before auto-unsubscribing a subscriber. Default is 3.</param>
     /// <returns>A task that completes when all subscribers have been notified.</returns>
     /// <exception cref="ArgumentNullException">Thrown if @event is null.</exception>
-    /// <exception cref="AggregateException">Thrown if multiple subscribers fail and exceptions are collected.</exception>
     public async Task PublishAsync(AnalysisEvent @event, int maxConsecutiveFailures = 3)
     {
         ArgumentNullException.ThrowIfNull(@event);
-        var exceptions = new List<Exception>();
-        var snapshot = _subscribers.ToList();
+        List<IAnalysisEventSubscriber> snapshot;
+        lock (_subscribersLock)
+        {
+            snapshot = [.. _subscribers];
+        }
+
         _logger?.LogInformation(
             "Publishing event {EventType} to {SubscriberCount} subscribers",
             @event.EventType,
             snapshot.Count);
 
+        int failedCount = 0;
         foreach (var subscriber in snapshot)
         {
             try
@@ -100,14 +118,14 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                TrackSubscriberFailure(subscriber, ex, maxConsecutiveFailures, exceptions);
+                failedCount++;
+                TrackSubscriberFailure(subscriber, ex, maxConsecutiveFailures);
             }
         }
 
-        if (exceptions.Count > 0)
+        if (failedCount > 0)
         {
-            _logger?.LogError("Failed to publish event to {Count} subscriber(s)", exceptions.Count);
-            throw new AggregateException("One or more subscribers failed to process the event", exceptions);
+            _logger?.LogError("Failed to publish event to {Count} subscriber(s)", failedCount);
         }
     }
 
@@ -130,8 +148,7 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
     /// <param name="subscriber">The subscriber that failed.</param>
     /// <param name="exception">The exception that was thrown.</param>
     /// <param name="maxConsecutiveFailures">Maximum allowed consecutive failures before unsubscribing.</param>
-    /// <param name="exceptions">List to accumulate exceptions.</param>
-    private void TrackSubscriberFailure(IAnalysisEventSubscriber subscriber, Exception exception, int maxConsecutiveFailures, List<Exception> exceptions)
+    private void TrackSubscriberFailure(IAnalysisEventSubscriber subscriber, Exception exception, int maxConsecutiveFailures)
     {
         var failureCount = _exceptionCounts.AddOrUpdate(
             subscriber,
@@ -144,14 +161,15 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
             maxConsecutiveFailures,
             exception.Message);
 
-        exceptions.Add(new SubscriberException(subscriber.GetType().Name, exception));
-
         if (failureCount >= maxConsecutiveFailures)
         {
             _logger?.LogWarning("Auto-unsubscribing {SubscriberType} after {FailureCount} consecutive failures",
                 subscriber.GetType().Name,
                 failureCount);
-            _subscribers.TryTake(out _);
+            lock (_subscribersLock)
+            {
+                _subscribers.Remove(subscriber);
+            }
             _exceptionCounts.TryRemove(subscriber, out _);
         }
     }

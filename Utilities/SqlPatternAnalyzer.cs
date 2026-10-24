@@ -113,8 +113,10 @@ public static partial class SqlPatternAnalyzer
     /// </summary>
     public static HashSet<string> ExtractCteNames(string query)
     {
-        ArgumentException.ThrowIfNullOrEmpty(query);
+        ArgumentNullException.ThrowIfNull(query);
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(query))
+            return names;
         foreach (Match match in CteNameRegex().Matches(query))
             names.Add(match.Groups[1].Value);
         return names;
