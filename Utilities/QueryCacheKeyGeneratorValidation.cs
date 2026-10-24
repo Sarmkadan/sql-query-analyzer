@@ -117,7 +117,7 @@ public static class QueryCacheKeyGeneratorValidation
                 errors.Add("IsValidCacheKey returned true for an invalid key");
             }
 
-            if (value.IsValidCacheKey(null))
+            if (value.IsValidCacheKey(null!))
             {
                 errors.Add("IsValidCacheKey returned true for null input");
             }
@@ -162,7 +162,7 @@ public static class QueryCacheKeyGeneratorValidation
                 errors.Add("ExtractHashFromKey returned a value for an invalid key");
             }
 
-            var nullHash = value.ExtractHashFromKey(null);
+            var nullHash = value.ExtractHashFromKey(null!);
             if (nullHash != null)
             {
                 errors.Add("ExtractHashFromKey returned a value for null input");

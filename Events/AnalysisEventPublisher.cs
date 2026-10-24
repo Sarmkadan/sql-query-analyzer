@@ -16,8 +16,17 @@ namespace SqlQueryAnalyzer.Events;
 /// </summary>
 public interface IAnalysisEventPublisher
 {
+    /// <summary>
+    /// Subscribe.
+    /// </summary>
     void Subscribe(IAnalysisEventSubscriber subscriber);
+    /// <summary>
+    /// Unsubscribe.
+    /// </summary>
     void Unsubscribe(IAnalysisEventSubscriber subscriber);
+    /// <summary>
+    /// Publish asynchronously.
+    /// </summary>
     Task PublishAsync(AnalysisEvent @event, int maxConsecutiveFailures = 3);
 }
 
@@ -32,6 +41,9 @@ public class AnalysisEventPublisher : IAnalysisEventPublisher
     private readonly ILogger<AnalysisEventPublisher>? _logger;
     private readonly ConcurrentDictionary<IAnalysisEventSubscriber, int> _exceptionCounts = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnalysisEventPublisher"/> class.
+    /// </summary>
     public AnalysisEventPublisher(ILogger<AnalysisEventPublisher>? logger = null)
     {
         _logger = logger;
@@ -194,9 +206,21 @@ public interface IAnalysisEventSubscriber
 /// </summary>
 public abstract class AnalysisEvent
 {
+    /// <summary>
+    /// The event type.
+    /// </summary>
     public string EventType => GetType().Name;
+    /// <summary>
+    /// Gets or sets the timestamp.
+    /// </summary>
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    /// <summary>
+    /// Gets or sets the correlation ID.
+    /// </summary>
     public string CorrelationId { get; set; } = Guid.NewGuid().ToString();
+    /// <summary>
+    /// Gets or sets the metadata.
+    /// </summary>
     public Dictionary<string, object> Metadata { get; set; } = new();
 }
 
@@ -205,7 +229,13 @@ public abstract class AnalysisEvent
 /// </summary>
 public class AnalysisStartedEvent : AnalysisEvent
 {
+    /// <summary>
+    /// Gets or sets the query ID.
+    /// </summary>
     public string QueryId { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the query.
+    /// </summary>
     public string Query { get; set; } = string.Empty;
 }
 
@@ -215,9 +245,21 @@ public class AnalysisStartedEvent : AnalysisEvent
 /// </summary>
 public class AnalysisCompletedEvent : AnalysisEvent
 {
+    /// <summary>
+    /// Gets or sets the query ID.
+    /// </summary>
     public string QueryId { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the performance score.
+    /// </summary>
     public double PerformanceScore { get; set; }
+    /// <summary>
+    /// Gets or sets the issues found.
+    /// </summary>
     public int IssuesFound { get; set; }
+    /// <summary>
+    /// Gets or sets the analysis duration.
+    /// </summary>
     public TimeSpan AnalysisDuration { get; set; }
 }
 
@@ -227,9 +269,21 @@ public class AnalysisCompletedEvent : AnalysisEvent
 /// </summary>
 public class CriticalIssueDetectedEvent : AnalysisEvent
 {
+    /// <summary>
+    /// Gets or sets the query ID.
+    /// </summary>
     public string QueryId { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the issue type.
+    /// </summary>
     public string IssueType { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the description.
+    /// </summary>
     public string Description { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the impact percentage.
+    /// </summary>
     public double ImpactPercentage { get; set; }
 }
 
@@ -238,8 +292,17 @@ public class CriticalIssueDetectedEvent : AnalysisEvent
 /// </summary>
 public class AnalysisFailedEvent : AnalysisEvent
 {
+    /// <summary>
+    /// Gets or sets the query ID.
+    /// </summary>
     public string QueryId { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the error message.
+    /// </summary>
     public string ErrorMessage { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the exception type.
+    /// </summary>
     public string ExceptionType { get; set; } = string.Empty;
 }
 
@@ -251,11 +314,17 @@ public class LoggingEventSubscriber : IAnalysisEventSubscriber
 {
     private readonly ILogger<LoggingEventSubscriber> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LoggingEventSubscriber"/> class.
+    /// </summary>
     public LoggingEventSubscriber(ILogger<LoggingEventSubscriber> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// On event asynchronously.
+    /// </summary>
     public Task OnEventAsync(AnalysisEvent @event)
     {
         ArgumentNullException.ThrowIfNull(@event);
@@ -289,11 +358,17 @@ public class NotificationEventSubscriber : IAnalysisEventSubscriber
 {
     private readonly ILogger<NotificationEventSubscriber> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NotificationEventSubscriber"/> class.
+    /// </summary>
     public NotificationEventSubscriber(ILogger<NotificationEventSubscriber> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// On event asynchronously.
+    /// </summary>
     public Task OnEventAsync(AnalysisEvent @event)
     {
         ArgumentNullException.ThrowIfNull(@event);

@@ -24,6 +24,9 @@ public class AnalyzerHealthCheck
     private readonly PerformanceMetricCollector _metrics;
     private readonly DatabaseConnectionValidator _connectionValidator;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnalyzerHealthCheck"/> class.
+    /// </summary>
     public AnalyzerHealthCheck(
         ILogger<AnalyzerHealthCheck> logger,
         QueryAnalysisCache cache,
@@ -277,14 +280,38 @@ public class AnalyzerHealthCheck
 /// </summary>
 public class HealthCheckResult
 {
+    /// <summary>
+    /// Gets or sets the check time.
+    /// </summary>
     public DateTime CheckTime { get; set; }
+    /// <summary>
+    /// Gets or sets the status.
+    /// </summary>
     public HealthStatus Status { get; set; }
+    /// <summary>
+    /// Gets or sets the cache health.
+    /// </summary>
     public ComponentHealth CacheHealth { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the rate limiter health.
+    /// </summary>
     public ComponentHealth RateLimiterHealth { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the metrics health.
+    /// </summary>
     public ComponentHealth MetricsHealth { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the database health.
+    /// </summary>
     public ComponentHealth DatabaseHealth { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the errors.
+    /// </summary>
     public List<string> Errors { get; set; } = new();
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() =>
         $"Health Status: {Status}\n" +
         $"  Cache: {CacheHealth.Status}\n" +
@@ -298,8 +325,17 @@ public class HealthCheckResult
 /// </summary>
 public class ComponentHealth
 {
+    /// <summary>
+    /// Gets or sets the component.
+    /// </summary>
     public string Component { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the status.
+    /// </summary>
     public HealthStatus Status { get; set; }
+    /// <summary>
+    /// Gets or sets the message.
+    /// </summary>
     public string Message { get; set; } = string.Empty;
 }
 
@@ -308,8 +344,17 @@ public class ComponentHealth
 /// </summary>
 public class SelfHealResult
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether success.
+    /// </summary>
     public bool Success { get; set; }
+    /// <summary>
+    /// Gets or sets the actions performed.
+    /// </summary>
     public List<string> ActionsPerformed { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the error.
+    /// </summary>
     public string? Error { get; set; }
 }
 
@@ -318,8 +363,20 @@ public class SelfHealResult
 /// </summary>
 public enum HealthStatus
 {
+    /// <summary>
+    /// The healthy.
+    /// </summary>
     Healthy,
+    /// <summary>
+    /// The degraded.
+    /// </summary>
     Degraded,
+    /// <summary>
+    /// The unhealthy.
+    /// </summary>
     Unhealthy,
+    /// <summary>
+    /// The error.
+    /// </summary>
     Error
 }

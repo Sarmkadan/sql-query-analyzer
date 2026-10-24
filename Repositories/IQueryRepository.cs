@@ -19,15 +19,45 @@ namespace SqlQueryAnalyzer.Repositories;
 /// </summary>
 public interface IQueryRepository
 {
+    /// <summary>
+    /// Get query by ID asynchronously.
+    /// </summary>
     Task<DatabaseQuery?> GetQueryByIdAsync(string queryId);
+    /// <summary>
+    /// Get all queries asynchronously.
+    /// </summary>
     Task<List<DatabaseQuery>> GetAllQueriesAsync();
+    /// <summary>
+    /// Get queries by table asynchronously.
+    /// </summary>
     Task<List<DatabaseQuery>> GetQueriesByTableAsync(string tableName);
+    /// <summary>
+    /// Get queries by type asynchronously.
+    /// </summary>
     Task<List<DatabaseQuery>> GetQueriesByTypeAsync(QueryType queryType);
+    /// <summary>
+    /// Add query asynchronously.
+    /// </summary>
     Task<DatabaseQuery> AddQueryAsync(DatabaseQuery query);
+    /// <summary>
+    /// Update query asynchronously.
+    /// </summary>
     Task UpdateQueryAsync(DatabaseQuery query);
+    /// <summary>
+    /// Delete query asynchronously.
+    /// </summary>
     Task DeleteQueryAsync(string queryId);
+    /// <summary>
+    /// Search queries asynchronously.
+    /// </summary>
     Task<List<DatabaseQuery>> SearchQueriesAsync(string searchTerm);
+    /// <summary>
+    /// Get queries by application asynchronously.
+    /// </summary>
     Task<List<DatabaseQuery>> GetQueriesByApplicationAsync(string applicationName);
+    /// <summary>
+    /// Get query count asynchronously.
+    /// </summary>
     Task<int> GetQueryCountAsync();
 }
 
@@ -42,11 +72,17 @@ public class QueryRepository : IQueryRepository
     private readonly object _lock = new();
     private readonly ILogger<QueryRepository> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QueryRepository"/> class.
+    /// </summary>
     public QueryRepository(ILogger<QueryRepository> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Get query by ID asynchronously.
+    /// </summary>
     public Task<DatabaseQuery?> GetQueryByIdAsync(string queryId)
     {
         ArgumentException.ThrowIfNullOrEmpty(queryId);
@@ -58,6 +94,9 @@ public class QueryRepository : IQueryRepository
         }
     }
 
+    /// <summary>
+    /// Get all queries asynchronously.
+    /// </summary>
     public Task<List<DatabaseQuery>> GetAllQueriesAsync()
     {
         lock (_lock)
@@ -66,6 +105,9 @@ public class QueryRepository : IQueryRepository
         }
     }
 
+    /// <summary>
+    /// Get queries by table asynchronously.
+    /// </summary>
     public Task<List<DatabaseQuery>> GetQueriesByTableAsync(string tableName)
     {
         ArgumentException.ThrowIfNullOrEmpty(tableName);
@@ -78,9 +120,11 @@ public class QueryRepository : IQueryRepository
         }
     }
 
+    /// <summary>
+    /// Get queries by type asynchronously.
+    /// </summary>
     public Task<List<DatabaseQuery>> GetQueriesByTypeAsync(QueryType queryType)
     {
-        ArgumentNullException.ThrowIfNull(queryType);
         lock (_lock)
         {
             var queries = _queries.Where(q => q.QueryType == queryType).ToList();
@@ -88,6 +132,9 @@ public class QueryRepository : IQueryRepository
         }
     }
 
+    /// <summary>
+    /// Add query asynchronously.
+    /// </summary>
     public Task<DatabaseQuery> AddQueryAsync(DatabaseQuery query)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -101,6 +148,9 @@ public class QueryRepository : IQueryRepository
         }
     }
 
+    /// <summary>
+    /// Update query asynchronously.
+    /// </summary>
     public Task UpdateQueryAsync(DatabaseQuery query)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -117,6 +167,9 @@ public class QueryRepository : IQueryRepository
         }
     }
 
+    /// <summary>
+    /// Delete query asynchronously.
+    /// </summary>
     public Task DeleteQueryAsync(string queryId)
     {
         ArgumentException.ThrowIfNullOrEmpty(queryId);
@@ -128,6 +181,9 @@ public class QueryRepository : IQueryRepository
         }
     }
 
+    /// <summary>
+    /// Search queries asynchronously.
+    /// </summary>
     public Task<List<DatabaseQuery>> SearchQueriesAsync(string searchTerm)
     {
         ArgumentException.ThrowIfNullOrEmpty(searchTerm);
@@ -141,6 +197,9 @@ public class QueryRepository : IQueryRepository
         }
     }
 
+    /// <summary>
+    /// Get queries by application asynchronously.
+    /// </summary>
     public Task<List<DatabaseQuery>> GetQueriesByApplicationAsync(string applicationName)
     {
         ArgumentException.ThrowIfNullOrEmpty(applicationName);
@@ -153,6 +212,9 @@ public class QueryRepository : IQueryRepository
         }
     }
 
+    /// <summary>
+    /// Get query count asynchronously.
+    /// </summary>
     public Task<int> GetQueryCountAsync()
     {
         _logger.LogDebug("Getting query count: {Count}", _queries.Count);
@@ -171,6 +233,9 @@ public class AnalysisRepository : IAnalysisRepository
     private readonly List<QueryAnalysisResult> _analyses = [];
     private readonly object _lock = new();
 
+    /// <summary>
+    /// Get analysis asynchronously.
+    /// </summary>
     public Task<QueryAnalysisResult?> GetAnalysisAsync(string queryId)
     {
         lock (_lock)
@@ -180,6 +245,9 @@ public class AnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Get all analyses asynchronously.
+    /// </summary>
     public Task<List<QueryAnalysisResult>> GetAllAnalysesAsync()
     {
         lock (_lock)
@@ -188,6 +256,9 @@ public class AnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Get analyses by date range asynchronously.
+    /// </summary>
     public Task<List<QueryAnalysisResult>> GetAnalysesByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
         lock (_lock)
@@ -199,6 +270,9 @@ public class AnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Save analysis asynchronously.
+    /// </summary>
     public Task<QueryAnalysisResult> SaveAnalysisAsync(QueryAnalysisResult analysis)
     {
         lock (_lock)
@@ -211,6 +285,9 @@ public class AnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Delete analysis asynchronously.
+    /// </summary>
     public Task DeleteAnalysisAsync(string queryId)
     {
         lock (_lock)
@@ -220,6 +297,9 @@ public class AnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Get issues by type asynchronously.
+    /// </summary>
     public Task<List<PerformanceIssue>> GetIssuesByTypeAsync(IssueType issueType)
     {
         lock (_lock)
@@ -232,6 +312,9 @@ public class AnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Get critical issues asynchronously.
+    /// </summary>
     public Task<List<PerformanceIssue>> GetCriticalIssuesAsync()
     {
         lock (_lock)
@@ -245,6 +328,9 @@ public class AnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Get total issue count asynchronously.
+    /// </summary>
     public Task<int> GetTotalIssueCountAsync()
     {
         lock (_lock)
@@ -254,6 +340,9 @@ public class AnalysisRepository : IAnalysisRepository
     }
 
     // New method for IAnalysisRepository.GetAnalysesForQueryAsync
+    /// <summary>
+    /// Get analyses for query asynchronously.
+    /// </summary>
     public Task<List<QueryAnalysisResult>> GetAnalysesForQueryAsync(string queryHash)
     {
         lock (_lock)
@@ -266,6 +355,9 @@ public class AnalysisRepository : IAnalysisRepository
     }
 
     // New method for IAnalysisRepository.GetRecentAnalysesAsync
+    /// <summary>
+    /// Get recent analyses asynchronously.
+    /// </summary>
     public Task<List<QueryAnalysisResult>> GetRecentAnalysesAsync(int count = 100)
     {
         lock (_lock)
@@ -288,6 +380,9 @@ public class IndexRepository : IIndexRepository
     private readonly List<IndexSuggestion> _suggestions = [];
     private readonly object _lock = new();
 
+    /// <summary>
+    /// Get index by name asynchronously.
+    /// </summary>
     public Task<ModelIndex?> GetIndexByNameAsync(string indexName)
     {
         lock (_lock)
@@ -297,6 +392,9 @@ public class IndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Get indexes by table asynchronously.
+    /// </summary>
     public Task<List<ModelIndex>> GetIndexesByTableAsync(string tableName)
     {
         lock (_lock)
@@ -306,11 +404,17 @@ public class IndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Save index asynchronously.
+    /// </summary>
     public async Task SaveIndexAsync(ModelIndex index)
     {
         await AddIndexAsync(index);
     }
 
+    /// <summary>
+    /// Get indexes for table asynchronously.
+    /// </summary>
     public Task<List<ModelIndex>> GetIndexesForTableAsync(string tableName)
     {
         lock (_lock)
@@ -322,6 +426,9 @@ public class IndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Get index asynchronously.
+    /// </summary>
     public Task<ModelIndex?> GetIndexAsync(string indexId)
     {
         lock (_lock)
@@ -331,6 +438,9 @@ public class IndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Get all indexes asynchronously.
+    /// </summary>
     public Task<List<ModelIndex>> GetAllIndexesAsync()
     {
         lock (_lock)
@@ -339,6 +449,9 @@ public class IndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Get unused indexes asynchronously.
+    /// </summary>
     public Task<List<ModelIndex>> GetUnusedIndexesAsync()
     {
         lock (_lock)
@@ -348,6 +461,9 @@ public class IndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Get fragmented indexes asynchronously.
+    /// </summary>
     public Task<List<ModelIndex>> GetFragmentedIndexesAsync()
     {
         lock (_lock)
@@ -357,6 +473,9 @@ public class IndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Add index asynchronously.
+    /// </summary>
     public Task<ModelIndex> AddIndexAsync(ModelIndex index)
     {
         lock (_lock)
@@ -366,6 +485,9 @@ public class IndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Update index asynchronously.
+    /// </summary>
     public Task UpdateIndexAsync(ModelIndex index)
     {
         lock (_lock)
@@ -380,6 +502,9 @@ public class IndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Delete index asynchronously.
+    /// </summary>
     public Task DeleteIndexAsync(string indexId)
     {
         lock (_lock)
@@ -390,6 +515,9 @@ public class IndexRepository : IIndexRepository
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Get suggestions asynchronously.
+    /// </summary>
     public Task<List<IndexSuggestion>> GetSuggestionsAsync()
     {
         lock (_lock)
@@ -398,6 +526,9 @@ public class IndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Save suggestion asynchronously.
+    /// </summary>
     public Task SaveSuggestionAsync(IndexSuggestion suggestion)
     {
         lock (_lock)
@@ -413,6 +544,9 @@ public class IndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Get index count asynchronously.
+    /// </summary>
     public Task<int> GetIndexCountAsync()
     {
         lock (_lock)

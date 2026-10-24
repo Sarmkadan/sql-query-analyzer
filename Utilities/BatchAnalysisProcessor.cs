@@ -23,6 +23,9 @@ public class BatchAnalysisProcessor
     private int _maxParallel;
     private IProgress<BatchProgress>? _progressReporter;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BatchAnalysisProcessor"/> class.
+    /// </summary>
     public BatchAnalysisProcessor(
         IQueryAnalyzerService analyzerService,
         ILogger<BatchAnalysisProcessor> logger,
@@ -190,11 +193,26 @@ public class BatchAnalysisProcessor
 /// </summary>
 public class BatchProgress
 {
+    /// <summary>
+    /// Gets or sets the processed count.
+    /// </summary>
     public int ProcessedCount { get; set; }
+    /// <summary>
+    /// Gets or sets the total count.
+    /// </summary>
     public int TotalCount { get; set; }
+    /// <summary>
+    /// Gets or sets the current query index.
+    /// </summary>
     public int CurrentQueryIndex { get; set; }
+    /// <summary>
+    /// Gets or sets the percent complete.
+    /// </summary>
     public double PercentComplete { get; set; }
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() =>
         $"Progress: {ProcessedCount}/{TotalCount} ({PercentComplete:F1}%)";
 }

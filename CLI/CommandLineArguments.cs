@@ -12,28 +12,97 @@ namespace SqlQueryAnalyzer.CLI;
 /// </summary>
 public class CommandLineArguments
 {
+    /// <summary>
+    /// Gets or sets the query.
+    /// </summary>
     public string? Query { get; set; }
+    /// <summary>
+    /// Gets or sets the query file.
+    /// </summary>
     public string? QueryFile { get; set; }
+    /// <summary>
+    /// Gets or sets the output format.
+    /// </summary>
     public string? OutputFormat { get; set; } = "json";
+    /// <summary>
+    /// Gets or sets the output path.
+    /// </summary>
     public string? OutputPath { get; set; }
+    /// <summary>
+    /// Gets or sets the database connection.
+    /// </summary>
     public string? DatabaseConnection { get; set; }
+    /// <summary>
+    /// Gets or sets a value indicating whether verbose.
+    /// </summary>
     public bool Verbose { get; set; }
+    /// <summary>
+    /// Gets or sets a value indicating whether generate report.
+    /// </summary>
     public bool GenerateReport { get; set; }
+    /// <summary>
+    /// Gets or sets a value indicating whether batch mode.
+    /// </summary>
     public bool BatchMode { get; set; }
+    /// <summary>
+    /// Gets or sets the config file.
+    /// </summary>
     public string? ConfigFile { get; set; }
+    /// <summary>
+    /// Gets or sets the thread count.
+    /// </summary>
     public int ThreadCount { get; set; } = Environment.ProcessorCount;
+    /// <summary>
+    /// Gets or sets a value indicating whether show execution plan.
+    /// </summary>
     public bool ShowExecutionPlan { get; set; }
+    /// <summary>
+    /// Gets or sets the SQL server version.
+    /// </summary>
     public string? SqlServerVersion { get; set; } = "2019";
+    /// <summary>
+    /// Gets or sets a value indicating whether dry run.
+    /// </summary>
     public bool DryRun { get; set; }
+    /// <summary>
+    /// Gets or sets a value indicating whether export suggestions.
+    /// </summary>
     public bool ExportSuggestions { get; set; }
+    /// <summary>
+    /// Gets or sets the filter by severity.
+    /// </summary>
     public string? FilterBySeverity { get; set; } // "Critical", "Warning", "Info"
+    /// <summary>
+    /// Gets or sets the max results.
+    /// </summary>
     public int? MaxResults { get; set; }
+    /// <summary>
+    /// Gets or sets a value indicating whether enable cache.
+    /// </summary>
     public bool EnableCache { get; set; } = true;
+    /// <summary>
+    /// Gets or sets the cache path.
+    /// </summary>
     public string? CachePath { get; set; }
+    /// <summary>
+    /// Gets or sets the slow log file.
+    /// </summary>
     public string? SlowLogFile { get; set; }
+    /// <summary>
+    /// Gets or sets the slow log format.
+    /// </summary>
     public string SlowLogFormat { get; set; } = "mysql";
+    /// <summary>
+    /// Gets or sets a value indicating whether parse slow log.
+    /// </summary>
     public bool ParseSlowLog { get; set; }
+    /// <summary>
+    /// Gets or sets a value indicating whether show help.
+    /// </summary>
     public bool ShowHelp { get; set; }
+    /// <summary>
+    /// Gets or sets a value indicating whether show version.
+    /// </summary>
     public bool ShowVersion { get; set; }
 
     /// <summary>
@@ -75,5 +144,8 @@ public class CommandLineArguments
     /// </summary>
     public int GetEffectiveThreadCount() => BatchMode ? ThreadCount : 1;
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() => $"CommandLineArguments {{ Query = {Query}, QueryFile = {QueryFile}, OutputFormat = {OutputFormat}, OutputPath = {OutputPath}, DatabaseConnection = {DatabaseConnection}, Verbose = {Verbose} }}";
 }

@@ -94,8 +94,17 @@ public interface IIndexAnalyzerService
 /// </summary>
 public interface IQueryPlanAnalyzerService
 {
+    /// <summary>
+    /// Parse execution plan asynchronously.
+    /// </summary>
     Task<QueryPlan?> ParseExecutionPlanAsync(string planXml);
+    /// <summary>
+    /// Get missing indexes asynchronously.
+    /// </summary>
     Task<List<string>> GetMissingIndexesAsync(QueryPlan plan);
+    /// <summary>
+    /// Analyze plan asynchronously.
+    /// </summary>
     Task<List<PerformanceIssue>> AnalyzePlanAsync(QueryPlan plan);
 }
 
@@ -104,6 +113,9 @@ public interface IQueryPlanAnalyzerService
 /// </summary>
 public interface IPerformanceIssueDetectorService
 {
+    /// <summary>
+    /// Detect issues asynchronously.
+    /// </summary>
     Task<List<PerformanceIssue>> DetectIssuesAsync(DatabaseQuery query);
 
     /// <summary>
@@ -119,8 +131,17 @@ public interface IPerformanceIssueDetectorService
         CancellationToken cancellationToken = default);
 
     // These methods complete synchronously; ValueTask avoids the Task allocation.
+    /// <summary>
+    /// Detect plus one asynchronously.
+    /// </summary>
     ValueTask<List<PerformanceIssue>> DetectNPlusOneAsync(List<DatabaseQuery> queries);
+    /// <summary>
+    /// Detect join issues asynchronously.
+    /// </summary>
     ValueTask<List<PerformanceIssue>> DetectJoinIssuesAsync(DatabaseQuery query);
+    /// <summary>
+    /// Detect index opportunities asynchronously.
+    /// </summary>
     ValueTask<List<PerformanceIssue>> DetectIndexOpportunitiesAsync(DatabaseQuery query);
 }
 
@@ -129,9 +150,21 @@ public interface IPerformanceIssueDetectorService
 /// </summary>
 public interface IExplainPlanParserService
 {
+    /// <summary>
+    /// Parse SQL server plan asynchronously.
+    /// </summary>
     Task<QueryPlan> ParseSqlServerPlanAsync(string xmlPlan);
+    /// <summary>
+    /// Parse postgre SQL plan asynchronously.
+    /// </summary>
     Task<QueryPlan> ParsePostgreSqlPlanAsync(string jsonPlan);
+    /// <summary>
+    /// Parse my SQL plan asynchronously.
+    /// </summary>
     Task<QueryPlan> ParseMySqlPlanAsync(string jsonPlan);
+    /// <summary>
+    /// Extract plan metrics asynchronously.
+    /// </summary>
     Task<Dictionary<string, object>> ExtractPlanMetricsAsync(QueryPlan plan);
 }
 
@@ -145,6 +178,9 @@ public class QueryAnalyzerService : IQueryAnalyzerService, IDisposable
     private readonly IAnalysisRepository _repository;
     private readonly Microsoft.Extensions.Logging.ILogger<QueryAnalyzerService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QueryAnalyzerService"/> class.
+    /// </summary>
     public QueryAnalyzerService(
         IPerformanceIssueDetectorService issueDetector,
         IIndexAnalyzerService indexAnalyzer,
@@ -157,6 +193,9 @@ public class QueryAnalyzerService : IQueryAnalyzerService, IDisposable
         _logger = logger;
     }
 
+    /// <summary>
+    /// Analyze query asynchronously.
+    /// </summary>
     public async Task<QueryAnalysisResult> AnalyzeQueryAsync(string queryText)
     {
         ArgumentException.ThrowIfNullOrEmpty(queryText);
@@ -165,6 +204,9 @@ public class QueryAnalyzerService : IQueryAnalyzerService, IDisposable
         return await AnalyzeQueryAsync(query);
     }
 
+    /// <summary>
+    /// Analyze query asynchronously.
+    /// </summary>
     public async Task<QueryAnalysisResult> AnalyzeQueryAsync(DatabaseQuery query)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -219,6 +261,9 @@ public class QueryAnalyzerService : IQueryAnalyzerService, IDisposable
     }
 
     // ValueTask.FromResult avoids a heap allocation when the result is already known.
+    /// <summary>
+    /// Calculate performance score asynchronously.
+    /// </summary>
     public ValueTask<double> CalculatePerformanceScoreAsync(QueryAnalysisResult analysis)
     {
         var score = 100.0;
@@ -232,6 +277,9 @@ public class QueryAnalyzerService : IQueryAnalyzerService, IDisposable
         return ValueTask.FromResult(Math.Max(0, Math.Min(100, score)));
     }
 
+    /// <summary>
+    /// Determine complexity asynchronously.
+    /// </summary>
     public ValueTask<QueryComplexity> DetermineComplexityAsync(DatabaseQuery query)
     {
         var complexity = QueryComplexity.Simple;

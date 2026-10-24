@@ -4,7 +4,10 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Authors>Vladyslav Zaiets</Authors>
     <PackageProjectUrl>https://github.com/sarmkadan/sql-query-analyzer</PackageProjectUrl>
   </PropertyGroup>

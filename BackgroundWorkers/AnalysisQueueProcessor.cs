@@ -25,6 +25,9 @@ public class AnalysisQueueProcessor
     private CancellationTokenSource? _cancellationTokenSource;
     private Task? _processingTask;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnalysisQueueProcessor"/> class.
+    /// </summary>
     public AnalysisQueueProcessor(
         IQueryAnalyzerService analyzerService,
         ILogger<AnalysisQueueProcessor> logger,
@@ -244,14 +247,41 @@ public class AnalysisQueueProcessor
 /// </summary>
 public class AnalysisTask
 {
+    /// <summary>
+    /// Gets or sets the task ID.
+    /// </summary>
     public string TaskId { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the query.
+    /// </summary>
     public string Query { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the status.
+    /// </summary>
     public AnalysisTaskStatus Status { get; set; }
+    /// <summary>
+    /// Gets or sets the created at.
+    /// </summary>
     public DateTime CreatedAt { get; set; }
+    /// <summary>
+    /// Gets or sets the started at.
+    /// </summary>
     public DateTime? StartedAt { get; set; }
+    /// <summary>
+    /// Gets or sets the completed at.
+    /// </summary>
     public DateTime? CompletedAt { get; set; }
+    /// <summary>
+    /// Gets or sets the result.
+    /// </summary>
     public QueryAnalysisResult? Result { get; set; }
+    /// <summary>
+    /// Gets or sets the error message.
+    /// </summary>
     public string? ErrorMessage { get; set; }
+    /// <summary>
+    /// Gets or sets the on complete.
+    /// </summary>
     public Action<QueryAnalysisResult>? OnComplete { get; set; }
 
     /// <summary>
@@ -269,10 +299,25 @@ public class AnalysisTask
 /// </summary>
 public enum AnalysisTaskStatus
 {
+    /// <summary>
+    /// The queued.
+    /// </summary>
     Queued,
+    /// <summary>
+    /// The in progress.
+    /// </summary>
     InProgress,
+    /// <summary>
+    /// The completed.
+    /// </summary>
     Completed,
+    /// <summary>
+    /// The failed.
+    /// </summary>
     Failed,
+    /// <summary>
+    /// The cancelled.
+    /// </summary>
     Cancelled
 }
 
@@ -281,12 +326,30 @@ public enum AnalysisTaskStatus
 /// </summary>
 public class QueueStatistics
 {
+    /// <summary>
+    /// Gets or sets the queued count.
+    /// </summary>
     public int QueuedCount { get; set; }
+    /// <summary>
+    /// Gets or sets the active count.
+    /// </summary>
     public int ActiveCount { get; set; }
+    /// <summary>
+    /// Gets or sets the max concurrency.
+    /// </summary>
     public int MaxConcurrency { get; set; }
+    /// <summary>
+    /// Gets or sets the total processed.
+    /// </summary>
     public int TotalProcessed { get; set; }
+    /// <summary>
+    /// Gets or sets the average processing time ms.
+    /// </summary>
     public double AverageProcessingTimeMs { get; set; }
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() =>
         $"Queue: {QueuedCount} queued, {ActiveCount}/{MaxConcurrency} active, " +
         $"{TotalProcessed} processed, Avg: {AverageProcessingTimeMs:F0}ms";

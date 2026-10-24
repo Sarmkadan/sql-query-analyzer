@@ -60,7 +60,7 @@ public static class HttpQueryAnalysisClientValidation
     }
 
     /// <summary>
-    /// Validates the query parameter for <see cref="HttpQueryAnalysisClient.AnalyzeQueryAsync(string)"/>.
+    /// Validates the query parameter for <see cref="HttpQueryAnalysisClient.AnalyzeQueryAsync(string, int, int)"/>.
     /// </summary>
     /// <param name="query">The SQL query to validate.</param>
     /// <returns>An immutable list of validation errors; empty if valid.</returns>

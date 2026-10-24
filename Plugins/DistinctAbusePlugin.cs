@@ -21,15 +21,30 @@ public class DistinctAbusePlugin : AnalysisPluginBase
 {
     private readonly ILogger<DistinctAbusePlugin>? _logger;
 
+    /// <summary>
+    /// The plugin ID.
+    /// </summary>
     public override string PluginId => "distinct-abuse-detection";
+    /// <summary>
+    /// The name.
+    /// </summary>
     public override string Name => "DISTINCT Abuse Detection Plugin";
+    /// <summary>
+    /// The version.
+    /// </summary>
     public override Version Version => new(1, 0, 0);
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DistinctAbusePlugin"/> class.
+    /// </summary>
     public DistinctAbusePlugin(ILogger<DistinctAbusePlugin>? logger = null)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Process asynchronously.
+    /// </summary>
     public override async Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
     {
         if (result.Query == null || string.IsNullOrWhiteSpace(result.Query))

@@ -38,11 +38,6 @@ public class AnalysisPipeline
     public TimeSpan MiddlewareTimeout { get; set; } = DefaultMiddlewareTimeout;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AnalysisPipeline"/> class.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    /// <param name="analyzer">The query analyzer service.</param>
-    /// <summary>
     /// Initializes a new instance of the <see cref="AnalysisPipeline"/>
     /// class.
     /// </summary>
@@ -55,12 +50,6 @@ public class AnalysisPipeline
     {
     }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AnalysisPipeline"/> class for testing.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    /// <param name="analyzer">The query analyzer service.</param>
-    /// <param name="includeCachingMiddleware">Whether to include the caching middleware.</param>
     /// <summary>
     /// Initializes a new instance of the <see cref="AnalysisPipeline"/> class for testing.
     /// </summary>
@@ -206,11 +195,17 @@ public class LoggingMiddleware : IAnalysisMiddleware
 {
     private readonly ILogger<LoggingMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LoggingMiddleware"/> class.
+    /// </summary>
     public LoggingMiddleware(ILogger<LoggingMiddleware> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Execute asynchronously.
+    /// </summary>
     public Task ExecuteAsync(AnalysisContext context)
     {
         var queryPreview = context.Query.Length > 80
@@ -232,11 +227,17 @@ public class ValidationMiddleware : IAnalysisMiddleware
 {
     private readonly ILogger<ValidationMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValidationMiddleware"/> class.
+    /// </summary>
     public ValidationMiddleware(ILogger<ValidationMiddleware> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Execute asynchronously.
+    /// </summary>
     public Task ExecuteAsync(AnalysisContext context)
     {
         try
@@ -270,11 +271,17 @@ public class QueryNormalizationMiddleware : IAnalysisMiddleware
 {
     private readonly ILogger<QueryNormalizationMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QueryNormalizationMiddleware"/> class.
+    /// </summary>
     public QueryNormalizationMiddleware(ILogger<QueryNormalizationMiddleware> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Execute asynchronously.
+    /// </summary>
     public Task ExecuteAsync(AnalysisContext context)
     {
         try
@@ -302,12 +309,18 @@ public class AnalysisMiddleware : IAnalysisMiddleware
     private readonly IQueryAnalyzerService _analyzer;
     private readonly ILogger<AnalysisMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnalysisMiddleware"/> class.
+    /// </summary>
     public AnalysisMiddleware(IQueryAnalyzerService analyzer, ILogger<AnalysisMiddleware> logger)
     {
         _analyzer = analyzer;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Execute asynchronously.
+    /// </summary>
     public async Task ExecuteAsync(AnalysisContext context)
     {
         try
@@ -332,11 +345,17 @@ public class OptimizationMiddleware : IAnalysisMiddleware
 {
     private readonly ILogger<OptimizationMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OptimizationMiddleware"/> class.
+    /// </summary>
     public OptimizationMiddleware(ILogger<OptimizationMiddleware> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Execute asynchronously.
+    /// </summary>
     public Task ExecuteAsync(AnalysisContext context)
     {
         if (context.Result == null)

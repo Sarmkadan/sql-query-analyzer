@@ -58,9 +58,24 @@ public sealed class IndexRecommendation
 /// </summary>
 public enum RecommendationSource
 {
+    /// <summary>
+    /// The where clause.
+    /// </summary>
     WhereClause,
+    /// <summary>
+    /// The join condition.
+    /// </summary>
     JoinCondition,
+    /// <summary>
+    /// The order by.
+    /// </summary>
     OrderBy,
+    /// <summary>
+    /// The group by.
+    /// </summary>
     GroupBy,
+    /// <summary>
+    /// The composite.
+    /// </summary>
     Composite
 }

@@ -39,14 +39,20 @@ public class JsonResultFormatter : IResultFormatter
 {
     private readonly bool _prettyPrint;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JsonResultFormatter"/> class.
+    /// </summary>
     public JsonResultFormatter(bool prettyPrint = true)
     {
         _prettyPrint = prettyPrint;
     }
 
+    /// <summary>
+    /// Format.
+    /// </summary>
     public string Format(QueryAnalysisResult result)
     {
-        ArgumentNullException.ThrowIfNull(nameof(result));
+        ArgumentNullException.ThrowIfNull(result);
         var dict = result.ToJsonDictionary();
         dict["issues"] = result.Issues.Select(i => new
         {
@@ -66,13 +72,19 @@ public class JsonResultFormatter : IResultFormatter
         return SerializeToJson(dict);
     }
 
+    /// <summary>
+    /// Format batch.
+    /// </summary>
     public string FormatBatch(IEnumerable<QueryAnalysisResult> results)
     {
-        ArgumentNullException.ThrowIfNull(nameof(results));
+        ArgumentNullException.ThrowIfNull(results);
         var list = results.Select(r => r.ToJsonDictionary()).ToList();
         return SerializeToJson(new { results = list });
     }
 
+    /// <summary>
+    /// Get format type.
+    /// </summary>
     public string GetFormatType() => "json";
 
     private string SerializeToJson(object obj)
@@ -122,9 +134,12 @@ public class JsonResultFormatter : IResultFormatter
 /// </summary>
 public class CsvResultFormatter : IResultFormatter
 {
+    /// <summary>
+    /// Format.
+    /// </summary>
     public string Format(QueryAnalysisResult result)
     {
-        ArgumentNullException.ThrowIfNull(nameof(result));
+        ArgumentNullException.ThrowIfNull(result);
         var lines = new List<string>();
 
         // Header
@@ -148,9 +163,12 @@ public class CsvResultFormatter : IResultFormatter
         return string.Join("\n", lines);
     }
 
+    /// <summary>
+    /// Format batch.
+    /// </summary>
     public string FormatBatch(IEnumerable<QueryAnalysisResult> results)
     {
-        ArgumentNullException.ThrowIfNull(nameof(results));
+        ArgumentNullException.ThrowIfNull(results);
         var lines = new List<string> { "QueryId,IssueType,Severity,Description,ImpactPercentage" };
 
         foreach (var result in results)
@@ -173,6 +191,9 @@ public class CsvResultFormatter : IResultFormatter
         return string.Join("\n", lines);
     }
 
+    /// <summary>
+    /// Get format type.
+    /// </summary>
     public string GetFormatType() => "csv";
 
     private string EscapeCsv(string value)
@@ -192,9 +213,12 @@ public class CsvResultFormatter : IResultFormatter
 /// </summary>
 public class XmlResultFormatter : IResultFormatter
 {
+    /// <summary>
+    /// Format.
+    /// </summary>
     public string Format(QueryAnalysisResult result)
     {
-        ArgumentNullException.ThrowIfNull(nameof(result));
+        ArgumentNullException.ThrowIfNull(result);
         var lines = new List<string>
         {
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>",
@@ -234,6 +258,9 @@ public class XmlResultFormatter : IResultFormatter
         return string.Join("\n", lines);
     }
 
+    /// <summary>
+    /// Format batch.
+    /// </summary>
     public string FormatBatch(IEnumerable<QueryAnalysisResult> results)
     {
         var lines = new List<string>
@@ -254,6 +281,9 @@ public class XmlResultFormatter : IResultFormatter
         return string.Join("\n", lines);
     }
 
+    /// <summary>
+    /// Get format type.
+    /// </summary>
     public string GetFormatType() => "xml";
 
     private string EscapeXml(string value) =>
@@ -269,9 +299,12 @@ public class XmlResultFormatter : IResultFormatter
 /// </summary>
 public class HtmlResultFormatter : IResultFormatter
 {
+    /// <summary>
+    /// Format.
+    /// </summary>
     public string Format(QueryAnalysisResult result)
     {
-        ArgumentNullException.ThrowIfNull(nameof(result));
+        ArgumentNullException.ThrowIfNull(result);
         return $@"
 <!DOCTYPE html>
 <html>
@@ -323,9 +356,12 @@ public class HtmlResultFormatter : IResultFormatter
 </html>";
     }
 
+    /// <summary>
+    /// Format batch.
+    /// </summary>
     public string FormatBatch(IEnumerable<QueryAnalysisResult> results)
     {
-        ArgumentNullException.ThrowIfNull(nameof(results));
+        ArgumentNullException.ThrowIfNull(results);
         var resultsList = results.ToList();
         var rows = string.Join("", resultsList.Select(r => $@"
         <tr>
@@ -358,6 +394,9 @@ public class HtmlResultFormatter : IResultFormatter
 </html>";
     }
 
+    /// <summary>
+    /// Get format type.
+    /// </summary>
     public string GetFormatType() => "html";
 }
 
@@ -366,9 +405,12 @@ public class HtmlResultFormatter : IResultFormatter
 /// </summary>
 public class TextResultFormatter : IResultFormatter
 {
+    /// <summary>
+    /// Format.
+    /// </summary>
     public string Format(QueryAnalysisResult result)
     {
-        ArgumentNullException.ThrowIfNull(nameof(result));
+        ArgumentNullException.ThrowIfNull(result);
         var lines = new List<string>
         {
             "═══════════════════════════════════════════",
@@ -416,6 +458,9 @@ public class TextResultFormatter : IResultFormatter
         return string.Join("\n", lines);
     }
 
+    /// <summary>
+    /// Format batch.
+    /// </summary>
     public string FormatBatch(IEnumerable<QueryAnalysisResult> results)
     {
         var lines = new List<string> { "BATCH ANALYSIS RESULTS", "=" + new string('=', 40) };
@@ -428,5 +473,8 @@ public class TextResultFormatter : IResultFormatter
         return string.Join("\n", lines);
     }
 
+    /// <summary>
+    /// Get format type.
+    /// </summary>
     public string GetFormatType() => "text";
 }

@@ -17,10 +17,25 @@ namespace SqlQueryAnalyzer.Configuration;
 /// </summary>
 public class AnalyzerSettings
 {
+    /// <summary>
+    /// Gets or sets the database.
+    /// </summary>
     public DatabaseSettings Database { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the analysis.
+    /// </summary>
     public AnalysisSettings Analysis { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the cache.
+    /// </summary>
     public CacheSettings Cache { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the performance.
+    /// </summary>
     public PerformanceSettings Performance { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the logging.
+    /// </summary>
     public LoggingSettings Logging { get; set; } = new();
 
     /// <summary>
@@ -123,6 +138,9 @@ public class AnalyzerSettings
         return errors;
     }
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() => $"AnalyzerSettings {{ Database = {Database}, Analysis = {Analysis}, Cache = {Cache}, Performance = {Performance}, Logging = {Logging}, Provider = {Database.Provider} }}";
 }
 
@@ -131,10 +149,25 @@ public class AnalyzerSettings
 /// </summary>
 public class DatabaseSettings
 {
+    /// <summary>
+    /// Gets or sets the provider.
+    /// </summary>
     public string Provider { get; set; } = "SqlServer"; // SqlServer, PostgreSQL, MySQL
+    /// <summary>
+    /// Gets or sets the connection string.
+    /// </summary>
     public string ConnectionString { get; set; } = "Server=localhost;Database=SqlAnalyzer;";
+    /// <summary>
+    /// Gets or sets the connection pool size.
+    /// </summary>
     public int ConnectionPoolSize { get; set; } = 10;
+    /// <summary>
+    /// Gets or sets the connection timeout seconds.
+    /// </summary>
     public int ConnectionTimeoutSeconds { get; set; } = 5;
+    /// <summary>
+    /// Gets or sets a value indicating whether enable connection logging.
+    /// </summary>
     public bool EnableConnectionLogging { get; set; } = false;
 }
 
@@ -143,12 +176,33 @@ public class DatabaseSettings
 /// </summary>
 public class AnalysisSettings
 {
+    /// <summary>
+    /// Gets or sets the max threads.
+    /// </summary>
     public int MaxThreads { get; set; } = Environment.ProcessorCount;
+    /// <summary>
+    /// Gets or sets a value indicating whether detect plus one.
+    /// </summary>
     public bool DetectNPlusOne { get; set; } = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether detect missing indexes.
+    /// </summary>
     public bool DetectMissingIndexes { get; set; } = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether detect join issues.
+    /// </summary>
     public bool DetectJoinIssues { get; set; } = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether analyze execution plans.
+    /// </summary>
     public bool AnalyzeExecutionPlans { get; set; } = true;
+    /// <summary>
+    /// Gets or sets the critical issue sensitivity.
+    /// </summary>
     public double CriticalIssueSensitivity { get; set; } = 0.8; // 0-1 scale
+    /// <summary>
+    /// Gets or sets a value indicating whether enable detailed logging.
+    /// </summary>
     public bool EnableDetailedLogging { get; set; } = false;
 
     /// <summary>
@@ -170,11 +224,29 @@ public class AnalysisSettings
 /// </summary>
 public class CacheSettings
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether enabled.
+    /// </summary>
     public bool Enabled { get; set; } = true;
+    /// <summary>
+    /// Gets or sets the provider.
+    /// </summary>
     public string Provider { get; set; } = "InMemory"; // InMemory, Redis
+    /// <summary>
+    /// Gets or sets the max entries.
+    /// </summary>
     public int MaxEntries { get; set; } = 10000;
+    /// <summary>
+    /// Gets or sets the max size bytes.
+    /// </summary>
     public int MaxSizeBytes { get; set; } = 1024 * 1024 * 100; // 100 MB
+    /// <summary>
+    /// Gets or sets the expiration seconds.
+    /// </summary>
     public int ExpirationSeconds { get; set; } = 3600; // 1 hour
+    /// <summary>
+    /// Gets or sets the redis connection string.
+    /// </summary>
     public string? RedisConnectionString { get; set; }
 }
 
@@ -183,11 +255,29 @@ public class CacheSettings
 /// </summary>
 public class PerformanceSettings
 {
+    /// <summary>
+    /// Gets or sets the timeout seconds.
+    /// </summary>
     public int TimeoutSeconds { get; set; } = 30;
+    /// <summary>
+    /// Gets or sets the max query length.
+    /// </summary>
     public int MaxQueryLength { get; set; } = 1024 * 1024; // 1 MB
+    /// <summary>
+    /// Gets or sets the rate limit queries per second.
+    /// </summary>
     public int RateLimitQueriesPerSecond { get; set; } = 100;
+    /// <summary>
+    /// Gets or sets the max concurrent analysis.
+    /// </summary>
     public int MaxConcurrentAnalysis { get; set; } = 10;
+    /// <summary>
+    /// Gets or sets a value indicating whether enable batching.
+    /// </summary>
     public bool EnableBatching { get; set; } = true;
+    /// <summary>
+    /// Gets or sets the batch size.
+    /// </summary>
     public int BatchSize { get; set; } = 50;
 }
 
@@ -196,11 +286,29 @@ public class PerformanceSettings
 /// </summary>
 public class LoggingSettings
 {
+    /// <summary>
+    /// Gets or sets the minimum level.
+    /// </summary>
     public string MinimumLevel { get; set; } = "Information"; // Debug, Information, Warning, Error
+    /// <summary>
+    /// Gets or sets a value indicating whether console logging.
+    /// </summary>
     public bool ConsoleLogging { get; set; } = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether file logging.
+    /// </summary>
     public bool FileLogging { get; set; } = false;
+    /// <summary>
+    /// Gets or sets the log file path.
+    /// </summary>
     public string? LogFilePath { get; set; }
+    /// <summary>
+    /// Gets or sets the log max file size bytes.
+    /// </summary>
     public int LogMaxFileSizeBytes { get; set; } = 1024 * 1024 * 10; // 10 MB
+    /// <summary>
+    /// Gets or sets the log max backup files.
+    /// </summary>
     public int LogMaxBackupFiles { get; set; } = 5;
 }
 

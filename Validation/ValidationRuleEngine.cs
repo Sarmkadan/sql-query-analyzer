@@ -19,9 +19,12 @@ public sealed class ValidationRuleEngine
     private readonly List<IValidationRule> _rules = new();
     private readonly ILogger<ValidationRuleEngine> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValidationRuleEngine"/> class.
+    /// </summary>
     public ValidationRuleEngine(ILogger<ValidationRuleEngine> logger)
     {
-        ArgumentNullException.ThrowIfNull(nameof(logger));
+        ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
 
         // Register default rules
@@ -73,7 +76,7 @@ public sealed class ValidationRuleEngine
     public void RegisterRule(IValidationRule rule)
     {
         _logger.LogInformation("RegisterRule called with rule {RuleName}", rule.Name);
-        ArgumentNullException.ThrowIfNull(nameof(rule));
+        ArgumentNullException.ThrowIfNull(rule);
         _rules.Add(rule);
         _logger.LogDebug("Registered validation rule: {RuleName}", rule.Name);
     }
@@ -115,8 +118,14 @@ public interface IValidationRule
 /// </summary>
 public sealed class SqlSyntaxRule : IValidationRule
 {
+    /// <summary>
+    /// The name.
+    /// </summary>
     public string Name => "SQL Syntax";
 
+    /// <summary>
+    /// Validate.
+    /// </summary>
     public RuleValidationResult Validate(string query)
     {
         var result = new RuleValidationResult();
@@ -173,9 +182,15 @@ public sealed class SqlSyntaxRule : IValidationRule
 /// </summary>
 public class QueryLengthRule : IValidationRule
 {
+    /// <summary>
+    /// The name.
+    /// </summary>
     public string Name => "Query Length";
     private const int MaxLength = 1024 * 1024; // 1 MB
 
+    /// <summary>
+    /// Validate.
+    /// </summary>
     public RuleValidationResult Validate(string query)
     {
         var result = new RuleValidationResult();
@@ -200,8 +215,14 @@ public class QueryLengthRule : IValidationRule
 /// </summary>
 public class DangerousOperationRule : IValidationRule
 {
+    /// <summary>
+    /// The name.
+    /// </summary>
     public string Name => "Dangerous Operations";
 
+    /// <summary>
+    /// Validate.
+    /// </summary>
     public RuleValidationResult Validate(string query)
     {
         var result = new RuleValidationResult();
@@ -236,8 +257,17 @@ public class DangerousOperationRule : IValidationRule
 /// </summary>
 public class RuleValidationResult
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether is valid.
+    /// </summary>
     public bool IsValid { get; set; } = true;
+    /// <summary>
+    /// Gets or sets the errors.
+    /// </summary>
     public List<string> Errors { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the warnings.
+    /// </summary>
     public List<string> Warnings { get; set; } = new();
 }
 
@@ -246,10 +276,22 @@ public class RuleValidationResult
 /// </summary>
 public class ValidationResult
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether is valid.
+    /// </summary>
     public bool IsValid { get; set; } = true;
+    /// <summary>
+    /// Gets or sets the errors.
+    /// </summary>
     public List<string> Errors { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the warnings.
+    /// </summary>
     public List<string> Warnings { get; set; } = new();
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() =>
         $"Valid: {IsValid}, Errors: {Errors.Count}, Warnings: {Warnings.Count}";
 }

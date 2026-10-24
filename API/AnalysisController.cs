@@ -27,6 +27,9 @@ public sealed class AnalysisController
     private readonly IQueryAnalyzerService _analyzerService;
     private readonly ILogger<AnalysisController> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnalysisController"/> class.
+    /// </summary>
     public AnalysisController(
         IQueryAnalyzerService analyzerService,
         ILogger<AnalysisController> logger)
@@ -316,7 +319,13 @@ public sealed class AnalysisController
 /// </summary>
 public class AnalysisRequest
 {
+    /// <summary>
+    /// Gets or sets the query.
+    /// </summary>
     public string Query { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the options.
+    /// </summary>
     public Dictionary<string, string>? Options { get; set; }
 }
 
@@ -325,7 +334,13 @@ public class AnalysisRequest
 /// </summary>
 public class BatchAnalysisRequest
 {
+    /// <summary>
+    /// Gets or sets the queries.
+    /// </summary>
     public string[] Queries { get; set; } = [];
+    /// <summary>
+    /// Gets or sets the max degree of parallelism.
+    /// </summary>
     public int? MaxDegreeOfParallelism { get; set; }
 }
 
@@ -334,13 +349,34 @@ public class BatchAnalysisRequest
 /// </summary>
 public class ApiResponse<T>
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether success.
+    /// </summary>
     public bool Success { get; set; }
+    /// <summary>
+    /// Gets or sets the data.
+    /// </summary>
     public T? Data { get; set; }
+    /// <summary>
+    /// Gets or sets the message.
+    /// </summary>
     public string Message { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the status code.
+    /// </summary>
     public int StatusCode { get; set; } = 200;
+    /// <summary>
+    /// Gets or sets the errors.
+    /// </summary>
     public List<string> Errors { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the timestamp.
+    /// </summary>
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() =>
         $"API Response - Status: {StatusCode}, Success: {Success}, Message: {Message}";
 }
@@ -350,9 +386,24 @@ public class ApiResponse<T>
 /// </summary>
 public class HealthStatus
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether is healthy.
+    /// </summary>
     public bool IsHealthy { get; set; }
+    /// <summary>
+    /// Gets or sets the message.
+    /// </summary>
     public string Message { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the version.
+    /// </summary>
     public string Version { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the timestamp.
+    /// </summary>
     public DateTime Timestamp { get; set; }
+    /// <summary>
+    /// Gets or sets the details.
+    /// </summary>
     public Dictionary<string, object>? Details { get; set; }
 }

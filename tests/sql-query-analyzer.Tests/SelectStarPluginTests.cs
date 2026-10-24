@@ -360,7 +360,7 @@ public class SelectStarPluginTests
             var plugin = new SelectStarPlugin(_loggerFactory.CreateLogger<SelectStarPlugin>());
             var result = new QueryAnalysisResult
             {
-                Query = null,
+                Query = null!,
                 QueryId = "test-10"
             };
 

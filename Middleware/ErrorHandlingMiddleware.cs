@@ -20,6 +20,9 @@ public class ErrorHandlingMiddleware
     private readonly int _maxRetries;
     private readonly TimeSpan _retryDelay;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ErrorHandlingMiddleware"/> class.
+    /// </summary>
     public ErrorHandlingMiddleware(
         ILogger<ErrorHandlingMiddleware> logger,
         int maxRetries = 3,
@@ -108,7 +111,7 @@ public class ErrorHandlingMiddleware
             StackTrace = ex.StackTrace ?? "No stack trace available",
             Context = context,
             Timestamp = DateTime.UtcNow,
-            IsRecoverable = IsTransientError(ex as AnalysisException),
+            IsRecoverable = ex is AnalysisException analysisEx && IsTransientError(analysisEx),
             Suggestion = GetRecoverySuggestion(ex)
         };
     }
@@ -137,12 +140,33 @@ public class ErrorHandlingMiddleware
 /// </summary>
 public class ErrorReport
 {
+    /// <summary>
+    /// Gets or sets the error message.
+    /// </summary>
     public string ErrorMessage { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the error type.
+    /// </summary>
     public string ErrorType { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the stack trace.
+    /// </summary>
     public string StackTrace { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the context.
+    /// </summary>
     public string Context { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the timestamp.
+    /// </summary>
     public DateTime Timestamp { get; set; }
+    /// <summary>
+    /// Gets or sets a value indicating whether is recoverable.
+    /// </summary>
     public bool IsRecoverable { get; set; }
+    /// <summary>
+    /// Gets or sets the suggestion.
+    /// </summary>
     public string Suggestion { get; set; } = string.Empty;
 
     /// <summary>
@@ -165,6 +189,9 @@ public class DegradationStrategy
 {
     private readonly ILogger<DegradationStrategy> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DegradationStrategy"/> class.
+    /// </summary>
     public DegradationStrategy(ILogger<DegradationStrategy> logger)
     {
         ArgumentNullException.ThrowIfNull(logger);

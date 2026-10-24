@@ -22,12 +22,18 @@ public class QueryPlanAnalyzerService : IQueryPlanAnalyzerService
 {
     private readonly ILogger<QueryPlanAnalyzerService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QueryPlanAnalyzerService"/> class.
+    /// </summary>
     public QueryPlanAnalyzerService(ILogger<QueryPlanAnalyzerService> logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
     }
 
+    /// <summary>
+    /// Parse execution plan asynchronously.
+    /// </summary>
     public async Task<QueryPlan?> ParseExecutionPlanAsync(string planXml)
     {
         if (string.IsNullOrWhiteSpace(planXml))
@@ -68,6 +74,9 @@ public class QueryPlanAnalyzerService : IQueryPlanAnalyzerService
         }
     }
 
+    /// <summary>
+    /// Get missing indexes asynchronously.
+    /// </summary>
     public async Task<List<string>> GetMissingIndexesAsync(QueryPlan plan)
     {
         if (plan == null)
@@ -103,6 +112,9 @@ public class QueryPlanAnalyzerService : IQueryPlanAnalyzerService
         return missingIndexes;
     }
 
+    /// <summary>
+    /// Analyze plan asynchronously.
+    /// </summary>
     public async Task<List<PerformanceIssue>> AnalyzePlanAsync(QueryPlan plan)
     {
         if (plan == null)

@@ -20,6 +20,9 @@ public class PerformanceMetricCollector
     private readonly object _lock = new object();
     private DateTime _startTime = DateTime.UtcNow;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PerformanceMetricCollector"/> class.
+    /// </summary>
     public PerformanceMetricCollector(ILogger<PerformanceMetricCollector> logger)
     {
         _logger = logger;
@@ -201,21 +204,66 @@ internal class AnalysisMetric
 /// </summary>
 public class PerformanceReport
 {
+    /// <summary>
+    /// Gets or sets the total analyses.
+    /// </summary>
     public int TotalAnalyses { get; set; }
+    /// <summary>
+    /// Gets or sets the successful analyses.
+    /// </summary>
     public int SuccessfulAnalyses { get; set; }
+    /// <summary>
+    /// Gets or sets the failed analyses.
+    /// </summary>
     public int FailedAnalyses { get; set; }
+    /// <summary>
+    /// Gets or sets the cache hits.
+    /// </summary>
     public int CacheHits { get; set; }
+    /// <summary>
+    /// Gets or sets the cache misses.
+    /// </summary>
     public int CacheMisses { get; set; }
+    /// <summary>
+    /// Gets or sets the average execution time ms.
+    /// </summary>
     public double AverageExecutionTimeMs { get; set; }
+    /// <summary>
+    /// Gets or sets the 50 execution time ms.
+    /// </summary>
     public double P50ExecutionTimeMs { get; set; }
+    /// <summary>
+    /// Gets or sets the 95 execution time ms.
+    /// </summary>
     public double P95ExecutionTimeMs { get; set; }
+    /// <summary>
+    /// Gets or sets the 99 execution time ms.
+    /// </summary>
     public double P99ExecutionTimeMs { get; set; }
+    /// <summary>
+    /// Gets or sets the cache hit ratio.
+    /// </summary>
     public double CacheHitRatio { get; set; }
+    /// <summary>
+    /// Gets or sets the success rate.
+    /// </summary>
     public double SuccessRate { get; set; }
+    /// <summary>
+    /// Gets or sets the throughput.
+    /// </summary>
     public double Throughput { get; set; }
+    /// <summary>
+    /// Gets or sets the total issues detected.
+    /// </summary>
     public int TotalIssuesDetected { get; set; }
+    /// <summary>
+    /// Gets or sets the collection duration.
+    /// </summary>
     public TimeSpan CollectionDuration { get; set; }
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() =>
         $@"Performance Report:
   Total Analyses: {TotalAnalyses} ({SuccessfulAnalyses} successful, {FailedAnalyses} failed)

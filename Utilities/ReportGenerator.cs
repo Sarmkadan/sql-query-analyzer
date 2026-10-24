@@ -18,6 +18,9 @@ namespace SqlQueryAnalyzer.Utilities;
 public static class ReportGenerator
 {
     // Generate text report
+    /// <summary>
+    /// Generate text report.
+    /// </summary>
     public static string GenerateTextReport(QueryAnalysisResult analysis)
     {
         // Fix: Add missing input validation
@@ -100,6 +103,9 @@ public static class ReportGenerator
     }
 
     // Generate CSV report
+    /// <summary>
+    /// Generate CSV report.
+    /// </summary>
     public static string GenerateCsvReport(List<QueryAnalysisResult> analyses)
     {
         var sb = new StringBuilder();
@@ -126,6 +132,9 @@ public static class ReportGenerator
     }
 
     // Generate JSON report
+    /// <summary>
+    /// Generate JSON report.
+    /// </summary>
     public static string GenerateJsonReport(QueryAnalysisResult analysis)
     {
         var summary = new
@@ -161,6 +170,9 @@ public static class ReportGenerator
     }
 
     // Generate HTML report
+    /// <summary>
+    /// Generate html report.
+    /// </summary>
     public static string GenerateHtmlReport(QueryAnalysisResult analysis)
     {
         var sb = new StringBuilder();
@@ -235,6 +247,9 @@ public static class ReportGenerator
     }
 
     // Generate executive summary
+    /// <summary>
+    /// Generate summary.
+    /// </summary>
     public static string GenerateSummary(QueryAnalysisResult analysis)
     {
         var issues = analysis.Issues.Count;

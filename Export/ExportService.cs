@@ -22,6 +22,9 @@ public sealed class ExportService
     private readonly Dictionary<string, IResultFormatter> _formatters =
         new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExportService"/> class.
+    /// </summary>
     public ExportService(ILogger<ExportService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -271,9 +274,24 @@ RECOMMENDATION: {result.GetRecommendation()}
 /// </summary>
 public sealed class ExportOptions
 {
+    /// <summary>
+    /// Gets or sets the formats.
+    /// </summary>
     public List<string> Formats { get; set; } = new() { "json" };
+    /// <summary>
+    /// Gets or sets the output directory.
+    /// </summary>
     public string OutputDirectory { get; set; } = "./exports";
+    /// <summary>
+    /// Gets or sets a value indicating whether include report.
+    /// </summary>
     public bool IncludeReport { get; set; } = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether compress.
+    /// </summary>
     public bool Compress { get; set; } = false;
+    /// <summary>
+    /// Gets or sets the compression password.
+    /// </summary>
     public string? CompressionPassword { get; set; }
 }

@@ -77,8 +77,17 @@ public enum IssueType
 /// </summary>
 public enum IssueSeverity
 {
+    /// <summary>
+    /// The info.
+    /// </summary>
     Info = 0,
+    /// <summary>
+    /// The warning.
+    /// </summary>
     Warning = 1,
+    /// <summary>
+    /// The critical.
+    /// </summary>
     Critical = 2
 }
 
@@ -87,11 +96,29 @@ public enum IssueSeverity
 /// </summary>
 public enum QueryComplexity
 {
+    /// <summary>
+    /// The simple.
+    /// </summary>
     Simple = 0,
+    /// <summary>
+    /// The low.
+    /// </summary>
     Low = 1,
+    /// <summary>
+    /// The medium.
+    /// </summary>
     Medium = 2,
+    /// <summary>
+    /// The high.
+    /// </summary>
     High = 3,
+    /// <summary>
+    /// The very high.
+    /// </summary>
     VeryHigh = 4,
+    /// <summary>
+    /// The extreme.
+    /// </summary>
     Extreme = 5
 }
 
@@ -100,9 +127,24 @@ public enum QueryComplexity
 /// </summary>
 public enum AnalysisStatus
 {
+    /// <summary>
+    /// The pending.
+    /// </summary>
     Pending = 0,
+    /// <summary>
+    /// The in progress.
+    /// </summary>
     InProgress = 1,
+    /// <summary>
+    /// The completed.
+    /// </summary>
     Completed = 2,
+    /// <summary>
+    /// The failed.
+    /// </summary>
     Failed = 3,
+    /// <summary>
+    /// The cancelled.
+    /// </summary>
     Cancelled = 4
 }

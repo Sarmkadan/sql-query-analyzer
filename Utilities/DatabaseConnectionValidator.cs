@@ -19,11 +19,17 @@ public class DatabaseConnectionValidator
 {
     private readonly ILogger<DatabaseConnectionValidator> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DatabaseConnectionValidator"/> class.
+    /// </summary>
     public DatabaseConnectionValidator(ILogger<DatabaseConnectionValidator> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() => 
         $"DatabaseConnectionValidator {{ IsValid = {false}, IsConnectionAlive = {false}, Message = {string.Empty}, DatabaseVersion = {string.Empty}, Errors = System.Collections.Generic.List<string>, Success = {false} }}";
 
@@ -247,10 +253,25 @@ public class DatabaseConnectionValidator
 /// </summary>
 public class ConnectionValidationResult
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether is valid.
+    /// </summary>
     public bool IsValid { get; set; }
+    /// <summary>
+    /// Gets or sets a value indicating whether is connection alive.
+    /// </summary>
     public bool IsConnectionAlive { get; set; }
+    /// <summary>
+    /// Gets or sets the message.
+    /// </summary>
     public string Message { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the database version.
+    /// </summary>
     public string DatabaseVersion { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the errors.
+    /// </summary>
     public List<string> Errors { get; set; } = new();
 }
 
@@ -259,7 +280,16 @@ public class ConnectionValidationResult
 /// </summary>
 public class ConnectionTestResult
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether success.
+    /// </summary>
     public bool Success { get; set; }
+    /// <summary>
+    /// Gets or sets the database version.
+    /// </summary>
     public string DatabaseVersion { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the errors.
+    /// </summary>
     public List<string> Errors { get; set; } = new();
 }

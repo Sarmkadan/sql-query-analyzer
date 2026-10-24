@@ -83,6 +83,9 @@ public static partial class SqlPatternAnalyzer
     // ── Public API ───────────────────────────────────────────────────────────
 
     // Detect N+1 query patterns
+    /// <summary>
+    /// Detect plus one pattern.
+    /// </summary>
     public static bool DetectNPlusOnePattern(List<string> queries)
     {
         if (queries == null) throw new ArgumentNullException(nameof(queries));
@@ -124,6 +127,9 @@ public static partial class SqlPatternAnalyzer
 
     // Extract table names from query — single regex pass (was 4 passes).
     // CTE alias names are excluded to prevent false-positive N+1 detection on CTE queries.
+    /// <summary>
+    /// Extract tables from query.
+    /// </summary>
     public static List<string> ExtractTablesFromQuery(string query)
     {
         var tables = new List<string>();
@@ -141,6 +147,9 @@ public static partial class SqlPatternAnalyzer
     }
 
     // Detect missing WHERE clause
+    /// <summary>
+    /// Has missing where clause.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasMissingWhereClause(string query)
     {
@@ -150,6 +159,9 @@ public static partial class SqlPatternAnalyzer
     }
 
     // Detect SELECT *
+    /// <summary>
+    /// Has select star.
+    /// </summary>
     public static bool HasSelectStar(string query)
     {
         ArgumentException.ThrowIfNullOrEmpty(query);
@@ -157,6 +169,9 @@ public static partial class SqlPatternAnalyzer
     }
 
     // Detect LIKE with leading wildcard
+    /// <summary>
+    /// Has leading wildcard like.
+    /// </summary>
     public static bool HasLeadingWildcardLike(string query)
     {
         ArgumentException.ThrowIfNullOrEmpty(query);
@@ -164,6 +179,9 @@ public static partial class SqlPatternAnalyzer
     }
 
     // Detect function on column in WHERE — was looping over array + per-function Regex.
+    /// <summary>
+    /// Has function on column.
+    /// </summary>
     public static bool HasFunctionOnColumn(string query)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -174,6 +192,9 @@ public static partial class SqlPatternAnalyzer
     }
 
     // Detect implicit JOIN (comma-separated tables in FROM)
+    /// <summary>
+    /// Has implicit join.
+    /// </summary>
     public static bool HasImplicitJoin(string query)
     {
         ArgumentException.ThrowIfNullOrEmpty(query);
@@ -181,6 +202,9 @@ public static partial class SqlPatternAnalyzer
     }
 
     // Detect DISTINCT without ORDER BY
+    /// <summary>
+    /// Has distinct without order.
+    /// </summary>
     public static bool HasDistinctWithoutOrder(string query)
     {
         var hasDistinct = query.Contains("DISTINCT", StringComparison.OrdinalIgnoreCase);
@@ -189,6 +213,9 @@ public static partial class SqlPatternAnalyzer
     }
 
     // Detect OR conditions in WHERE
+    /// <summary>
+    /// Count or conditions.
+    /// </summary>
     public static int CountOrConditions(string query)
     {
         if (!query.Contains("WHERE", StringComparison.OrdinalIgnoreCase))
@@ -198,14 +225,23 @@ public static partial class SqlPatternAnalyzer
     }
 
     // Detect subquery pattern
+    /// <summary>
+    /// Has subquery.
+    /// </summary>
     public static bool HasSubquery(string query) =>
         SubqueryRegex().IsMatch(query);
 
     // Detect UNION vs UNION ALL
+    /// <summary>
+    /// Count union.
+    /// </summary>
     public static int CountUnion(string query) =>
         UnionRegex().Matches(query).Count;
 
     // Detect JOIN conditions
+    /// <summary>
+    /// Extract join conditions.
+    /// </summary>
     public static List<string> ExtractJoinConditions(string query)
     {
         var conditions = new List<string>();
@@ -215,6 +251,9 @@ public static partial class SqlPatternAnalyzer
     }
 
     // Extract WHERE clause
+    /// <summary>
+    /// Extract where clause.
+    /// </summary>
     public static string ExtractWhereClause(string query)
     {
         var match = WhereClauseRegex().Match(query);
@@ -222,18 +261,30 @@ public static partial class SqlPatternAnalyzer
     }
 
     // Detect CASE statement complexity
+    /// <summary>
+    /// Count case statements.
+    /// </summary>
     public static int CountCaseStatements(string query) =>
         CaseRegex().Matches(query).Count;
 
     // Detect aggregate functions — was looping over array + per-aggregate Regex.
+    /// <summary>
+    /// Has aggregate function.
+    /// </summary>
     public static bool HasAggregateFunction(string query) =>
         AggregateFunctionRegex().IsMatch(query);
 
     // Detect window functions
+    /// <summary>
+    /// Has window function.
+    /// </summary>
     public static bool HasWindowFunction(string query) =>
         WindowFunctionRegex().IsMatch(query);
 
     // Analyze query readability score (0-100)
+    /// <summary>
+    /// Calculate readability score.
+    /// </summary>
     public static double CalculateReadabilityScore(string query)
     {
         var score = 100.0;
@@ -285,6 +336,9 @@ public static partial class SqlPatternAnalyzer
     }
 
     // Generate optimization recommendations
+    /// <summary>
+    /// Generate optimization recommendations.
+    /// </summary>
     public static List<string> GenerateOptimizationRecommendations(string query)
     {
         var recommendations = new List<string>();

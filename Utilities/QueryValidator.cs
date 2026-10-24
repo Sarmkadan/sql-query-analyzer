@@ -19,6 +19,9 @@ namespace SqlQueryAnalyzer.Utilities;
 public static class QueryValidator
 {
     // Check if query text is valid SQL
+    /// <summary>
+    /// Is valid query.
+    /// </summary>
     public static bool IsValidQuery(string queryText)
     {
         if (string.IsNullOrWhiteSpace(queryText))
@@ -31,6 +34,9 @@ public static class QueryValidator
     }
 
     // Validate database query object
+    /// <summary>
+    /// Validate database query.
+    /// </summary>
     public static void ValidateDatabaseQuery(DatabaseQuery query)
     {
         if (query == null)
@@ -47,6 +53,9 @@ public static class QueryValidator
     }
 
     // Validate analysis result
+    /// <summary>
+    /// Validate analysis result.
+    /// </summary>
     public static void ValidateAnalysisResult(QueryAnalysisResult result)
     {
         // Fix: Add missing null check and improve exception types
@@ -70,6 +79,9 @@ public static class QueryValidator
     }
 
     // Validate index
+    /// <summary>
+    /// Validate index.
+    /// </summary>
     public static void ValidateIndex(ModelIndex index)
     {
         if (index == null)
@@ -86,6 +98,9 @@ public static class QueryValidator
     }
 
     // Validate index suggestion
+    /// <summary>
+    /// Validate index suggestion.
+    /// </summary>
     public static void ValidateIndexSuggestion(IndexSuggestion suggestion)
     {
         if (suggestion == null)
@@ -103,6 +118,9 @@ public static class QueryValidator
     }
 
     // Check for SQL injection patterns
+    /// <summary>
+    /// Detect SQL injection risks.
+    /// </summary>
     public static List<string> DetectSQLInjectionRisks(string queryText)
     {
         var risks = new List<string>();
@@ -130,6 +148,9 @@ public static class QueryValidator
     }
 
     // Validate connection configuration
+    /// <summary>
+    /// Validate connection string.
+    /// </summary>
     public static void ValidateConnectionString(string connectionString)
     {
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -148,6 +169,9 @@ public static class QueryValidator
     }
 
     // Sanitize query for display
+    /// <summary>
+    /// Sanitize query for display.
+    /// </summary>
     public static string SanitizeQueryForDisplay(string query, int maxLength = 100)
     {
         if (string.IsNullOrEmpty(query))

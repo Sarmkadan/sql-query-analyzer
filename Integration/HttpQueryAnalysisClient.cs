@@ -21,6 +21,9 @@ public class HttpQueryAnalysisClient
     private readonly string _baseUrl;
     private readonly int _timeoutSeconds;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HttpQueryAnalysisClient"/> class.
+    /// </summary>
     public HttpQueryAnalysisClient(
         ILogger<HttpQueryAnalysisClient> logger,
         string baseUrl = "http://localhost:5000",
@@ -243,6 +246,9 @@ public class HttpQueryAnalysisClient
         PropertyNameCaseInsensitive = true
     };
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() => $"HttpQueryAnalysisClient {{ BaseUrl = {_baseUrl}, TimeoutSeconds = {_timeoutSeconds} }}";
 }
 
@@ -251,9 +257,18 @@ public class HttpQueryAnalysisClient
 /// </summary>
 public class AnalysisRequest
 {
+    /// <summary>
+    /// Gets or sets the query.
+    /// </summary>
     public string Query { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the options.
+    /// </summary>
     public Dictionary<string, string>? Options { get; set; }
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() => $"AnalysisRequest {{ Query = {Query}, Options = {Options} }}";
 }
 
@@ -262,8 +277,17 @@ public class AnalysisRequest
 /// </summary>
 public class BatchAnalysisRequest
 {
+    /// <summary>
+    /// Gets or sets the queries.
+    /// </summary>
     public string[] Queries { get; set; } = [];
+    /// <summary>
+    /// Gets or sets the max degree of parallelism.
+    /// </summary>
     public int? MaxDegreeOfParallelism { get; set; }
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() => $"BatchAnalysisRequest {{ Queries = {System.Text.Json.JsonSerializer.Serialize(Queries)}, MaxDegreeOfParallelism = {MaxDegreeOfParallelism} }}";
 }

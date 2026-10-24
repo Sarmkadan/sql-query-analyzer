@@ -260,7 +260,7 @@ public class QueryNormalizerParameterizationTests
         string? query = null;
 
         // Act
-        var result = QueryNormalizerExtensions.ToParameterizedQueryAndTrim(_normalizer, query);
+        var result = QueryNormalizerExtensions.ToParameterizedQueryAndTrim(_normalizer, query!);
 
         // Assert
         result.Should().BeEmpty();

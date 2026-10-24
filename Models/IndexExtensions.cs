@@ -2,75 +2,71 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+namespace SqlQueryAnalyzer.Models;
+
 /// <summary>
-/// Extension methods for <see cref="Index"/> providing common calculations and formatting helpers.
+/// Provides additional functionality for <see cref="Index"/> objects.
 /// </summary>
-namespace SqlQueryAnalyzer.Models
+/// <remarks>
+/// This static class cannot be inherited.
+/// </remarks>
+public static class IndexExtensions
 {
     /// <summary>
-    /// Provides additional functionality for <see cref="Index"/> objects.
+    /// Returns the fully qualified name of the index in the form <c>SchemaName.TableName.IndexName</c>.
     /// </summary>
-    /// <remarks>
-    /// This static class cannot be inherited.
-    /// </remarks>
-    public static class IndexExtensions
+    /// <param name="index">The index to format.</param>
+    /// <returns>A string containing the fully qualified name in the format <c>SchemaName.TableName.IndexName</c>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="index"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="index"/>'s <see cref="Index.SchemaName"/>, <see cref="Index.TableName"/>, or <see cref="Index.IndexName"/> is <c>null</c> or empty.</exception>
+    public static string GetQualifiedName(this Index index)
     {
-        /// <summary>
-        /// Returns the fully qualified name of the index in the form <c>SchemaName.TableName.IndexName</c>.
-        /// </summary>
-        /// <param name="index">The index to format.</param>
-        /// <returns>A string containing the fully qualified name in the format <c>SchemaName.TableName.IndexName</c>.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="index"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="index"/>'s <see cref="Index.SchemaName"/>, <see cref="Index.TableName"/>, or <see cref="Index.IndexName"/> is <c>null</c> or empty.</exception>
-        public static string GetQualifiedName(this Index index)
-        {
-            ArgumentNullException.ThrowIfNull(index);
-            ArgumentException.ThrowIfNullOrEmpty(index.SchemaName);
-            ArgumentException.ThrowIfNullOrEmpty(index.TableName);
-            ArgumentException.ThrowIfNullOrEmpty(index.IndexName);
+        ArgumentNullException.ThrowIfNull(index);
+        ArgumentException.ThrowIfNullOrEmpty(index.SchemaName);
+        ArgumentException.ThrowIfNullOrEmpty(index.TableName);
+        ArgumentException.ThrowIfNullOrEmpty(index.IndexName);
 
-            return $"{index.SchemaName}.{index.TableName}.{index.IndexName}";
-        }
+        return $"{index.SchemaName}.{index.TableName}.{index.IndexName}";
+    }
 
-        /// <summary>
-        /// Calculates the total number of user operations performed on the index
-        /// (seeks, scans, lookups and updates).
-        /// </summary>
-        /// <param name="index">The index whose usage is being summed.</param>
-        /// <returns>The sum of <see cref="Index.UserSeeks"/>, <see cref="Index.UserScans"/>,
-        /// <see cref="Index.UserLookups"/> and <see cref="Index.UserUpdates"/>.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="index"/> is <c>null</c>.</exception>
-        /// <exception cref="OverflowException">Thrown when the sum exceeds <see cref="long.MaxValue"/>.</exception>
-        public static long GetTotalUserOperations(this Index index)
-        {
-            ArgumentNullException.ThrowIfNull(index);
-            return checked(index.UserSeeks + index.UserScans + index.UserLookups + index.UserUpdates);
-        }
+    /// <summary>
+    /// Calculates the total number of user operations performed on the index
+    /// (seeks, scans, lookups and updates).
+    /// </summary>
+    /// <param name="index">The index whose usage is being summed.</param>
+    /// <returns>The sum of <see cref="Index.UserSeeks"/>, <see cref="Index.UserScans"/>,
+    /// <see cref="Index.UserLookups"/> and <see cref="Index.UserUpdates"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="index"/> is <c>null</c>.</exception>
+    /// <exception cref="OverflowException">Thrown when the sum exceeds <see cref="long.MaxValue"/>.</exception>
+    public static long GetTotalUserOperations(this Index index)
+    {
+        ArgumentNullException.ThrowIfNull(index);
+        return checked(index.UserSeeks + index.UserScans + index.UserLookups + index.UserUpdates);
+    }
 
-        /// <summary>
-        /// Returns the size of the index expressed in megabytes.
-        /// </summary>
-        /// <param name="index">The index whose size is to be converted.</param>
-        /// <returns>The size in megabytes (MiB) as a <see cref="double"/>.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="index"/> is <c>null</c>.</exception>
-        public static double GetSizeInMegabytes(this Index index)
-        {
-            ArgumentNullException.ThrowIfNull(index);
-            const double bytesPerMiB = 1024.0 * 1024.0;
-            return index.SizeInBytes / bytesPerMiB;
-        }
+    /// <summary>
+    /// Returns the size of the index expressed in megabytes.
+    /// </summary>
+    /// <param name="index">The index whose size is to be converted.</param>
+    /// <returns>The size in megabytes (MiB) as a <see cref="double"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="index"/> is <c>null</c>.</exception>
+    public static double GetSizeInMegabytes(this Index index)
+    {
+        ArgumentNullException.ThrowIfNull(index);
+        const double bytesPerMiB = 1024.0 * 1024.0;
+        return index.SizeInBytes / bytesPerMiB;
+    }
 
-        /// <summary>
-        /// Calculates the total number of columns that participate in the index,
-        /// including both key columns and included columns.
-        /// </summary>
-        /// <param name="index">The index to evaluate.</param>
-        /// <returns>The combined count of <see cref="Index.Columns"/> and <see cref="Index.IncludeColumns"/>.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="index"/> is <c>null</c>.</exception>
-        public static int GetEffectiveColumnCount(this Index index)
-        {
-            ArgumentNullException.ThrowIfNull(index);
-            return (index.Columns?.Count ?? 0) + (index.IncludeColumns?.Count ?? 0);
-        }
+    /// <summary>
+    /// Calculates the total number of columns that participate in the index,
+    /// including both key columns and included columns.
+    /// </summary>
+    /// <param name="index">The index to evaluate.</param>
+    /// <returns>The combined count of <see cref="Index.Columns"/> and <see cref="Index.IncludeColumns"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="index"/> is <c>null</c>.</exception>
+    public static int GetEffectiveColumnCount(this Index index)
+    {
+        ArgumentNullException.ThrowIfNull(index);
+        return (index.Columns?.Count ?? 0) + (index.IncludeColumns?.Count ?? 0);
     }
 }

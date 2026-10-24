@@ -20,7 +20,7 @@ public class QueryTooLargeException : AnalysisException
 
     /// <summary>
     /// Initializes a new instance of the <see cref="QueryTooLargeException"/> class with a specified error message.
-    /// </param>
+    /// </summary>
     /// <param name="message">The error message that explains the reason for the exception.</param>
     public QueryTooLargeException(string message) : base(message, "QUERY_TOO_LARGE") { }
 

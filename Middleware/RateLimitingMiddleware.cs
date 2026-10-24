@@ -25,6 +25,9 @@ public class RateLimitingMiddleware
     private int _requestsInWindow = 0;
     private readonly object _windowSync = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RateLimitingMiddleware"/> class.
+    /// </summary>
     public RateLimitingMiddleware(
         ILogger<RateLimitingMiddleware> logger,
         int maxQueriesPerSecond = 100,
@@ -182,9 +185,21 @@ public class RateLimitingMiddleware
 /// </summary>
 public class QueryRateLimit
 {
+    /// <summary>
+    /// Gets or sets the query hash.
+    /// </summary>
     public string QueryHash { get; set; } = string.Empty;
+    /// <summary>
+    /// The request count.
+    /// </summary>
     public int RequestCount; // Changed from property to field for Interlocked usage
+    /// <summary>
+    /// Gets or sets the first request time.
+    /// </summary>
     public DateTime FirstRequestTime { get; set; } = DateTime.UtcNow;
+    /// <summary>
+    /// Gets or sets the last request time.
+    /// </summary>
     public DateTime LastRequestTime { get; set; } = DateTime.UtcNow;
 
     /// <summary>
@@ -206,9 +221,24 @@ public class QueryRateLimit
 /// </summary>
 public class QueryRateLimitStats
 {
+    /// <summary>
+    /// Gets or sets the query hash.
+    /// </summary>
     public string QueryHash { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the total requests.
+    /// </summary>
     public int TotalRequests { get; set; }
+    /// <summary>
+    /// Gets or sets the last request time.
+    /// </summary>
     public DateTime LastRequestTime { get; set; }
+    /// <summary>
+    /// Gets or sets the average interval ms.
+    /// </summary>
     public double AverageIntervalMs { get; set; }
+    /// <summary>
+    /// Gets or sets a value indicating whether is throttled.
+    /// </summary>
     public bool IsThrottled { get; set; }
 }

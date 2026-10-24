@@ -15,6 +15,9 @@ namespace SqlQueryAnalyzer.Formatters;
 /// </summary>
 public class MarkdownResultFormatter : IResultFormatter
 {
+    /// <summary>
+    /// Format.
+    /// </summary>
     public string Format(QueryAnalysisResult result)
     {
         var lines = new List<string>();
@@ -118,6 +121,9 @@ public class MarkdownResultFormatter : IResultFormatter
         return string.Join("\n", lines);
     }
 
+    /// <summary>
+    /// Format batch.
+    /// </summary>
     public string FormatBatch(IEnumerable<QueryAnalysisResult> results)
     {
         var resultsList = results.ToList();
@@ -200,5 +206,8 @@ public class MarkdownResultFormatter : IResultFormatter
         return string.Join("\n", lines);
     }
 
+    /// <summary>
+    /// Get format type.
+    /// </summary>
     public string GetFormatType() => "md";
 }

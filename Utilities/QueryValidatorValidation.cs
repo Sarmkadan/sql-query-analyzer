@@ -103,7 +103,7 @@ public sealed class QueryValidatorValidation
             {
                 var invalidQuery = new DatabaseQuery
                 {
-                    QueryText = null,
+                    QueryText = null!,
                     LineCount = 1
                 };
                 QueryValidator.ValidateDatabaseQuery(invalidQuery);
@@ -207,7 +207,7 @@ public sealed class QueryValidatorValidation
             {
                 var invalidResult = new QueryAnalysisResult
                 {
-                    Query = null,
+                    Query = null!,
                     PerformanceScore = 85.5
                 };
                 QueryValidator.ValidateAnalysisResult(invalidResult);
@@ -294,7 +294,7 @@ public sealed class QueryValidatorValidation
             {
                 var invalidIndex = new ModelIndex
                 {
-                    IndexName = null,
+                    IndexName = null!,
                     TableName = "Users",
                     Columns = new List<IndexColumn> { new IndexColumn { ColumnName = "Email" } }
                 };
@@ -331,7 +331,7 @@ public sealed class QueryValidatorValidation
                 var invalidIndex = new ModelIndex
                 {
                     IndexName = "IX_Users_Email",
-                    TableName = null,
+                    TableName = null!,
                     Columns = new List<IndexColumn> { new IndexColumn { ColumnName = "Email" } }
                 };
                 QueryValidator.ValidateIndex(invalidIndex);
@@ -420,7 +420,7 @@ public sealed class QueryValidatorValidation
             {
                 var invalidSuggestion = new IndexSuggestion
                 {
-                    TableName = null,
+                    TableName = null!,
                     IndexColumns = new List<string> { "Email" },
                     EstimatedPerformanceGain = 45.2
                 };

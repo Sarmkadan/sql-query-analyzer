@@ -1,7 +1,7 @@
 using System;
 
-namespace SqlQueryAnalyzer.Tests
-{
+namespace SqlQueryAnalyzer.Tests;
+
 	/// <summary>
 	/// Provides extension methods that provide convenient wrappers around the public test members of
 	/// <see cref="QueryValidatorTests"/>. These helpers allow grouping related assertions
@@ -46,4 +46,3 @@ namespace SqlQueryAnalyzer.Tests
 			tests.ValidateQuery_CustomRuleRegistered_RuleIsInvokedExactlyOnce();
 		}
 	}
-}

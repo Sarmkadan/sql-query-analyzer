@@ -207,19 +207,58 @@ public class StatisticsAggregator
 /// </summary>
 public class AggregationSummary
 {
+    /// <summary>
+    /// Gets or sets the total queries.
+    /// </summary>
     public int TotalQueries { get; set; }
+    /// <summary>
+    /// Gets or sets the average score.
+    /// </summary>
     public double AverageScore { get; set; }
+    /// <summary>
+    /// Gets or sets the min score.
+    /// </summary>
     public double MinScore { get; set; }
+    /// <summary>
+    /// Gets or sets the max score.
+    /// </summary>
     public double MaxScore { get; set; }
+    /// <summary>
+    /// Gets or sets the score std dev.
+    /// </summary>
     public double ScoreStdDev { get; set; }
+    /// <summary>
+    /// Gets or sets the total issues found.
+    /// </summary>
     public int TotalIssuesFound { get; set; }
+    /// <summary>
+    /// Gets or sets the critical issues.
+    /// </summary>
     public int CriticalIssues { get; set; }
+    /// <summary>
+    /// Gets or sets the warning issues.
+    /// </summary>
     public int WarningIssues { get; set; }
+    /// <summary>
+    /// Gets or sets the info issues.
+    /// </summary>
     public int InfoIssues { get; set; }
+    /// <summary>
+    /// Gets or sets the total optimization potential.
+    /// </summary>
     public double TotalOptimizationPotential { get; set; }
+    /// <summary>
+    /// Gets or sets the queries with issues.
+    /// </summary>
     public int QueriesWithIssues { get; set; }
+    /// <summary>
+    /// Gets or sets the average bug density.
+    /// </summary>
     public double AverageBugDensity { get; set; }
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() =>
         $"Analysis Summary:\n" +
         $"  Total Queries: {TotalQueries}\n" +

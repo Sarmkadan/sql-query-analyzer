@@ -30,6 +30,9 @@ public sealed class QueryAnalysisCache
     // Singleton instance for static access
     private static QueryAnalysisCache? _instance;
 
+    /// <summary>
+    /// The instance.
+    /// </summary>
     public static QueryAnalysisCache Instance => _instance ?? throw new InvalidOperationException("QueryAnalysisCache not initialized. Register with DI first.");
 
     /// <summary>
@@ -38,6 +41,9 @@ public sealed class QueryAnalysisCache
     /// </summary>
     public static bool IsInitialized => _instance is not null;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QueryAnalysisCache"/> class.
+    /// </summary>
     public QueryAnalysisCache(
         ILogger<QueryAnalysisCache> logger,
         QueryCacheKeyGenerator keyGenerator,
@@ -84,7 +90,7 @@ public sealed class QueryAnalysisCache
         {
             var key = _keyGenerator.GenerateQueryKey(query);
 
-            if (_cache.TryGetValue<CacheEntry>(key, out var entry))
+            if (_cache.TryGetValue(key, out CacheEntry? entry) && entry is not null)
             {
                 // Update access metadata
                 _metadata.AddOrUpdate(key,
@@ -258,7 +264,7 @@ public sealed class QueryAnalysisCache
     /// Evicts least-recently-used entry from cache.
     /// Called automatically by MemoryCache when size limit is reached.
     /// </summary>
-    private void EvictLruEntry(string key, object value, EvictionReason reason, object state)
+    private void EvictLruEntry(string key, object? value, EvictionReason reason, object? state)
     {
         if (reason == EvictionReason.Capacity)
         {
@@ -270,7 +276,7 @@ public sealed class QueryAnalysisCache
     /// <summary>
     /// Callback for MemoryCache eviction events.
     /// </summary>
-    private void EvictionCallback(object key, object value, EvictionReason reason, object state)
+    private void EvictionCallback(object key, object? value, EvictionReason reason, object? state)
     {
         EvictLruEntry((string)key, value, reason, state);
     }
@@ -309,14 +315,38 @@ internal class CacheEntryMetadata
 /// </summary>
 public sealed class CacheStatistics
 {
+    /// <summary>
+    /// Gets or sets the total entries.
+    /// </summary>
     public int TotalEntries { get; set; }
+    /// <summary>
+    /// Gets or sets the max entries.
+    /// </summary>
     public int MaxEntries { get; set; }
+    /// <summary>
+    /// Gets or sets the hits.
+    /// </summary>
     public long Hits { get; set; }
+    /// <summary>
+    /// Gets or sets the misses.
+    /// </summary>
     public long Misses { get; set; }
+    /// <summary>
+    /// Gets or sets the hit rate.
+    /// </summary>
     public double HitRate { get; set; }
+    /// <summary>
+    /// Gets or sets the average access count.
+    /// </summary>
     public double AverageAccessCount { get; set; }
+    /// <summary>
+    /// Gets or sets the oldest entry age.
+    /// </summary>
     public double OldestEntryAge { get; set; }
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() =>
         $"Cache Stats: {TotalEntries}/{MaxEntries} entries, " +
         $"Hit Rate: {HitRate:F1}%, Avg Accesses: {AverageAccessCount:F1}";

@@ -14,13 +14,34 @@ namespace SqlQueryAnalyzer.Configuration;
 /// </summary>
 public interface IConnectionConfiguration
 {
+    /// <summary>
+    /// Gets the connection string.
+    /// </summary>
     string ConnectionString { get; }
+    /// <summary>
+    /// Gets the database name.
+    /// </summary>
     string DatabaseName { get; }
+    /// <summary>
+    /// Gets the server name.
+    /// </summary>
     string ServerName { get; }
+    /// <summary>
+    /// Gets the database type.
+    /// </summary>
     string DatabaseType { get; }
+    /// <summary>
+    /// Gets the command timeout.
+    /// </summary>
     int CommandTimeout { get; }
 
+    /// <summary>
+    /// Test connection asynchronously.
+    /// </summary>
     Task<bool> TestConnectionAsync();
+    /// <summary>
+    /// Initialize database asynchronously.
+    /// </summary>
     Task<bool> InitializeDatabaseAsync();
 }
 
@@ -33,12 +54,30 @@ public class SqlServerConfiguration : IConnectionConfiguration
     private const string DefaultDatabase = "QueryAnalyzer";
     private const int DefaultTimeout = 30;
 
+    /// <summary>
+    /// Gets or sets the connection string.
+    /// </summary>
     public string ConnectionString { get; private set; }
+    /// <summary>
+    /// Gets or sets the database name.
+    /// </summary>
     public string DatabaseName { get; private set; }
+    /// <summary>
+    /// Gets or sets the server name.
+    /// </summary>
     public string ServerName { get; private set; }
+    /// <summary>
+    /// The database type.
+    /// </summary>
     public string DatabaseType => "SQL Server";
+    /// <summary>
+    /// Gets or sets the command timeout.
+    /// </summary>
     public int CommandTimeout { get; private set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SqlServerConfiguration"/> class.
+    /// </summary>
     public SqlServerConfiguration()
     {
         var serverName = Environment.GetEnvironmentVariable("DB_SERVER") ?? DefaultServer;
@@ -56,6 +95,9 @@ public class SqlServerConfiguration : IConnectionConfiguration
         ConnectionString = $"Server={serverName};Database={dbName};User Id={userId};Password={password};Encrypt=false;";
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SqlServerConfiguration"/> class.
+    /// </summary>
     public SqlServerConfiguration(string server, string database, string userId, string password)
     {
         ServerName = server;
@@ -64,6 +106,9 @@ public class SqlServerConfiguration : IConnectionConfiguration
         ConnectionString = $"Server={server};Database={database};User Id={userId};Password={password};Encrypt=false;";
     }
 
+    /// <summary>
+    /// Test connection asynchronously.
+    /// </summary>
     public async Task<bool> TestConnectionAsync()
     {
         try
@@ -80,6 +125,9 @@ public class SqlServerConfiguration : IConnectionConfiguration
         }
     }
 
+    /// <summary>
+    /// Initialize database asynchronously.
+    /// </summary>
     public async Task<bool> InitializeDatabaseAsync()
     {
         try
@@ -125,12 +173,30 @@ public class PostgresConfiguration : IConnectionConfiguration
     private const string DefaultDatabase = "query_analyzer";
     private const int DefaultTimeout = 30;
 
+    /// <summary>
+    /// Gets or sets the connection string.
+    /// </summary>
     public string ConnectionString { get; private set; }
+    /// <summary>
+    /// Gets or sets the database name.
+    /// </summary>
     public string DatabaseName { get; private set; }
+    /// <summary>
+    /// Gets or sets the server name.
+    /// </summary>
     public string ServerName { get; private set; }
+    /// <summary>
+    /// The database type.
+    /// </summary>
     public string DatabaseType => "PostgreSQL";
+    /// <summary>
+    /// Gets or sets the command timeout.
+    /// </summary>
     public int CommandTimeout { get; private set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PostgresConfiguration"/> class.
+    /// </summary>
     public PostgresConfiguration()
     {
         var serverName = Environment.GetEnvironmentVariable("DB_SERVER") ?? DefaultServer;
@@ -148,6 +214,9 @@ public class PostgresConfiguration : IConnectionConfiguration
         ConnectionString = $"Host={serverName};Port={port};Database={dbName};Username={userId};Password={password};";
     }
 
+    /// <summary>
+    /// Test connection asynchronously.
+    /// </summary>
     public async Task<bool> TestConnectionAsync()
     {
         try
@@ -164,6 +233,9 @@ public class PostgresConfiguration : IConnectionConfiguration
         }
     }
 
+    /// <summary>
+    /// Initialize database asynchronously.
+    /// </summary>
     public async Task<bool> InitializeDatabaseAsync()
     {
         try

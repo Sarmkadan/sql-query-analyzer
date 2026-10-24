@@ -66,6 +66,9 @@ public sealed class PluginManager
     private readonly List<IAnalysisPlugin> _plugins = new();
     private readonly ILogger<PluginManager> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PluginManager"/> class.
+    /// </summary>
     public PluginManager(ILogger<PluginManager> logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
@@ -220,10 +223,22 @@ public abstract class AnalysisPluginBase : IAnalysisPlugin
 /// </summary>
 public class CustomIssueDetectionPlugin : AnalysisPluginBase
 {
+    /// <summary>
+    /// The plugin ID.
+    /// </summary>
     public override string PluginId => "custom-issues";
+    /// <summary>
+    /// The name.
+    /// </summary>
     public override string Name => "Custom Issue Detection";
+    /// <summary>
+    /// The version.
+    /// </summary>
     public override Version Version => new(1, 0, 0);
 
+    /// <summary>
+    /// Process asynchronously.
+    /// </summary>
     public override Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
@@ -252,10 +267,22 @@ public class CustomIssueDetectionPlugin : AnalysisPluginBase
 /// </summary>
 public class ResultEnhancementPlugin : AnalysisPluginBase
 {
+    /// <summary>
+    /// The plugin ID.
+    /// </summary>
     public override string PluginId => "enhancement";
+    /// <summary>
+    /// The name.
+    /// </summary>
     public override string Name => "Result Enhancement";
+    /// <summary>
+    /// The version.
+    /// </summary>
     public override Version Version => new(1, 0, 0);
 
+    /// <summary>
+    /// Process asynchronously.
+    /// </summary>
     public override Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
     {
         ArgumentNullException.ThrowIfNull(result);

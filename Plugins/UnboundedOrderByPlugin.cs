@@ -21,13 +21,25 @@ public class UnboundedOrderByPlugin : AnalysisPluginBase, IDetectorPlugin
 {
     private readonly ILogger<UnboundedOrderByPlugin>? _logger;
 
+    /// <summary>
+    /// The plugin ID.
+    /// </summary>
     public override string PluginId => "unbounded-orderby-detection";
+    /// <summary>
+    /// The name.
+    /// </summary>
     public override string Name => "Unbounded ORDER BY Detection Plugin";
+    /// <summary>
+    /// The version.
+    /// </summary>
     public override Version Version => new(1, 0, 0);
 
     /// <inheritdoc />
     public string RuleId => "unbounded-orderby";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UnboundedOrderByPlugin"/> class.
+    /// </summary>
     public UnboundedOrderByPlugin(ILogger<UnboundedOrderByPlugin>? logger = null)
     {
         _logger = logger;

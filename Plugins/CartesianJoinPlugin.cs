@@ -76,15 +76,30 @@ public class CartesianJoinPlugin : AnalysisPluginBase
 
     private readonly ILogger<CartesianJoinPlugin>? _logger;
 
+    /// <summary>
+    /// The plugin ID.
+    /// </summary>
     public override string PluginId => "cartesian-join-detection";
+    /// <summary>
+    /// The name.
+    /// </summary>
     public override string Name => "Cartesian Join Detection Plugin";
+    /// <summary>
+    /// The version.
+    /// </summary>
     public override Version Version => new(1, 0, 0);
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CartesianJoinPlugin"/> class.
+    /// </summary>
     public CartesianJoinPlugin(ILogger<CartesianJoinPlugin>? logger = null)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Process asynchronously.
+    /// </summary>
     public override async Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
     {
         if (result.Query == null || string.IsNullOrWhiteSpace(result.Query))
@@ -217,7 +232,6 @@ public class CartesianJoinPlugin : AnalysisPluginBase
     {
         // Calculate line number from match index
         var lineNumber = 1;
-        var queryText = "";
         // We need the actual query text, but we don't have it here. Use a default line number.
         lineNumber = Math.Max(1, matchIndex / ApproximateCharactersPerLine) + 1;
 

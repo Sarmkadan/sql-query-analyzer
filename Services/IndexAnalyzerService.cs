@@ -22,12 +22,18 @@ public class IndexAnalyzerService : IIndexAnalyzerService
     private readonly IIndexRepository _repository;
     private readonly ILogger<IndexAnalyzerService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="IndexAnalyzerService"/> class.
+    /// </summary>
     public IndexAnalyzerService(IIndexRepository repository, ILogger<IndexAnalyzerService> logger)
     {
         _repository = repository;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Analyze indexes asynchronously.
+    /// </summary>
     public async Task<List<IndexSuggestion>> AnalyzeIndexesAsync(string tableName)
     {
         // Fix: Ensure table name is provided before querying the database repository
@@ -79,18 +85,27 @@ public class IndexAnalyzerService : IIndexAnalyzerService
         return suggestions;
     }
 
+    /// <summary>
+    /// Get fragmented indexes asynchronously.
+    /// </summary>
     public async Task<List<ModelIndex>> GetFragmentedIndexesAsync()
     {
         _logger.LogInformation("Retrieving fragmented indexes");
         return await _repository.GetFragmentedIndexesAsync();
     }
 
+    /// <summary>
+    /// Get unused indexes asynchronously.
+    /// </summary>
     public async Task<List<ModelIndex>> GetUnusedIndexesAsync()
     {
         _logger.LogInformation("Retrieving unused indexes");
         return await _repository.GetUnusedIndexesAsync();
     }
 
+    /// <summary>
+    /// Assess index health asynchronously.
+    /// </summary>
     public async Task<IndexHealth> AssessIndexHealthAsync(ModelIndex index)
     {
         if (!index.IsValid())
@@ -108,6 +123,9 @@ public class IndexAnalyzerService : IIndexAnalyzerService
         return IndexHealth.Healthy;
     }
 
+    /// <summary>
+    /// Generate maintenance scripts asynchronously.
+    /// </summary>
     public async Task<List<string>> GenerateMaintenanceScriptsAsync()
     {
         _logger.LogInformation("Generating index maintenance scripts");

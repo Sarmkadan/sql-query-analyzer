@@ -50,8 +50,14 @@ public class CliApplicationHost
     /// </summary>
     public Dictionary<string, object> Metadata { get; set; } = new();
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() => $"CliApplicationHost {{ Query = {Query}, Arguments = {Arguments}, Result = {Result}, ShouldContinue = {ShouldContinue}, Metadata = {Metadata} }}";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CliApplicationHost"/> class.
+    /// </summary>
     public CliApplicationHost(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
@@ -235,9 +241,24 @@ public class CliApplicationHost
 /// </summary>
 public class AnalysisContext
 {
+    /// <summary>
+    /// Gets or sets the query.
+    /// </summary>
     public string Query { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the arguments.
+    /// </summary>
     public CommandLineArguments Arguments { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the result.
+    /// </summary>
     public QueryAnalysisResult? Result { get; set; }
+    /// <summary>
+    /// Gets or sets a value indicating whether should continue.
+    /// </summary>
     public bool ShouldContinue { get; set; } = true;
+    /// <summary>
+    /// Gets or sets the metadata.
+    /// </summary>
     public Dictionary<string, object> Metadata { get; set; } = new();
 }

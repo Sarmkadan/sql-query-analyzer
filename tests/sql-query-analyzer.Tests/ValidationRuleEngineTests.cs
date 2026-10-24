@@ -61,7 +61,7 @@ public class ValidationRuleEngineTests
         string? nullQuery = null;
 
         // Act
-        var result = _engine.ValidateQuery(nullQuery);
+        var result = _engine.ValidateQuery(nullQuery!);
 
         // Assert
         result.IsValid.Should().BeFalse();

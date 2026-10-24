@@ -204,9 +204,24 @@ public class QueryCacheKeyGenerator
 /// </summary>
 public enum CacheKeyType
 {
+    /// <summary>
+    /// The query.
+    /// </summary>
     Query,
+    /// <summary>
+    /// The result.
+    /// </summary>
     Result,
+    /// <summary>
+    /// The metadata.
+    /// </summary>
     Metadata,
+    /// <summary>
+    /// The batch.
+    /// </summary>
     Batch,
+    /// <summary>
+    /// The unknown.
+    /// </summary>
     Unknown
 }

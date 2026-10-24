@@ -16,16 +16,37 @@ namespace SqlQueryAnalyzer.DTOs;
 /// </summary>
 public interface IDtoMapper
 {
+    /// <summary>
+    /// To response DTO.
+    /// </summary>
     AnalysisResponseDto ToResponseDto(QueryAnalysisResult analysis, long analysisTimeMs);
+    /// <summary>
+    /// To issue DTO.
+    /// </summary>
     PerformanceIssueDto ToIssueDto(PerformanceIssue issue);
+    /// <summary>
+    /// To suggestion DTO.
+    /// </summary>
     IndexSuggestionDto ToSuggestionDto(IndexSuggestion suggestion);
+    /// <summary>
+    /// To index detail DTO.
+    /// </summary>
     IndexDetailDto ToIndexDetailDto(ModelIndex index);
+    /// <summary>
+    /// To index analysis response DTO.
+    /// </summary>
     IndexAnalysisResponseDto ToIndexAnalysisResponseDto(
         string tableName,
         List<ModelIndex> indexes,
         List<IndexSuggestion> suggestions,
         List<string> scripts);
+    /// <summary>
+    /// To query detail DTO.
+    /// </summary>
     QueryDetailDto ToQueryDetailDto(DatabaseQuery query);
+    /// <summary>
+    /// To batch response DTO.
+    /// </summary>
     BatchAnalysisResponseDto ToBatchResponseDto(
         List<QueryAnalysisResult> results,
         List<string> nPlusOnePatterns,

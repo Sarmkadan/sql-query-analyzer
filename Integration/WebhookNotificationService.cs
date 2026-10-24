@@ -21,6 +21,9 @@ public class WebhookNotificationService : IAnalysisEventSubscriber
     private readonly List<WebhookConfiguration> _webhooks = new();
     private readonly HttpClient _httpClient;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WebhookNotificationService"/> class.
+    /// </summary>
     public WebhookNotificationService(ILogger<WebhookNotificationService> logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
@@ -283,15 +286,42 @@ public class WebhookNotificationService : IAnalysisEventSubscriber
 /// </summary>
 public class WebhookConfiguration
 {
+    /// <summary>
+    /// Gets or sets the name.
+    /// </summary>
     public string Name { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the URL.
+    /// </summary>
     public string Url { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the type.
+    /// </summary>
     public WebhookType Type { get; set; } = WebhookType.Custom;
+    /// <summary>
+    /// Gets or sets a value indicating whether enabled.
+    /// </summary>
     public bool Enabled { get; set; } = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether notify on completion.
+    /// </summary>
     public bool NotifyOnCompletion { get; set; } = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether notify on critical issues.
+    /// </summary>
     public bool NotifyOnCriticalIssues { get; set; } = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether notify on failures.
+    /// </summary>
     public bool NotifyOnFailures { get; set; } = true;
+    /// <summary>
+    /// Gets or sets the custom headers.
+    /// </summary>
     public Dictionary<string, string>? CustomHeaders { get; set; }
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() => $"WebhookConfiguration {{ Name = {Name}, Url = {Url}, Type = {Type}, Enabled = {Enabled}, NotifyOnCompletion = {NotifyOnCompletion}, NotifyOnCriticalIssues = {NotifyOnCriticalIssues} }}";
 }
 
@@ -300,8 +330,20 @@ public class WebhookConfiguration
 /// </summary>
 public enum WebhookType
 {
+    /// <summary>
+    /// The slack.
+    /// </summary>
     Slack,
+    /// <summary>
+    /// The microsoft teams.
+    /// </summary>
     MicrosoftTeams,
+    /// <summary>
+    /// The discord.
+    /// </summary>
     Discord,
+    /// <summary>
+    /// The custom.
+    /// </summary>
     Custom
 }

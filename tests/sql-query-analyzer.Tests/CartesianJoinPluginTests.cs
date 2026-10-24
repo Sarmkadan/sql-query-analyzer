@@ -465,7 +465,7 @@ public class CartesianJoinPluginTests
         var plugin = new CartesianJoinPlugin(_loggerFactory.CreateLogger<CartesianJoinPlugin>());
         var result = new QueryAnalysisResult
         {
-            Query = null,
+            Query = null!,
             QueryId = "test-13"
         };
 

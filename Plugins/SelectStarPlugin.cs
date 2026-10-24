@@ -34,15 +34,30 @@ public class SelectStarPlugin : AnalysisPluginBase
 
     private readonly ILogger<SelectStarPlugin>? _logger;
 
+    /// <summary>
+    /// The plugin ID.
+    /// </summary>
     public override string PluginId => "select-star-detection";
+    /// <summary>
+    /// The name.
+    /// </summary>
     public override string Name => "SELECT * Detection Plugin";
+    /// <summary>
+    /// The version.
+    /// </summary>
     public override Version Version => new(1, 0, 0);
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SelectStarPlugin"/> class.
+    /// </summary>
     public SelectStarPlugin(ILogger<SelectStarPlugin>? logger = null)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Process asynchronously.
+    /// </summary>
     public override Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
     {
         // Skip analysis if plugin is disabled

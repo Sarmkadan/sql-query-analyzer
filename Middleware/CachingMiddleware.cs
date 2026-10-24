@@ -22,6 +22,9 @@ public class CachingMiddleware : IAnalysisMiddleware
     private readonly QueryAnalysisCache _cache;
     private readonly ILogger<CachingMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CachingMiddleware"/> class.
+    /// </summary>
     public CachingMiddleware(
         QueryAnalysisCache cache,
         ILogger<CachingMiddleware> logger)

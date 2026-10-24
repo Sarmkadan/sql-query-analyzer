@@ -18,6 +18,9 @@ namespace SqlQueryAnalyzer.Utilities;
 public static class PerformanceMetricsCalculator
 {
     // Calculate combined performance score
+    /// <summary>
+    /// Calculate combined score.
+    /// </summary>
     public static double CalculateCombinedScore(QueryAnalysisResult analysis, double weight = 1.0)
     {
         ArgumentNullException.ThrowIfNull(analysis);
@@ -29,6 +32,9 @@ public static class PerformanceMetricsCalculator
     }
 
     // Estimate total optimization potential
+    /// <summary>
+    /// Estimate total optimization.
+    /// </summary>
     public static double EstimateTotalOptimization(List<PerformanceIssue> issues, List<IndexSuggestion> suggestions)
     {
         ArgumentNullException.ThrowIfNull(issues);
@@ -40,6 +46,9 @@ public static class PerformanceMetricsCalculator
     }
 
     // Calculate query complexity score
+    /// <summary>
+    /// Calculate complexity score.
+    /// </summary>
     public static int CalculateComplexityScore(DatabaseQuery query)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -89,6 +98,9 @@ public static class PerformanceMetricsCalculator
     }
 
     // Calculate index usage score (0-100)
+    /// <summary>
+    /// Calculate index usage score.
+    /// </summary>
     public static double CalculateIndexUsageScore(ModelIndex index)
     {
         ArgumentNullException.ThrowIfNull(index);
@@ -112,6 +124,9 @@ public static class PerformanceMetricsCalculator
     }
 
     // Calculate index maintenance effort
+    /// <summary>
+    /// Calculate maintenance effort.
+    /// </summary>
     public static int CalculateMaintenanceEffort(List<ModelIndex> indexes)
     {
         ArgumentNullException.ThrowIfNull(indexes);
@@ -132,6 +147,9 @@ public static class PerformanceMetricsCalculator
     }
 
     // Get performance trend (simulating trend calculation)
+    /// <summary>
+    /// Get performance trend.
+    /// </summary>
     public static string GetPerformanceTrend(List<QueryAnalysisResult> analysisHistory)
     {
         ArgumentNullException.ThrowIfNull(analysisHistory);
@@ -146,6 +164,9 @@ public static class PerformanceMetricsCalculator
     }
 
     // Calculate query execution time distribution
+    /// <summary>
+    /// Calculate execution time distribution.
+    /// </summary>
     public static Dictionary<string, int> CalculateExecutionTimeDistribution(QueryStatistics stats)
     {
         ArgumentNullException.ThrowIfNull(stats);
@@ -175,6 +196,9 @@ public static class PerformanceMetricsCalculator
     }
 
     // Calculate ROI for index creation
+    /// <summary>
+    /// Calculate index ROI.
+    /// </summary>
     public static double CalculateIndexROI(IndexSuggestion suggestion, long tableSizeKB)
     {
         ArgumentNullException.ThrowIfNull(suggestion);
@@ -190,6 +214,9 @@ public static class PerformanceMetricsCalculator
     }
 
     // Predict query execution time based on statistics
+    /// <summary>
+    /// Predict execution time.
+    /// </summary>
     public static TimeSpan PredictExecutionTime(QueryStatistics stats, int estimatedRows)
     {
         ArgumentNullException.ThrowIfNull(stats);

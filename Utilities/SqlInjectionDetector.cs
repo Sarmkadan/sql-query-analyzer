@@ -18,6 +18,9 @@ public class SqlInjectionDetector
 {
     private readonly ILogger<SqlInjectionDetector> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SqlInjectionDetector"/> class.
+    /// </summary>
     public SqlInjectionDetector(ILogger<SqlInjectionDetector> logger)
     {
         _logger = logger;
@@ -238,12 +241,30 @@ public class SqlInjectionDetector
 /// </summary>
 public class SqlInjectionIssue
 {
+    /// <summary>
+    /// Gets or sets the type.
+    /// </summary>
     public string Type { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the severity.
+    /// </summary>
     public string Severity { get; set; } = "Low";
+    /// <summary>
+    /// Gets or sets the location.
+    /// </summary>
     public int Location { get; set; }
+    /// <summary>
+    /// Gets or sets the pattern.
+    /// </summary>
     public string Pattern { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the description.
+    /// </summary>
     public string Description { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() =>
         $"[{Severity}] {Type} at {Location}: {Description} (Pattern: {Pattern})";
 }

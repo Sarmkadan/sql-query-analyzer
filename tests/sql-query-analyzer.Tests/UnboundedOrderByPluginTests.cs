@@ -245,7 +245,7 @@ public class UnboundedOrderByPluginTests
         var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
         var result = new QueryAnalysisResult
         {
-            Query = null,
+            Query = null!,
             QueryId = "test-10"
         };
 

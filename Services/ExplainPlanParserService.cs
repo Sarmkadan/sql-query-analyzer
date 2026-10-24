@@ -22,6 +22,9 @@ public class ExplainPlanParserService : IExplainPlanParserService
     private readonly IQueryPlanAnalyzerService _planAnalyzer;
     private readonly ILogger<ExplainPlanParserService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExplainPlanParserService"/> class.
+    /// </summary>
     public ExplainPlanParserService(
         IQueryPlanAnalyzerService planAnalyzer,
         ILogger<ExplainPlanParserService> logger)
@@ -30,6 +33,9 @@ public class ExplainPlanParserService : IExplainPlanParserService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Parse SQL server plan asynchronously.
+    /// </summary>
     public async Task<QueryPlan> ParseSqlServerPlanAsync(string xmlPlan)
     {
         _logger.LogInformation("Parsing SQL Server execution plan");
@@ -43,6 +49,9 @@ public class ExplainPlanParserService : IExplainPlanParserService
         return plan;
     }
 
+    /// <summary>
+    /// Parse postgre SQL plan asynchronously.
+    /// </summary>
     public async Task<QueryPlan> ParsePostgreSqlPlanAsync(string jsonPlan)
     {
         _logger.LogInformation("Parsing PostgreSQL EXPLAIN plan");
@@ -123,6 +132,9 @@ public class ExplainPlanParserService : IExplainPlanParserService
         return await Task.FromResult(plan);
     }
 
+    /// <summary>
+    /// Parse my SQL plan asynchronously.
+    /// </summary>
     public async Task<QueryPlan> ParseMySqlPlanAsync(string jsonPlan)
     {
         _logger.LogInformation("Parsing MySQL EXPLAIN plan");
@@ -285,6 +297,9 @@ public class ExplainPlanParserService : IExplainPlanParserService
         }
     }
 
+    /// <summary>
+    /// Extract plan metrics asynchronously.
+    /// </summary>
     public async Task<Dictionary<string, object>> ExtractPlanMetricsAsync(QueryPlan plan)
     {
         // Fix: Added validation to handle null query plan edge case and prevent NullReferenceException

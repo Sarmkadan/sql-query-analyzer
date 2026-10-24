@@ -140,9 +140,9 @@ public class ExplainPlanParserTests
             x => x.Log(
                 LogLevel.Error,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((o, t) => o.ToString().Contains("Error parsing PostgreSQL plan")),
+                It.Is<It.IsAnyType>((o, t) => o.ToString()!.Contains("Error parsing PostgreSQL plan")),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 }

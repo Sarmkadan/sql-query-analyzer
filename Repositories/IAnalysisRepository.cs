@@ -53,11 +53,17 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
     private readonly object _lock = new object();
     private readonly ILogger<InMemoryAnalysisRepository> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InMemoryAnalysisRepository"/> class.
+    /// </summary>
     public InMemoryAnalysisRepository(ILogger<InMemoryAnalysisRepository> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Save analysis asynchronously.
+    /// </summary>
     public Task<QueryAnalysisResult> SaveAnalysisAsync(QueryAnalysisResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
@@ -70,6 +76,9 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
         return Task.FromResult(result);
     }
 
+    /// <summary>
+    /// Get analysis asynchronously.
+    /// </summary>
     public Task<QueryAnalysisResult?> GetAnalysisAsync(string analysisId)
     {
         ArgumentException.ThrowIfNullOrEmpty(analysisId);
@@ -81,6 +90,9 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Get all analyses asynchronously.
+    /// </summary>
     public Task<List<QueryAnalysisResult>> GetAllAnalysesAsync()
     {
         _logger.LogInformation("Retrieving all analyses");
@@ -90,6 +102,9 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Get analyses by date range asynchronously.
+    /// </summary>
     public Task<List<QueryAnalysisResult>> GetAnalysesByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
         lock (_lock)
@@ -101,6 +116,9 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Get analyses for query asynchronously.
+    /// </summary>
     public Task<List<QueryAnalysisResult>> GetAnalysesForQueryAsync(string queryHash)
     {
         ArgumentException.ThrowIfNullOrEmpty(queryHash);
@@ -114,6 +132,9 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Delete analysis asynchronously.
+    /// </summary>
     public Task DeleteAnalysisAsync(string analysisId)
     {
         ArgumentException.ThrowIfNullOrEmpty(analysisId);
@@ -126,6 +147,9 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Get recent analyses asynchronously.
+    /// </summary>
     public Task<List<QueryAnalysisResult>> GetRecentAnalysesAsync(int count = 100)
     {
         lock (_lock)
@@ -139,6 +163,9 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Get issues by type asynchronously.
+    /// </summary>
     public Task<List<PerformanceIssue>> GetIssuesByTypeAsync(Constants.IssueType issueType)
     {
         lock (_lock)
@@ -151,6 +178,9 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Get critical issues asynchronously.
+    /// </summary>
     public Task<List<PerformanceIssue>> GetCriticalIssuesAsync()
     {
         lock (_lock)
@@ -163,6 +193,9 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
         }
     }
 
+    /// <summary>
+    /// Get total issue count asynchronously.
+    /// </summary>
     public Task<int> GetTotalIssueCountAsync()
     {
         lock (_lock)
@@ -177,18 +210,54 @@ public class InMemoryAnalysisRepository : IAnalysisRepository
 /// </summary>
 public interface IIndexRepository
 {
+    /// <summary>
+    /// Save index asynchronously.
+    /// </summary>
     Task SaveIndexAsync(ModelIndex index);
+    /// <summary>
+    /// Get indexes for table asynchronously.
+    /// </summary>
     Task<List<ModelIndex>> GetIndexesForTableAsync(string tableName);
+    /// <summary>
+    /// Get index asynchronously.
+    /// </summary>
     Task<ModelIndex?> GetIndexAsync(string indexId);
+    /// <summary>
+    /// Delete index asynchronously.
+    /// </summary>
     Task DeleteIndexAsync(string indexId);
 
+    /// <summary>
+    /// Get all indexes asynchronously.
+    /// </summary>
     Task<List<ModelIndex>> GetAllIndexesAsync(); // Added missing method
+    /// <summary>
+    /// Get unused indexes asynchronously.
+    /// </summary>
     Task<List<ModelIndex>> GetUnusedIndexesAsync(); // Added missing method
+    /// <summary>
+    /// Get fragmented indexes asynchronously.
+    /// </summary>
     Task<List<ModelIndex>> GetFragmentedIndexesAsync(); // Added missing method
+    /// <summary>
+    /// Add index asynchronously.
+    /// </summary>
     Task<ModelIndex> AddIndexAsync(ModelIndex index); // Changed return type
+    /// <summary>
+    /// Update index asynchronously.
+    /// </summary>
     Task UpdateIndexAsync(ModelIndex index); // Changed parameter and return type
+    /// <summary>
+    /// Get suggestions asynchronously.
+    /// </summary>
     Task<List<IndexSuggestion>> GetSuggestionsAsync(); // Added missing method
+    /// <summary>
+    /// Save suggestion asynchronously.
+    /// </summary>
     Task SaveSuggestionAsync(IndexSuggestion suggestion); // Added missing method
+    /// <summary>
+    /// Get index count asynchronously.
+    /// </summary>
     Task<int> GetIndexCountAsync(); // Added missing method
 }
 
@@ -202,11 +271,17 @@ public class InMemoryIndexRepository : IIndexRepository
     private readonly object _lock = new object();
     private readonly ILogger<InMemoryIndexRepository> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InMemoryIndexRepository"/> class.
+    /// </summary>
     public InMemoryIndexRepository(ILogger<InMemoryIndexRepository> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Get index by name asynchronously.
+    /// </summary>
     public Task<ModelIndex?> GetIndexByNameAsync(string indexName)
     {
         _logger.LogDebug("Retrieving index by name: {IndexName}", indexName);
@@ -217,6 +292,9 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Get indexes by table asynchronously.
+    /// </summary>
     public Task<List<ModelIndex>> GetIndexesByTableAsync(string tableName)
     {
         lock (_lock)
@@ -229,6 +307,9 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Get all indexes asynchronously.
+    /// </summary>
     public Task<List<ModelIndex>> GetAllIndexesAsync()
     {
         lock (_lock)
@@ -237,6 +318,9 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Get unused indexes asynchronously.
+    /// </summary>
     public Task<List<ModelIndex>> GetUnusedIndexesAsync()
     {
         lock (_lock)
@@ -246,6 +330,9 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Get fragmented indexes asynchronously.
+    /// </summary>
     public Task<List<ModelIndex>> GetFragmentedIndexesAsync()
     {
         lock (_lock)
@@ -255,6 +342,9 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Add index asynchronously.
+    /// </summary>
     public Task<ModelIndex> AddIndexAsync(ModelIndex index)
     {
         _logger.LogInformation("Adding index: {IndexName} for table {TableName}", index.IndexName, index.TableName);
@@ -265,11 +355,17 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Save index asynchronously.
+    /// </summary>
     public async Task SaveIndexAsync(ModelIndex index)
     {
         await AddIndexAsync(index);
     }
 
+    /// <summary>
+    /// Get indexes for table asynchronously.
+    /// </summary>
     public Task<List<ModelIndex>> GetIndexesForTableAsync(string tableName)
     {
         lock (_lock)
@@ -282,6 +378,9 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Update index asynchronously.
+    /// </summary>
     public Task UpdateIndexAsync(ModelIndex index)
     {
         _logger.LogInformation("Updating index: {IndexName}", index.IndexName);
@@ -295,6 +394,9 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Get index asynchronously.
+    /// </summary>
     public Task<ModelIndex?> GetIndexAsync(string indexId)
     {
         lock (_lock)
@@ -304,6 +406,9 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Delete index asynchronously.
+    /// </summary>
     public Task DeleteIndexAsync(string indexId)
     {
         _logger.LogInformation("Deleting index with ID: {IndexId}", indexId);
@@ -315,6 +420,9 @@ public class InMemoryIndexRepository : IIndexRepository
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Get suggestions asynchronously.
+    /// </summary>
     public Task<List<IndexSuggestion>> GetSuggestionsAsync()
     {
         lock (_lock)
@@ -323,6 +431,9 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Save suggestion asynchronously.
+    /// </summary>
     public Task SaveSuggestionAsync(IndexSuggestion suggestion)
     {
         lock (_lock)
@@ -338,6 +449,9 @@ public class InMemoryIndexRepository : IIndexRepository
         }
     }
 
+    /// <summary>
+    /// Get index count asynchronously.
+    /// </summary>
     public Task<int> GetIndexCountAsync()
     {
         lock (_lock)

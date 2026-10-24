@@ -18,6 +18,7 @@ public static class QueryAnalysisExtensions
     /// <summary>
     /// Gets all issues of a specific severity level.
     /// </summary>
+    /// <param name="result">The analysis result to inspect.</param>
     /// <param name="severity">The severity level to filter by.</param>
     /// <returns>List of performance issues matching the specified severity.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/>.</exception>
@@ -32,6 +33,7 @@ public static class QueryAnalysisExtensions
     /// <summary>
     /// Gets all issues of a specific type.
     /// </summary>
+    /// <param name="result">The analysis result to inspect.</param>
     /// <param name="issueType">The issue type to filter by.</param>
     /// <returns>List of performance issues matching the specified type.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/>.</exception>
@@ -46,6 +48,7 @@ public static class QueryAnalysisExtensions
     /// <summary>
     /// Gets top N issues by performance impact.
     /// </summary>
+    /// <param name="result">The analysis result to inspect.</param>
     /// <param name="count">Maximum number of issues to return. Default is 5.</param>
     /// <returns>List of top performance issues ordered by impact.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/>.</exception>
@@ -66,6 +69,7 @@ public static class QueryAnalysisExtensions
     /// <summary>
     /// Gets top N index suggestions by performance gain.
     /// </summary>
+    /// <param name="result">The analysis result to inspect.</param>
     /// <param name="count">Maximum number of suggestions to return. Default is 3.</param>
     /// <returns>List of top index suggestions ordered by estimated performance gain.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/>.</exception>
@@ -97,6 +101,7 @@ public static class QueryAnalysisExtensions
     /// <summary>
     /// Checks if result meets minimum performance threshold.
     /// </summary>
+    /// <param name="result">The analysis result to inspect.</param>
     /// <param name="threshold">Minimum acceptable performance score (0-100). Default is 70.0.</param>
     /// <returns><see langword="true"/> if performance meets or exceeds threshold; otherwise, <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/>.</exception>
@@ -231,6 +236,7 @@ public static class AnalysisResultCollectionExtensions
     /// <summary>
     /// Filters results by complexity level.
     /// </summary>
+    /// <param name="results">The analysis results to process.</param>
     /// <param name="complexity">The complexity level to filter by.</param>
     /// <returns>List of results matching the specified complexity.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="results"/> is <see langword="null"/>.</exception>
@@ -245,6 +251,7 @@ public static class AnalysisResultCollectionExtensions
     /// <summary>
     /// Filters results by performance score threshold.
     /// </summary>
+    /// <param name="results">The analysis results to process.</param>
     /// <param name="minScore">Minimum performance score (inclusive).</param>
     /// <param name="maxScore">Maximum performance score (inclusive). Default is 100.</param>
     /// <returns>List of results within the specified score range.</returns>
@@ -315,13 +322,34 @@ public static class AnalysisResultCollectionExtensions
 /// </summary>
 public sealed class BatchStatistics
 {
+    /// <summary>
+    /// Gets or sets the total queries.
+    /// </summary>
     public int TotalQueries { get; set; }
+    /// <summary>
+    /// Gets or sets the average score.
+    /// </summary>
     public double AverageScore { get; set; }
+    /// <summary>
+    /// Gets or sets the worst score.
+    /// </summary>
     public double WorstScore { get; set; }
+    /// <summary>
+    /// Gets or sets the best score.
+    /// </summary>
     public double BestScore { get; set; }
+    /// <summary>
+    /// Gets or sets the total issues found.
+    /// </summary>
     public int TotalIssuesFound { get; set; }
+    /// <summary>
+    /// Gets or sets the queries with issues.
+    /// </summary>
     public int QueriesWithIssues { get; set; }
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() =>
         $"Batch Stats: {TotalQueries} queries, avg={AverageScore:F1}, " +
         $"range={WorstScore:F0}-{BestScore:F0}, {TotalIssuesFound} issues in {QueriesWithIssues} queries";

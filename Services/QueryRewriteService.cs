@@ -50,6 +50,9 @@ public class QueryRewriteService : IQueryRewriteService
 {
     private readonly ILogger<QueryRewriteService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QueryRewriteService"/> class.
+    /// </summary>
     public QueryRewriteService(ILogger<QueryRewriteService> logger)
     {
         _logger = logger;

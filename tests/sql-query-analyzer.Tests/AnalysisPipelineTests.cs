@@ -205,7 +205,7 @@ public class AnalysisPipelineTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, t) => true),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.AtLeastOnce);
 
         _logger.LogInformation("Finished test {TestName}", nameof(ExecuteAsync_LogsPipelineExecution));
@@ -308,7 +308,7 @@ public class AnalysisPipelineTests
         var pipeline = new AnalysisPipeline(NullLogger<AnalysisPipeline>.Instance, _mockAnalyzer.Object);
         var context = new AnalysisContext
         {
-            Query = null,
+            Query = null!,
             Arguments = new CommandLineArguments()
         };
 

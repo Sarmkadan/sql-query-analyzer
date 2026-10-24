@@ -43,6 +43,9 @@ public class SqlQueryAnalyzerOptions
 	[Required]
 	public LoggingOptions Logging { get; set; } = new();
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
     public override string ToString() => $"SqlQueryAnalyzerOptions {{ Database = {Database}, Analysis = {Analysis}, Cache = {Cache}, Performance = {Performance}, Logging = {Logging}, Provider = {Database.Provider} }}";
 }
 

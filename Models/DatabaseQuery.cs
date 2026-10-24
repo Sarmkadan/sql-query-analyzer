@@ -52,42 +52,111 @@ public sealed class DatabaseQuery
     public string? DatabaseName { get; set; }
 
     // Classification
+    /// <summary>
+    /// Gets or sets the query type.
+    /// </summary>
     public QueryType QueryType { get; set; } = QueryType.Unknown;
+    /// <summary>
+    /// Gets or sets the database type.
+    /// </summary>
     public DatabaseType DatabaseType { get; set; } = DatabaseType.SqlServer;
+    /// <summary>
+    /// Gets or sets the schema name.
+    /// </summary>
     public string SchemaName { get; set; } = "dbo";
 
     // Metadata
+    /// <summary>
+    /// Gets or sets the created by.
+    /// </summary>
     public string CreatedBy { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the created date.
+    /// </summary>
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+    /// <summary>
+    /// Gets or sets the modified by.
+    /// </summary>
     public string? ModifiedBy { get; set; }
+    /// <summary>
+    /// Gets or sets the modified date.
+    /// </summary>
     public DateTime? ModifiedDate { get; set; }
 
     // Query analysis
+    /// <summary>
+    /// Gets or sets the referenced tables.
+    /// </summary>
     public List<string> ReferencedTables { get; set; } = [];
+    /// <summary>
+    /// Gets or sets the referenced columns.
+    /// </summary>
     public List<string> ReferencedColumns { get; set; } = [];
+    /// <summary>
+    /// Gets or sets the join conditions.
+    /// </summary>
     public List<string> JoinConditions { get; set; } = [];
+    /// <summary>
+    /// Gets or sets the where conditions.
+    /// </summary>
     public List<string> WhereConditions { get; set; } = [];
 
     // Parameters and variables
+    /// <summary>
+    /// Gets or sets the parameters.
+    /// </summary>
     public Dictionary<string, ParameterInfo> Parameters { get; set; } = [];
+    /// <summary>
+    /// Gets or sets the variable declarations.
+    /// </summary>
     public Dictionary<string, string> VariableDeclarations { get; set; } = [];
 
     // Query complexity
+    /// <summary>
+    /// Gets or sets the line count.
+    /// </summary>
     public int LineCount { get; set; }
+    /// <summary>
+    /// Gets or sets the statement count.
+    /// </summary>
     public int StatementCount { get; set; }
+    /// <summary>
+    /// Gets or sets the cyclomatic complexity.
+    /// </summary>
     public double CyclomaticComplexity { get; set; }
 
     // Execution context
+    /// <summary>
+    /// Gets or sets the source file.
+    /// </summary>
     public string? SourceFile { get; set; }
+    /// <summary>
+    /// Gets or sets the source line number.
+    /// </summary>
     public int? SourceLineNumber { get; set; }
+    /// <summary>
+    /// Gets or sets the calling method.
+    /// </summary>
     public string? CallingMethod { get; set; }
+    /// <summary>
+    /// Gets or sets the environment.
+    /// </summary>
     public string? Environment { get; set; } // Development, Staging, Production
 
     // Hash for deduplication
+    /// <summary>
+    /// Gets or sets the query hash.
+    /// </summary>
     public string QueryHash { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the normalized query.
+    /// </summary>
     public string NormalizedQuery { get; set; } = string.Empty;
 
     // Validate query
+    /// <summary>
+    /// Is valid.
+    /// </summary>
     public bool IsValid() =>
         !string.IsNullOrWhiteSpace(QueryText) &&
         QueryType != QueryType.Unknown &&
@@ -274,11 +343,17 @@ public sealed class DatabaseQuery
     }
 
     // Get query summary
+    /// <summary>
+    /// Get summary.
+    /// </summary>
     public string GetSummary() =>
         $"{QueryType} | Tables: {string.Join(", ", ReferencedTables)} | " +
         $"Lines: {LineCount} | Complexity: {CyclomaticComplexity:F2}";
 
     // Generate query hash for deduplication
+    /// <summary>
+    /// Generate hash.
+    /// </summary>
     public string GenerateHash()
     {
         using (var sha = System.Security.Cryptography.SHA256.Create())
@@ -295,10 +370,25 @@ public sealed class DatabaseQuery
 /// </summary>
 public sealed class ParameterInfo
 {
+    /// <summary>
+    /// Gets or sets the parameter name.
+    /// </summary>
     public string ParameterName { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the data type.
+    /// </summary>
     public string DataType { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the default value.
+    /// </summary>
     public string? DefaultValue { get; set; }
+    /// <summary>
+    /// Gets or sets a value indicating whether is output.
+    /// </summary>
     public bool IsOutput { get; set; }
+    /// <summary>
+    /// Gets or sets the max length.
+    /// </summary>
     public int? MaxLength { get; set; }
 }
 
@@ -307,14 +397,41 @@ public sealed class ParameterInfo
 /// </summary>
 public enum QueryType
 {
+    /// <summary>
+    /// The unknown.
+    /// </summary>
     Unknown = 0,
+    /// <summary>
+    /// The select.
+    /// </summary>
     Select = 1,
+    /// <summary>
+    /// The insert.
+    /// </summary>
     Insert = 2,
+    /// <summary>
+    /// The update.
+    /// </summary>
     Update = 3,
+    /// <summary>
+    /// The delete.
+    /// </summary>
     Delete = 4,
+    /// <summary>
+    /// The create.
+    /// </summary>
     Create = 5,
+    /// <summary>
+    /// The drop.
+    /// </summary>
     Drop = 6,
+    /// <summary>
+    /// The procedure.
+    /// </summary>
     Procedure = 7,
+    /// <summary>
+    /// The function.
+    /// </summary>
     Function = 8
 }
 
@@ -323,10 +440,28 @@ public enum QueryType
 /// </summary>
 public enum DatabaseType
 {
+    /// <summary>
+    /// The unknown.
+    /// </summary>
     Unknown = 0,
+    /// <summary>
+    /// The SQL server.
+    /// </summary>
     SqlServer = 1,
+    /// <summary>
+    /// The postgre SQL.
+    /// </summary>
     PostgreSQL = 2,
+    /// <summary>
+    /// The my SQL.
+    /// </summary>
     MySQL = 3,
+    /// <summary>
+    /// The oracle.
+    /// </summary>
     Oracle = 4,
+    /// <summary>
+    /// The SQ lite.
+    /// </summary>
     SQLite = 5
 }

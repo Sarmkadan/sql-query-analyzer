@@ -14,7 +14,7 @@ public static class QueryRewriteSuggestionExtensions
     /// </summary>
     /// <param name="suggestion">The suggestion to analyze. Must not be <see langword="null"/>.</param>
     /// <returns><see langword="true"/> if the estimated improvement is 20% or greater; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="ArgumentNullException"><inheritdoc cref="ArgumentNullException.ThrowIfNull" path="/param[@name='suggestion']"/></exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="suggestion"/> is <see langword="null"/>.</exception>
     public static bool IsHighImpact(this QueryRewriteSuggestion suggestion)
     {
         ArgumentNullException.ThrowIfNull(suggestion);
@@ -27,7 +27,7 @@ public static class QueryRewriteSuggestionExtensions
     /// </summary>
     /// <param name="suggestion">The suggestion to analyze. Must not be <see langword="null"/>.</param>
     /// <returns><see langword="true"/> if the suggestion is auto-applicable and not a breaking change; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="ArgumentNullException"><inheritdoc cref="ArgumentNullException.ThrowIfNull" path="/param[@name='suggestion']"/></exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="suggestion"/> is <see langword="null"/>.</exception>
     public static bool IsSafelyApplicable(this QueryRewriteSuggestion suggestion)
     {
         ArgumentNullException.ThrowIfNull(suggestion);
@@ -39,7 +39,7 @@ public static class QueryRewriteSuggestionExtensions
     /// </summary>
     /// <param name="suggestion">The suggestion to describe. Must not be <see langword="null"/>.</param>
     /// <returns>A detailed string summary containing the suggestion ID, priority, risk level, and summary.</returns>
-    /// <exception cref="ArgumentNullException"><inheritdoc cref="ArgumentNullException.ThrowIfNull" path="/param[@name='suggestion']"/></exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="suggestion"/> is <see langword="null"/>.</exception>
     public static string ToDetailedSummary(this QueryRewriteSuggestion suggestion)
     {
         ArgumentNullException.ThrowIfNull(suggestion);

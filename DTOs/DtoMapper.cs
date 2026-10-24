@@ -20,6 +20,9 @@ namespace SqlQueryAnalyzer.DTOs;
 public class DtoMapper : IDtoMapper
 {
     // Map QueryAnalysisResult to AnalysisResponseDto
+    /// <summary>
+    /// To response DTO.
+    /// </summary>
     public AnalysisResponseDto ToResponseDto(QueryAnalysisResult analysis, long analysisTimeMs)
     {
         ArgumentNullException.ThrowIfNull(analysis);
@@ -38,6 +41,9 @@ public class DtoMapper : IDtoMapper
     }
 
     // Map PerformanceIssue to PerformanceIssueDto
+    /// <summary>
+    /// To issue DTO.
+    /// </summary>
     public PerformanceIssueDto ToIssueDto(PerformanceIssue issue)
     {
         ArgumentNullException.ThrowIfNull(issue);
@@ -53,6 +59,9 @@ public class DtoMapper : IDtoMapper
     }
 
     // Map IndexSuggestion to IndexSuggestionDto
+    /// <summary>
+    /// To suggestion DTO.
+    /// </summary>
     public IndexSuggestionDto ToSuggestionDto(IndexSuggestion suggestion)
     {
         ArgumentNullException.ThrowIfNull(suggestion);
@@ -69,6 +78,9 @@ public class DtoMapper : IDtoMapper
     }
 
     // Map Index to IndexDetailDto
+    /// <summary>
+    /// To index detail DTO.
+    /// </summary>
     public IndexDetailDto ToIndexDetailDto(ModelIndex index)
     {
         ArgumentNullException.ThrowIfNull(index);
@@ -86,6 +98,9 @@ public class DtoMapper : IDtoMapper
     }
 
     // Map Index list to IndexAnalysisResponseDto
+    /// <summary>
+    /// To index analysis response DTO.
+    /// </summary>
     public IndexAnalysisResponseDto ToIndexAnalysisResponseDto(
         string tableName,
         List<ModelIndex> indexes,
@@ -109,6 +124,9 @@ public class DtoMapper : IDtoMapper
     }
 
     // Map DatabaseQuery for display
+    /// <summary>
+    /// To query detail DTO.
+    /// </summary>
     public QueryDetailDto ToQueryDetailDto(DatabaseQuery query)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -126,6 +144,9 @@ public class DtoMapper : IDtoMapper
     }
 
     // Map batch analysis results
+    /// <summary>
+    /// To batch response DTO.
+    /// </summary>
     public BatchAnalysisResponseDto ToBatchResponseDto(
         List<QueryAnalysisResult> results,
         List<string> nPlusOnePatterns,
@@ -166,12 +187,36 @@ public class DtoMapper : IDtoMapper
 /// </summary>
 public sealed class QueryDetailDto
 {
+    /// <summary>
+    /// Gets or sets the query ID.
+    /// </summary>
     public string QueryId { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the query text.
+    /// </summary>
     public string QueryText { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the query type.
+    /// </summary>
     public string QueryType { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets or sets the table count.
+    /// </summary>
     public int TableCount { get; set; }
+    /// <summary>
+    /// Gets or sets the tables.
+    /// </summary>
     public List<string> Tables { get; set; } = [];
+    /// <summary>
+    /// Gets or sets the join count.
+    /// </summary>
     public int JoinCount { get; set; }
+    /// <summary>
+    /// Gets or sets the parameter count.
+    /// </summary>
     public int ParameterCount { get; set; }
+    /// <summary>
+    /// Gets or sets the line count.
+    /// </summary>
     public int LineCount { get; set; }
 }

@@ -35,6 +35,9 @@ public sealed class QueryProfilerService : IQueryProfilerService
     internal readonly ProfilerSettings _settings;
     private readonly ILogger<QueryProfilerService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QueryProfilerService"/> class.
+    /// </summary>
     public QueryProfilerService(
         IQueryAnalyzerService queryAnalyzer,
         IQueryPlanAnalyzerService planAnalyzer,
