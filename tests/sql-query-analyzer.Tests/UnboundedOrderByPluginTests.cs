@@ -351,4 +351,234 @@ public class UnboundedOrderByPluginTests
         processedResult.Issues.Should().HaveCount(1);
         processedResult.Issues[0].IssueType.Should().Be(Constants.IssueType.LargeResultSet);
     }
+
+    /// <summary>
+    /// Tests that an ORDER BY on a function expression (not a bare column) is flagged and the full expression is captured.
+    /// </summary>
+    [Fact]
+    public async Task ProcessAsync_OrderByFunctionExpression_AddsIssueWithFullExpression()
+    {
+        // Arrange
+        var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
+        var result = new QueryAnalysisResult
+        {
+            Query = "SELECT * FROM Orders ORDER BY LEN(customer_name) DESC",
+            QueryId = "test-14"
+        };
+
+        // Act
+        var processedResult = await plugin.ProcessAsync(result);
+
+        // Assert
+        processedResult.Issues.Should().ContainSingle();
+        processedResult.Issues[0].Metadata.Should().ContainKey("orderby_clause").WhoseValue.Should().Be("LEN(customer_name) DESC");
+    }
+
+    /// <summary>
+    /// Tests that commas inside a function call in ORDER BY do not split the expression into separate issues.
+    /// </summary>
+    [Fact]
+    public async Task ProcessAsync_OrderByFunctionWithCommaArguments_AddsSingleIssue()
+    {
+        // Arrange
+        var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
+        var result = new QueryAnalysisResult
+        {
+            Query = "SELECT * FROM Orders ORDER BY COALESCE(ship_date, order_date), id",
+            QueryId = "test-15"
+        };
+
+        // Act
+        var processedResult = await plugin.ProcessAsync(result);
+
+        // Assert
+        processedResult.Issues.Should().ContainSingle();
+        processedResult.Issues[0].Metadata.Should().ContainKey("orderby_clause").WhoseValue.Should().Be("COALESCE(ship_date, order_date), id");
+    }
+
+    /// <summary>
+    /// Tests that a CASE expression in ORDER BY is flagged.
+    /// </summary>
+    [Fact]
+    public async Task ProcessAsync_OrderByCaseExpression_AddsIssue()
+    {
+        // Arrange
+        var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
+        var result = new QueryAnalysisResult
+        {
+            Query = "SELECT * FROM Orders ORDER BY CASE WHEN status = 'Open' THEN 0 ELSE 1 END, order_date",
+            QueryId = "test-16"
+        };
+
+        // Act
+        var processedResult = await plugin.ProcessAsync(result);
+
+        // Assert
+        processedResult.Issues.Should().ContainSingle();
+    }
+
+    /// <summary>
+    /// Tests that an ordinal ORDER BY position (ORDER BY 2) is flagged like any other unbounded sort.
+    /// </summary>
+    [Fact]
+    public async Task ProcessAsync_OrderByOrdinalPosition_AddsIssue()
+    {
+        // Arrange
+        var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
+        var result = new QueryAnalysisResult
+        {
+            Query = "SELECT id, name FROM Products ORDER BY 2",
+            QueryId = "test-17"
+        };
+
+        // Act
+        var processedResult = await plugin.ProcessAsync(result);
+
+        // Assert
+        processedResult.Issues.Should().ContainSingle();
+    }
+
+    /// <summary>
+    /// Tests that a trailing semicolon terminates the ORDER BY clause without leaking into its captured text.
+    /// </summary>
+    [Fact]
+    public async Task ProcessAsync_OrderByWithTrailingSemicolon_CapturesClauseWithoutSemicolon()
+    {
+        // Arrange
+        var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
+        var result = new QueryAnalysisResult
+        {
+            Query = "SELECT * FROM Orders ORDER BY order_date;",
+            QueryId = "test-18"
+        };
+
+        // Act
+        var processedResult = await plugin.ProcessAsync(result);
+
+        // Assert
+        processedResult.Issues.Should().ContainSingle();
+        processedResult.Issues[0].Metadata.Should().ContainKey("orderby_clause").WhoseValue.Should().Be("order_date");
+    }
+
+    /// <summary>
+    /// Tests that an ORDER BY inside a derived table without pagination is flagged when the outer query has no ORDER BY.
+    /// </summary>
+    [Fact]
+    public async Task ProcessAsync_OrderByInSubqueryWithoutPagination_AddsIssue()
+    {
+        // Arrange
+        var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
+        var result = new QueryAnalysisResult
+        {
+            Query = "SELECT * FROM (SELECT id, total FROM Orders ORDER BY total) t",
+            QueryId = "test-19"
+        };
+
+        // Act
+        var processedResult = await plugin.ProcessAsync(result);
+
+        // Assert
+        processedResult.Issues.Should().ContainSingle();
+        processedResult.Issues[0].Metadata.Should().ContainKey("orderby_clause").WhoseValue.Should().StartWith("total");
+    }
+
+    /// <summary>
+    /// Tests that an ORDER BY inside a derived table with its own LIMIT is not flagged.
+    /// </summary>
+    [Fact]
+    public async Task ProcessAsync_OrderByInSubqueryWithLimit_DoesNotAddIssue()
+    {
+        // Arrange
+        var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
+        var result = new QueryAnalysisResult
+        {
+            Query = "SELECT * FROM (SELECT id FROM Orders ORDER BY id LIMIT 10) t",
+            QueryId = "test-20"
+        };
+
+        // Act
+        var processedResult = await plugin.ProcessAsync(result);
+
+        // Assert
+        processedResult.Issues.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Tests that a TOP clause before a derived table's ORDER BY suppresses the issue, since TOP is scoped to text preceding the ORDER BY.
+    /// </summary>
+    [Fact]
+    public async Task ProcessAsync_TopBeforeSubqueryOrderBy_DoesNotAddIssue()
+    {
+        // Arrange
+        var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
+        var result = new QueryAnalysisResult
+        {
+            Query = "SELECT TOP 5 * FROM (SELECT id FROM Orders ORDER BY id) t",
+            QueryId = "test-21"
+        };
+
+        // Act
+        var processedResult = await plugin.ProcessAsync(result);
+
+        // Assert
+        processedResult.Issues.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Tests that a derived table's ORDER BY and an outer ORDER BY within one statement produce a single issue,
+    /// because the plugin matches one ORDER BY span per semicolon-delimited statement and starts it at the first ORDER BY.
+    /// </summary>
+    [Fact]
+    public async Task ProcessAsync_SubqueryAndOuterOrderByInSameStatement_ReportsSingleIssueSpanningBothClauses()
+    {
+        // Arrange
+        var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
+        var result = new QueryAnalysisResult
+        {
+            Query = "SELECT * FROM (SELECT id, total FROM Orders ORDER BY total) t ORDER BY id",
+            QueryId = "test-22"
+        };
+
+        // Act
+        var processedResult = await plugin.ProcessAsync(result);
+
+        // Assert
+        processedResult.Issues.Should().ContainSingle();
+        processedResult.Issues[0].Metadata.Should().ContainKey("orderby_clause").WhoseValue.Should().Be("total) t ORDER BY id");
+    }
+
+    /// <summary>
+    /// Tests that the detector-plugin entry point rejects a null query with <see cref="ArgumentNullException"/>.
+    /// </summary>
+    [Fact]
+    public void Analyze_NullQuery_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
+
+        // Act
+        Action act = () => plugin.Analyze(null!);
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    /// <summary>
+    /// Tests that the detector-plugin entry point tags each issue with the plugin's rule identifier.
+    /// </summary>
+    [Fact]
+    public void Analyze_OrderByWithoutPagination_TagsIssueWithRuleId()
+    {
+        // Arrange
+        var plugin = new UnboundedOrderByPlugin(_loggerFactory.CreateLogger<UnboundedOrderByPlugin>());
+        var query = new DatabaseQuery { QueryText = "SELECT * FROM Orders ORDER BY id" };
+
+        // Act
+        var issues = plugin.Analyze(query).ToList();
+
+        // Assert
+        plugin.RuleId.Should().Be("unbounded-orderby");
+        issues.Should().ContainSingle();
+        issues[0].Metadata.Should().ContainKey("rule_id").WhoseValue.Should().Be("unbounded-orderby");
+    }
 }
