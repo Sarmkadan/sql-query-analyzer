@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SqlQueryAnalyzer.CLI;
 using SqlQueryAnalyzer.Caching;
+using SqlQueryAnalyzer.Exceptions;
 using SqlQueryAnalyzer.Services;
 using SqlQueryAnalyzer.Utilities;
 
@@ -236,10 +237,17 @@ public class ValidationMiddleware : IAnalysisMiddleware
     }
 
     /// <summary>
-    /// Execute asynchronously.
+    /// Execute asynchronously. Rejects malformed queries with an <see cref="InvalidQueryException"/>
+    /// so they share the same error type as the other query-validation paths.
     /// </summary>
+    /// <param name="context">The analysis context carrying the query to validate.</param>
+    /// <returns>A task that completes when validation has passed.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is null.</exception>
+    /// <exception cref="InvalidQueryException">Thrown when the query fails validation checks.</exception>
     public Task ExecuteAsync(AnalysisContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         try
         {
             var isValid = QueryValidator.IsValidQuery(context.Query);
@@ -247,7 +255,7 @@ public class ValidationMiddleware : IAnalysisMiddleware
             {
                 _logger.LogWarning("Query validation failed");
                 context.ShouldContinue = false;
-                throw new InvalidOperationException("Query failed validation checks");
+                throw new InvalidQueryException("Query failed validation checks", context.Query, nameof(ValidationMiddleware));
             }
 
             _logger.LogDebug("Query validation passed");

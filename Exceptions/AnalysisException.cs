@@ -122,6 +122,19 @@ public class InvalidQueryException : AnalysisException
     }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="InvalidQueryException"/> class with the pipeline stage
+    /// that rejected the query recorded in <see cref="AnalysisException.ErrorDetails"/>.
+    /// </summary>
+    /// <param name="message">The error message.</param>
+    /// <param name="query">The query text that was rejected.</param>
+    /// <param name="stage">The component that rejected the query, for example the middleware name.</param>
+    public InvalidQueryException(string message, string query, string stage)
+        : base(message, "INVALID_QUERY", stage)
+    {
+        Query = query;
+    }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="InvalidQueryException"/> class.
     /// </summary>
     public InvalidQueryException(string message, string query, int lineNumber, int columnNumber)
