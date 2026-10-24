@@ -1,19 +1,17 @@
 ---
-name: Feature Request
-about: Suggest a feature for sql-query-analyzer
-title: '[FEATURE] '
+name: Feature request
+about: Suggest an improvement or new capability for SQL Query Analyzer
 labels: enhancement
-assignees: ''
 ---
 
-## Problem Statement
-A clear description of the problem or limitation.
+## Problem
+A clear description of the problem or limitation you are running into.
 
-## Proposed Solution
-Describe the solution you'd like to see.
+## Proposed solution
+Describe the solution you would like to see.
 
-## Alternatives Considered
-List any alternative solutions or workarounds you've considered.
+## Alternatives
+Describe any alternative solutions or workarounds you have considered.
 
-## Additional Context
-Any other context, mockups, or examples.
+## Additional context
+Any other context, examples, or sample SQL that helps explain the request.
