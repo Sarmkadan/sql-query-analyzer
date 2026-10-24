@@ -147,10 +147,36 @@ public class PerformanceIssueDetectorService : IPerformanceIssueDetectorService
 
         _logger.LogInformation($"Detecting issues in query: {query.QueryId}");
 
+        var (issues, diagnostics) = await RunRulesAsync(query, _ => true, cancellationToken).ConfigureAwait(false);
+
+        var ordered = issues.OrderByDescending(i => i.Severity)
+                            .ThenByDescending(i => i.EstimatedPerformanceImpact)
+                            .ToList();
+
+        _logger.LogInformation($"Found {ordered.Count} performance issues ({diagnostics.Count} detector(s) failed or timed out)");
+
+        return (ordered, diagnostics);
+    }
+
+    /// <summary>
+    /// Runs the registered rule plugins that satisfy <paramref name="selector"/> against a single query.
+    /// Every plugin runs behind the same timeout and exception boundary, so a slow or faulty rule is
+    /// recorded as a diagnostic and skipped rather than aborting the remaining rules or the caller.
+    /// </summary>
+    /// <param name="query">The query to analyze.</param>
+    /// <param name="selector">Predicate choosing which registered rules participate in this run.</param>
+    /// <param name="cancellationToken">Token used to cancel the whole run.</param>
+    /// <returns>The unordered findings alongside diagnostics for any rule that could not complete.</returns>
+    /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is cancelled by the caller.</exception>
+    private async Task<(List<PerformanceIssue> Issues, List<AnalysisDiagnostic> Diagnostics)> RunRulesAsync(
+        DatabaseQuery query,
+        Func<IDetectorPlugin, bool> selector,
+        CancellationToken cancellationToken)
+    {
         var issues = new List<PerformanceIssue>();
         var diagnostics = new List<AnalysisDiagnostic>();
 
-        foreach (var plugin in _plugins)
+        foreach (var plugin in _plugins.Where(selector))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -178,12 +204,6 @@ public class PerformanceIssueDetectorService : IPerformanceIssueDetectorService
                 diagnostics.Add(new AnalysisDiagnostic { RuleId = plugin.RuleId, Message = ex.Message, TimedOut = false });
             }
         }
-
-        issues = issues.OrderByDescending(i => i.Severity)
-                       .ThenByDescending(i => i.EstimatedPerformanceImpact)
-                       .ToList();
-
-        _logger.LogInformation($"Found {issues.Count} performance issues ({diagnostics.Count} detector(s) failed or timed out)");
 
         return (issues, diagnostics);
     }
@@ -238,18 +258,18 @@ public class PerformanceIssueDetectorService : IPerformanceIssueDetectorService
     /// <param name="query">The query to analyze.</param>
     /// <returns>Detected join-related issues.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="query"/> is null.</exception>
-    public ValueTask<List<PerformanceIssue>> DetectJoinIssuesAsync(DatabaseQuery query)
+    public async ValueTask<List<PerformanceIssue>> DetectJoinIssuesAsync(DatabaseQuery query)
     {
         ArgumentNullException.ThrowIfNull(query);
 
         _logger.LogInformation("Detecting join-related issues");
 
-        var issues = _plugins
-            .Where(p => p is CartesianJoinDetectorPlugin or JoinColumnTypeDetectorPlugin)
-            .SelectMany(p => p.Analyze(query))
-            .ToList();
+        var (issues, _) = await RunRulesAsync(
+            query,
+            p => p is CartesianJoinDetectorPlugin or JoinColumnTypeDetectorPlugin,
+            CancellationToken.None).ConfigureAwait(false);
 
-        return ValueTask.FromResult(issues);
+        return issues;
     }
 
     /// <summary>
@@ -259,18 +279,19 @@ public class PerformanceIssueDetectorService : IPerformanceIssueDetectorService
     /// <param name="query">The query to analyze.</param>
     /// <returns>Detected index-opportunity issues (OR conditions, leading wildcards).</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="query"/> is null.</exception>
-    public ValueTask<List<PerformanceIssue>> DetectIndexOpportunitiesAsync(DatabaseQuery query)
+    public async ValueTask<List<PerformanceIssue>> DetectIndexOpportunitiesAsync(DatabaseQuery query)
     {
         ArgumentNullException.ThrowIfNull(query);
 
         _logger.LogInformation("Analyzing index opportunities");
 
-        var issues = _plugins
-            .OfType<NonSargablePredicateDetectorPlugin>()
-            .SelectMany(p => p.Analyze(query))
+        var (findings, _) = await RunRulesAsync(
+            query,
+            p => p is NonSargablePredicateDetectorPlugin,
+            CancellationToken.None).ConfigureAwait(false);
+
+        return findings
             .Where(i => i.IssueType is IssueType.OrCondition or IssueType.LeadingWildcard)
             .ToList();
-
-        return ValueTask.FromResult(issues);
     }
 }
