@@ -16,11 +16,18 @@ public class SqlQueryAnalyzerException : Exception
     /// <summary>
     /// Initializes a new instance of the <see cref="SqlQueryAnalyzerException"/> class.
     /// </summary>
-    public SqlQueryAnalyzerException(string message) : base(message) { }
+    public SqlQueryAnalyzerException(string message) : base(message)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+    }
     /// <summary>
     /// Initializes a new instance of the <see cref="SqlQueryAnalyzerException"/> class.
     /// </summary>
-    public SqlQueryAnalyzerException(string message, Exception innerException) : base(message, innerException) { }
+    public SqlQueryAnalyzerException(string message, Exception innerException) : base(message, innerException)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        ArgumentNullException.ThrowIfNull(innerException);
+    }
 
     /// <summary>
     /// Returns a string that represents the current object.
@@ -74,6 +81,7 @@ public class AnalysisException : SqlQueryAnalyzerException
     public AnalysisException(string message, string errorCode)
         : base(message)
     {
+        ArgumentNullException.ThrowIfNull(errorCode);
         ErrorCode = errorCode;
     }
 
@@ -83,8 +91,22 @@ public class AnalysisException : SqlQueryAnalyzerException
     public AnalysisException(string message, string errorCode, string errorDetails)
         : base(message)
     {
+        ArgumentNullException.ThrowIfNull(errorCode);
+        ArgumentNullException.ThrowIfNull(errorDetails);
         ErrorCode = errorCode;
         ErrorDetails = errorDetails;
+    }
+
+    /// <summary>
+    /// Returns the message of an inner exception for use as error details, validating the argument first.
+    /// </summary>
+    /// <param name="innerException">The inner exception.</param>
+    /// <returns>The message of <paramref name="innerException"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="innerException"/> is <see langword="null"/>.</exception>
+    protected static string GetInnerMessage(Exception innerException)
+    {
+        ArgumentNullException.ThrowIfNull(innerException);
+        return innerException.Message;
     }
 }
 // ... (keep the rest of the file, just add IntegrationException below)
@@ -118,6 +140,7 @@ public class InvalidQueryException : AnalysisException
     public InvalidQueryException(string message, string query)
         : base(message, "INVALID_QUERY")
     {
+        ArgumentNullException.ThrowIfNull(query);
         Query = query;
     }
 
@@ -131,6 +154,7 @@ public class InvalidQueryException : AnalysisException
     public InvalidQueryException(string message, string query, string stage)
         : base(message, "INVALID_QUERY", stage)
     {
+        ArgumentNullException.ThrowIfNull(query);
         Query = query;
     }
 
@@ -140,6 +164,7 @@ public class InvalidQueryException : AnalysisException
     public InvalidQueryException(string message, string query, int lineNumber, int columnNumber)
         : base(message, "INVALID_QUERY")
     {
+        ArgumentNullException.ThrowIfNull(query);
         Query = query;
         LineNumber = lineNumber;
         ColumnNumber = columnNumber;
@@ -170,14 +195,15 @@ public class DatabaseConnectionException : AnalysisException
     /// Initializes a new instance of the <see cref="DatabaseConnectionException"/> class.
     /// </summary>
     public DatabaseConnectionException(string message, Exception innerException)
-        : base(message, "DB_CONNECTION_ERROR", innerException.Message) { }
+        : base(message, "DB_CONNECTION_ERROR", GetInnerMessage(innerException)) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DatabaseConnectionException"/> class.
     /// </summary>
     public DatabaseConnectionException(string message, string databaseName, Exception innerException)
-        : base(message, "DB_CONNECTION_ERROR", innerException.Message)
+        : base(message, "DB_CONNECTION_ERROR", GetInnerMessage(innerException))
     {
+        ArgumentNullException.ThrowIfNull(databaseName);
         DatabaseName = databaseName;
     }
 }
@@ -202,14 +228,15 @@ public class QueryPlanException : AnalysisException
     /// Initializes a new instance of the <see cref="QueryPlanException"/> class.
     /// </summary>
     public QueryPlanException(string message, Exception innerException)
-        : base(message, "PLAN_ERROR", innerException.Message) { }
+        : base(message, "PLAN_ERROR", GetInnerMessage(innerException)) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="QueryPlanException"/> class.
     /// </summary>
     public QueryPlanException(string message, string planSource, Exception innerException)
-        : base(message, "PLAN_ERROR", innerException.Message)
+        : base(message, "PLAN_ERROR", GetInnerMessage(innerException))
     {
+        ArgumentNullException.ThrowIfNull(planSource);
         PlanSource = planSource;
     }
 }
@@ -240,6 +267,7 @@ public class IndexAnalysisException : AnalysisException
     public IndexAnalysisException(string message, string indexName)
         : base(message, "INDEX_ANALYSIS_ERROR")
     {
+        ArgumentNullException.ThrowIfNull(indexName);
         IndexName = indexName;
     }
 
@@ -249,6 +277,8 @@ public class IndexAnalysisException : AnalysisException
     public IndexAnalysisException(string message, string indexName, string tableName)
         : base(message, "INDEX_ANALYSIS_ERROR")
     {
+        ArgumentNullException.ThrowIfNull(indexName);
+        ArgumentNullException.ThrowIfNull(tableName);
         IndexName = indexName;
         TableName = tableName;
     }
@@ -276,6 +306,7 @@ public class ConfigurationException : AnalysisException
     public ConfigurationException(string message, string configKey)
         : base(message, "CONFIGURATION_ERROR")
     {
+        ArgumentNullException.ThrowIfNull(configKey);
         ConfigKey = configKey;
     }
 }
@@ -306,6 +337,7 @@ public class RepositoryException : AnalysisException
     public RepositoryException(string message, string operationType)
         : base(message, "REPOSITORY_ERROR")
     {
+        ArgumentNullException.ThrowIfNull(operationType);
         OperationType = operationType;
     }
 
@@ -313,8 +345,9 @@ public class RepositoryException : AnalysisException
     /// Initializes a new instance of the <see cref="RepositoryException"/> class.
     /// </summary>
     public RepositoryException(string message, string operationType, Exception innerException)
-        : base(message, "REPOSITORY_ERROR", innerException.Message)
+        : base(message, "REPOSITORY_ERROR", GetInnerMessage(innerException))
     {
+        ArgumentNullException.ThrowIfNull(operationType);
         OperationType = operationType;
     }
 }
@@ -345,6 +378,7 @@ public class ValidationException : AnalysisException
     public ValidationException(string message, string field)
         : base(message, "VALIDATION_ERROR")
     {
+        ArgumentNullException.ThrowIfNull(field);
         ValidationField = field;
     }
 
@@ -354,6 +388,8 @@ public class ValidationException : AnalysisException
     public ValidationException(string message, string field, string rule)
         : base(message, "VALIDATION_ERROR")
     {
+        ArgumentNullException.ThrowIfNull(field);
+        ArgumentNullException.ThrowIfNull(rule);
         ValidationField = field;
         ValidationRule = rule;
     }
@@ -381,6 +417,7 @@ public class IntegrationException : AnalysisException
     public IntegrationException(string message, string serviceName)
         : base(message, "INTEGRATION_ERROR")
     {
+        ArgumentNullException.ThrowIfNull(serviceName);
         ServiceName = serviceName;
     }
 }
