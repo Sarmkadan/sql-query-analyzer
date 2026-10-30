@@ -58,6 +58,8 @@ public static partial class QueryComplexityScorer
     /// <returns>A non-negative integer score; higher means more complex.</returns>
     public static int ComputeScore(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         // Base: distinct tables referenced in the query
         int tableCount = SqlPatternAnalyzer.ExtractTablesFromQuery(result.Query).Count;
         int score = tableCount;
