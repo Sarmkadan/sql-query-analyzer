@@ -108,6 +108,8 @@ public class IndexAnalyzerService : IIndexAnalyzerService
     /// </summary>
     public async Task<IndexHealth> AssessIndexHealthAsync(ModelIndex index)
     {
+        ArgumentNullException.ThrowIfNull(index);
+
         if (!index.IsValid())
             return IndexHealth.Corrupted;
 
