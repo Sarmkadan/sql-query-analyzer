@@ -29,6 +29,9 @@ public class CachingMiddleware : IAnalysisMiddleware
         QueryAnalysisCache cache,
         ILogger<CachingMiddleware> logger)
     {
+        ArgumentNullException.ThrowIfNull(cache);
+        ArgumentNullException.ThrowIfNull(logger);
+
         _cache = cache;
         _logger = logger;
     }
@@ -40,6 +43,8 @@ public class CachingMiddleware : IAnalysisMiddleware
     /// </summary>
     public async Task ExecuteAsync(AnalysisContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         try
         {
             // Check if caching is disabled for this analysis
