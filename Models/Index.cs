@@ -301,6 +301,15 @@ public sealed class Index
         !string.IsNullOrWhiteSpace(IndexName) &&
         !string.IsNullOrWhiteSpace(TableName) &&
         Columns.Count > 0;
+
+    /// <summary>
+    /// Returns a concise summary of the index, e.g. "IX_Orders_Customer on dbo.Orders (CustomerId, OrderDate DESC) INCLUDE (Total) [Nonclustered]".
+    /// </summary>
+    public override string ToString()
+    {
+        var include = IncludeColumns.Count > 0 ? $" {GetIncludeList()}" : string.Empty;
+        return $"{IndexName} on {SchemaName}.{TableName} ({GetColumnList()}){include} [{IndexType}]";
+    }
 }
 
 /// <summary>
