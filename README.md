@@ -175,3 +175,75 @@ Detector plugins in `Plugins/` contribute `PerformanceIssue` entries to each ana
 - **`DistinctAbusePlugin`**: Flags `SELECT DISTINCT` over multiple joined tables as a possible join-fanout smell, and suggests checking that join keys are properly constrained.
 - **`SelectStarPlugin`**: Flags `SELECT *` (case-insensitive) and recommends an explicit column list. `COUNT(*)` and stars inside comments or string literals are ignored.
 - **`UnboundedOrderByPlugin`**: Flags `ORDER BY` without `TOP`, `LIMIT`, or `OFFSET ... FETCH`, which may indicate sorting the full result set.
+
+## Default Configuration Values
+
+The defaults below are defined in `Constants/AnalyzerDefaults.cs`. Each row lists the constant's group and what it controls.
+
+| Name | Value | Meaning |
+|---|---|---|
+| `HighExecutionTimeThresholdMs` | `1000.0` | Performance thresholds: high execution time (ms) |
+| `ModerateExecutionTimeThresholdMs` | `500.0` | Performance thresholds: moderate execution time (ms) |
+| `HighLogicalReadsThreshold` | `100000` | Performance thresholds: high logical reads |
+| `ModerateLogicalReadsThreshold` | `10000` | Performance thresholds: moderate logical reads |
+| `HighPhysicalReadsThreshold` | `10000` | Performance thresholds: high physical reads |
+| `FragmentationRebuildThreshold` | `30.0` | Index fragmentation: rebuild threshold |
+| `FragmentationReorganizeThreshold` | `10.0` | Index fragmentation: reorganize threshold |
+| `OptimalFragmentationThreshold` | `5.0` | Index fragmentation: optimal threshold |
+| `SimpleComplexityLineCount` | `5` | Query complexity: line count for simple queries |
+| `LowComplexityLineCount` | `10` | Query complexity: line count for low complexity |
+| `MediumComplexityLineCount` | `20` | Query complexity: line count for medium complexity |
+| `HighComplexityLineCount` | `50` | Query complexity: line count for high complexity |
+| `SimpleComplexityTableCount` | `1` | Query complexity: table count for simple queries |
+| `LowComplexityTableCount` | `2` | Query complexity: table count for low complexity |
+| `MediumComplexityTableCount` | `3` | Query complexity: table count for medium complexity |
+| `HighComplexityTableCount` | `5` | Query complexity: table count for high complexity |
+| `CriticalIssuePenalty` | `10.0` | Issue severity scoring: penalty per critical issue |
+| `WarningIssuePenalty` | `5.0` | Issue severity scoring: penalty per warning issue |
+| `InfoIssuePenalty` | `2.0` | Issue severity scoring: penalty per info issue |
+| `OptimizationPotentialBonus` | `0.1` | Issue severity scoring: bonus for optimization potential |
+| `MinIndexPerformanceGain` | `5.0` | Index recommendations: minimum performance gain |
+| `MinIndexAffectedQueries` | `1` | Index recommendations: minimum number of affected queries |
+| `MaxIndexMaintenanceCostRatio` | `0.3` | Index recommendations: maximum maintenance cost ratio |
+| `StatisticsStalenessDays` | `7` | Statistics update frequency: days until statistics are stale |
+| `StatisticsCheckIntervalDays` | `1` | Statistics update frequency: days between checks |
+| `DefaultAnalysisTimeoutSeconds` | `60` | Analysis timeouts: default analysis timeout (seconds) |
+| `BatchAnalysisTimeoutSeconds` | `300` | Analysis timeouts: batch analysis timeout (seconds) |
+| `IndexAnalysisTimeoutSeconds` | `30` | Analysis timeouts: index analysis timeout (seconds) |
+| `IssueWeightCritical` | `1.0` | Performance score weights: weight for critical issues |
+| `IssueWeightWarning` | `0.5` | Performance score weights: weight for warning issues |
+| `IssueWeightInfo` | `0.1` | Performance score weights: weight for info issues |
+| `OptimizationWeight` | `0.8` | Performance score weights: weight for optimization |
+| `MaxIssuesInReport` | `50` | Report generation: maximum issues in a report |
+| `MaxSuggestionsInReport` | `10` | Report generation: maximum suggestions in a report |
+| `ReportSummaryLineLength` | `80` | Report generation: report summary line length |
+| `SqlServerVersion` | `"2016+"` | Database compatibility: SQL Server version |
+| `PostgreSqlVersion` | `"12+"` | Database compatibility: PostgreSQL version |
+| `MySqlVersion` | `"5.7+"` | Database compatibility: MySQL version |
+| `AnalysisCacheExpirationMinutes` | `60` | Cache settings: analysis cache expiration (minutes) |
+| `MaxCachedAnalyses` | `10000` | Cache settings: maximum cached analyses |
+| `MaxBatchSize` | `100` | Batch processing: maximum batch size |
+| `DefaultBatchSize` | `10` | Batch processing: default batch size |
+| `MaxConcurrentAnalyses` | `4` | Batch processing: maximum concurrent analyses |
+| `MaxQuerySizeBytes` | `1048576` | Resource limits: maximum query size in bytes (1 MB) |
+| `MaxQueryStatements` | `1000` | Resource limits: maximum statements per query |
+| `MaxQueryParameters` | `500` | Resource limits: maximum parameters per query |
+| `ScoringRanges.Excellent` | `90.0` | Default scoring ranges: excellent |
+| `ScoringRanges.Good` | `75.0` | Default scoring ranges: good |
+| `ScoringRanges.Acceptable` | `60.0` | Default scoring ranges: acceptable |
+| `ScoringRanges.Poor` | `40.0` | Default scoring ranges: poor |
+| `ScoringRanges.Critical` | `20.0` | Default scoring ranges: critical |
+| `DetectionSensitivity.Low` | `1` | Detection sensitivity level: low |
+| `DetectionSensitivity.Medium` | `2` | Detection sensitivity level: medium |
+| `DetectionSensitivity.High` | `3` | Detection sensitivity level: high |
+| `DetectionSensitivity.VeryHigh` | `4` | Detection sensitivity level: very high |
+| `DefaultSensitivity` | `DetectionSensitivity.High` | Default detection sensitivity |
+| `ErrorCodes.InvalidQuery` | `"ERR_INVALID_QUERY"` | Error code: invalid query |
+| `ErrorCodes.AnalysisFailed` | `"ERR_ANALYSIS_FAILED"` | Error code: analysis failed |
+| `ErrorCodes.ConnectionError` | `"ERR_CONNECTION"` | Error code: connection error |
+| `ErrorCodes.Timeout` | `"ERR_TIMEOUT"` | Error code: timeout |
+| `ErrorCodes.ConfigError` | `"ERR_CONFIG"` | Error code: configuration error |
+| `ErrorCodes.DatabaseError` | `"ERR_DATABASE"` | Error code: database error |
+| `SuccessCodes.AnalysisComplete` | `"OK_ANALYSIS_COMPLETE"` | Success code: analysis complete |
+| `SuccessCodes.NoIssuesFound` | `"OK_NO_ISSUES"` | Success code: no issues found |
+| `SuccessCodes.SuggestionsProvided` | `"OK_SUGGESTIONS"` | Success code: suggestions provided |
