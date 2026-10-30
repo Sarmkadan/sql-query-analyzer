@@ -247,4 +247,43 @@ public static class QueryPlanExtensions
             .Where(n => string.Equals(n.ObjectName, tableName, StringComparison.OrdinalIgnoreCase))
             .ToList();
     }
+
+    /// <summary>
+    /// Gets all nodes whose share of the total plan cost meets or exceeds a percentage threshold
+    /// </summary>
+    /// <param name="plan">The query plan</param>
+    /// <param name="minCostPercentage">Minimum cost share to include (0-100)</param>
+    /// <returns>Nodes at or above the threshold, ordered by cost share descending</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minCostPercentage"/> is outside the range 0-100</exception>
+    public static List<PlanNode> GetCostlyNodes(this QueryPlan plan, double minCostPercentage)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        ArgumentOutOfRangeException.ThrowIfNegative(minCostPercentage);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(minCostPercentage, 100);
+
+        return plan.AllNodes
+            .Select(n => (Node: n, Percentage: plan.GetCostPercentage(n)))
+            .Where(x => x.Percentage >= minCostPercentage)
+            .OrderByDescending(x => x.Percentage)
+            .Select(x => x.Node)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Determines if the plan contains a table scan whose cost share meets or exceeds a percentage threshold
+    /// </summary>
+    /// <param name="plan">The query plan</param>
+    /// <param name="minCostPercentage">Minimum cost share for a scan to be considered costly (0-100)</param>
+    /// <returns>True if a costly table scan exists, false otherwise</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="plan"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minCostPercentage"/> is outside the range 0-100</exception>
+    public static bool HasCostlyTableScan(this QueryPlan plan, double minCostPercentage = 20.0)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        ArgumentOutOfRangeException.ThrowIfNegative(minCostPercentage);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(minCostPercentage, 100);
+
+        return plan.GetTableScans().Any(ts => plan.GetCostPercentage(ts) >= minCostPercentage);
+    }
 }
