@@ -350,6 +350,13 @@ public sealed class DatabaseQuery
         $"{QueryType} | Tables: {string.Join(", ", ReferencedTables)} | " +
         $"Lines: {LineCount} | Complexity: {CyclomaticComplexity:F2}";
 
+    /// <summary>
+    /// Returns a concise, human-readable summary of the query's key properties.
+    /// </summary>
+    public override string ToString() =>
+        $"DatabaseQuery {QueryId} | {DatabaseType} {QueryType} | " +
+        $"Database: {DatabaseName ?? "-"} | Tables: {ReferencedTables.Count} | Lines: {LineCount}";
+
     // Generate query hash for deduplication
     /// <summary>
     /// Generate hash.
