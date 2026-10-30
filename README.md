@@ -139,3 +139,30 @@ await tests.ExecuteAsync_StopsExecutionWhenShouldContinueIsFalse();
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Issue Types
+
+The `IssueType` enum (`Constants/IssueTypes.cs`) lists every performance issue the analyzer can detect.
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `TableScan` | 1 | Tables being scanned without proper indexes |
+| `NPlusOne` | 2 | N+1 query problem detected |
+| `MissingIndex` | 3 | Missing index opportunity |
+| `UnusedIndex` | 4 | Unused or redundant indexes |
+| `ImplicitConversion` | 5 | Implicit type conversion in WHERE clause |
+| `NonSargable` | 6 | Non-SARGable predicate |
+| `IneffectiveJoin` | 7 | Inefficient join condition |
+| `CrossJoin` | 8 | Cartesian product / cross join |
+| `OrCondition` | 9 | OR condition that prevents index usage |
+| `SubqueryOptimization` | 10 | Subquery that could be optimized |
+| `IndexFragmentation` | 11 | Index fragmentation |
+| `MissingStatistics` | 12 | Missing statistics |
+| `OutdatedStatistics` | 13 | Outdated statistics |
+| `FunctionOnColumn` | 14 | Function on indexed column |
+| `LeadingWildcard` | 15 | LIKE with leading wildcard |
+| `SelectStar` | 16 | SELECT * inefficiency |
+| `LargeResultSet` | 17 | Large result set without pagination |
+| `JoinOnDifferentTypes` | 18 | Join on different data types |
+| `InefficientUnion` | 19 | Inefficient UNION instead of UNION ALL |
+| `ClusteredIndexIssue` | 20 | Clustered index on non-unique column |
