@@ -60,6 +60,8 @@ public class SelectStarPlugin : AnalysisPluginBase
     /// </summary>
     public override Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         // Skip analysis if plugin is disabled
         if (!IsEnabled)
         {
