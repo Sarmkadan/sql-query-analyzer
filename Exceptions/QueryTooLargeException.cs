@@ -22,7 +22,10 @@ public class QueryTooLargeException : AnalysisException
     /// Initializes a new instance of the <see cref="QueryTooLargeException"/> class with a specified error message.
     /// </summary>
     /// <param name="message">The error message that explains the reason for the exception.</param>
-    public QueryTooLargeException(string message) : base(message, "QUERY_TOO_LARGE") { }
+    public QueryTooLargeException(string message) : base(message, "QUERY_TOO_LARGE")
+    {
+        ArgumentNullException.ThrowIfNull(message);
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="QueryTooLargeException"/> class with a specified error message and the query that caused the exception.
@@ -31,6 +34,8 @@ public class QueryTooLargeException : AnalysisException
     /// <param name="query">The query string that exceeded the maximum allowed length.</param>
     public QueryTooLargeException(string message, string query) : base(message, "QUERY_TOO_LARGE")
     {
+        ArgumentNullException.ThrowIfNull(message);
+        ArgumentNullException.ThrowIfNull(query);
         Query = query;
     }
 }
