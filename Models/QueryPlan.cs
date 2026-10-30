@@ -178,6 +178,15 @@ public sealed class QueryPlan
             { "joinCount", Joins.Count },
             { "tableScans", GetTableScans().Count }
         };
+
+    /// <summary>
+    /// Returns a concise, human-readable summary of the plan.
+    /// </summary>
+    public override string ToString() =>
+        $"{Format} plan{(IsEstimated ? " (estimated)" : string.Empty)}: " +
+        $"cost={TotalEstimatedCost.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)}, " +
+        $"rows={TotalEstimatedRows}, nodes={AllNodes.Count}, " +
+        $"tableAccesses={TableAccesses.Count}, joins={Joins.Count}, tableScans={GetTableScans().Count}";
 }
 
 /// <summary>
