@@ -3,7 +3,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FluentAssertions;
+using SqlQueryAnalyzer.Constants;
 using SqlQueryAnalyzer.DTOs;
+using SqlQueryAnalyzer.Models;
+using ModelIndex = SqlQueryAnalyzer.Models.Index;
 using Xunit;
 
 namespace SqlQueryAnalyzer.Tests;
@@ -330,5 +333,278 @@ public class DtoMapperTests
         dto.QueryText.Should().Be("SELECT * FROM Test");
         dto.ApplicationName.Should().Be("TestApp");
         dto.IncludeIndexSuggestions.Should().BeFalse();
+    }
+
+    private readonly DtoMapper _mapper = new();
+
+    [Fact]
+    public void ToResponseDto_NullIssues_MapsToEmptyIssuesAndZeroCounts()
+    {
+        var analysis = new QueryAnalysisResult { Issues = null! };
+
+        var dto = _mapper.ToResponseDto(analysis, 5);
+
+        dto.Issues.Should().BeEmpty();
+        dto.IssueCount.Should().Be(0);
+        dto.CriticalIssueCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void ToResponseDto_NullIndexSuggestions_MapsToEmptySuggestions()
+    {
+        var analysis = new QueryAnalysisResult { IndexSuggestions = null! };
+
+        var dto = _mapper.ToResponseDto(analysis, 5);
+
+        dto.IndexSuggestions.Should().NotBeNull().And.BeEmpty();
+    }
+
+    [Fact]
+    public void ToResponseDto_NullEntriesInIssuesAndSuggestions_AreSkipped()
+    {
+        var analysis = new QueryAnalysisResult
+        {
+            Issues = [null!, new PerformanceIssue { Severity = IssueSeverity.Critical }],
+            IndexSuggestions = [null!]
+        };
+
+        var dto = _mapper.ToResponseDto(analysis, 5);
+
+        dto.IssueCount.Should().Be(1);
+        dto.CriticalIssueCount.Should().Be(1);
+        dto.Issues.Should().HaveCount(1);
+        dto.IndexSuggestions.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ToResponseDto_NullQueryId_MapsToEmptyString()
+    {
+        var analysis = new QueryAnalysisResult { QueryId = null! };
+
+        var dto = _mapper.ToResponseDto(analysis, 5);
+
+        dto.QueryId.Should().Be(string.Empty);
+    }
+
+    [Fact]
+    public void ToResponseDto_NullIssuesAndSuggestions_SummaryReportsZeroCounts()
+    {
+        var analysis = new QueryAnalysisResult { Issues = null!, IndexSuggestions = null! };
+
+        var dto = _mapper.ToResponseDto(analysis, 5);
+
+        dto.Summary.Should().Be(
+            "Score: 0/100 | Issues: 0 (0 critical, 0 warnings, 0 info) | Suggestions: 0 | Optimization Potential: 0.0%");
+    }
+
+    [Fact]
+    public void ToResponseDto_WithAnalysisTimeMs_MapsAnalysisTimeMs()
+    {
+        var dto = _mapper.ToResponseDto(new QueryAnalysisResult(), 42);
+
+        dto.AnalysisTimeMs.Should().Be(42);
+    }
+
+    [Fact]
+    public void ToIssueDto_NullDescriptionAndRecommendedFix_MapToEmptyStrings()
+    {
+        var issue = new PerformanceIssue { Description = null!, RecommendedFix = null! };
+
+        var dto = _mapper.ToIssueDto(issue);
+
+        dto.Description.Should().Be(string.Empty);
+        dto.RecommendedFix.Should().Be(string.Empty);
+    }
+
+    [Fact]
+    public void ToIssueDto_NullIssue_ThrowsArgumentNullException()
+    {
+        var act = () => _mapper.ToIssueDto(null!);
+
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void ToSuggestionDto_NullNames_MapToEmptyStrings()
+    {
+        var suggestion = new IndexSuggestion { TableName = null!, IndexName = null! };
+
+        var dto = _mapper.ToSuggestionDto(suggestion);
+
+        dto.TableName.Should().Be(string.Empty);
+        dto.IndexName.Should().Be(string.Empty);
+    }
+
+    [Fact]
+    public void ToSuggestionDto_NullColumnLists_MapToEmptyListsNotSharedReferences()
+    {
+        var suggestion = new IndexSuggestion { IndexColumns = null!, IncludeColumns = null! };
+
+        var dto = _mapper.ToSuggestionDto(suggestion);
+
+        dto.Columns.Should().NotBeNull().And.BeEmpty();
+        dto.IncludeColumns.Should().NotBeNull().And.BeEmpty();
+    }
+
+    [Fact]
+    public void ToSuggestionDto_ColumnLists_AreCopiedNotShared()
+    {
+        var suggestion = new IndexSuggestion { IndexColumns = ["Id"], IncludeColumns = ["Name"] };
+
+        var dto = _mapper.ToSuggestionDto(suggestion);
+
+        dto.Columns.Should().Equal("Id");
+        dto.Columns.Should().NotBeSameAs(suggestion.IndexColumns);
+        dto.IncludeColumns.Should().NotBeSameAs(suggestion.IncludeColumns);
+    }
+
+    [Fact]
+    public void ToSuggestionDto_NullCreateScript_MapsToEmptyString()
+    {
+        var suggestion = new IndexSuggestion { GeneratedCreateScript = null! };
+
+        var dto = _mapper.ToSuggestionDto(suggestion);
+
+        dto.CreateScript.Should().Be(string.Empty);
+    }
+
+    [Fact]
+    public void ToIndexDetailDto_NullIndexName_MapsToEmptyString()
+    {
+        var index = new ModelIndex { IndexName = null! };
+
+        var dto = _mapper.ToIndexDetailDto(index);
+
+        dto.IndexName.Should().Be(string.Empty);
+    }
+
+    [Fact]
+    public void ToIndexDetailDto_NullColumns_MapsToEmptyList()
+    {
+        var index = new ModelIndex { Columns = null! };
+
+        var dto = _mapper.ToIndexDetailDto(index);
+
+        dto.Columns.Should().NotBeNull().And.BeEmpty();
+    }
+
+    [Fact]
+    public void ToIndexDetailDto_NullColumnEntries_AreSkipped()
+    {
+        var index = new ModelIndex
+        {
+            Columns = [null!, new IndexColumn { ColumnName = "Id", KeyOrdinal = 1 }]
+        };
+
+        var dto = _mapper.ToIndexDetailDto(index);
+
+        dto.Columns.Should().Equal("Id");
+    }
+
+    [Fact]
+    public void ToIndexDetailDto_NullColumnName_MapsToEmptyString()
+    {
+        var index = new ModelIndex
+        {
+            Columns = [new IndexColumn { ColumnName = null!, KeyOrdinal = 1 }]
+        };
+
+        var dto = _mapper.ToIndexDetailDto(index);
+
+        dto.Columns.Should().Equal(string.Empty);
+    }
+
+    [Fact]
+    public void ToIndexAnalysisResponseDto_EmptyInputs_MapsAllCountsToZero()
+    {
+        var dto = _mapper.ToIndexAnalysisResponseDto("Orders", [], [], []);
+
+        dto.TableName.Should().Be("Orders");
+        dto.TotalIndexes.Should().Be(0);
+        dto.UnusedCount.Should().Be(0);
+        dto.FragmentedCount.Should().Be(0);
+        dto.Indexes.Should().BeEmpty();
+        dto.Suggestions.Should().BeEmpty();
+        dto.MaintenanceScripts.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ToIndexAnalysisResponseDto_NullEntries_AreSkipped()
+    {
+        var indexes = new List<ModelIndex> { null!, new ModelIndex { IndexName = "IX_Orders_Date" } };
+        var suggestions = new List<IndexSuggestion> { null! };
+
+        var dto = _mapper.ToIndexAnalysisResponseDto("Orders", indexes, suggestions, []);
+
+        dto.TotalIndexes.Should().Be(1);
+        dto.Indexes.Should().HaveCount(1);
+        dto.Suggestions.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ToQueryDetailDto_NullReferencedTables_MapsToEmptyTablesAndZeroCount()
+    {
+        var query = new DatabaseQuery { ReferencedTables = null! };
+
+        var dto = _mapper.ToQueryDetailDto(query);
+
+        dto.Tables.Should().NotBeNull().And.BeEmpty();
+        dto.TableCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void ToQueryDetailDto_NullJoinConditions_MapsToZeroJoinCount()
+    {
+        var query = new DatabaseQuery { JoinConditions = null! };
+
+        var dto = _mapper.ToQueryDetailDto(query);
+
+        dto.JoinCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void ToQueryDetailDto_NullParameters_MapsToZeroParameterCount()
+    {
+        var query = new DatabaseQuery { Parameters = null! };
+
+        var dto = _mapper.ToQueryDetailDto(query);
+
+        dto.ParameterCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void ToQueryDetailDto_NullQueryIdAndText_MapToEmptyStrings()
+    {
+        var query = new DatabaseQuery { QueryId = null!, QueryText = null! };
+
+        var dto = _mapper.ToQueryDetailDto(query);
+
+        dto.QueryId.Should().Be(string.Empty);
+        dto.QueryText.Should().Be(string.Empty);
+    }
+
+    [Fact]
+    public void ToBatchResponseDto_NullEntriesInResults_AreSkipped()
+    {
+        var results = new List<QueryAnalysisResult> { null!, new QueryAnalysisResult { PerformanceScore = 80 } };
+
+        var dto = _mapper.ToBatchResponseDto(results, [], 10);
+
+        dto.TotalQueries.Should().Be(1);
+        dto.SuccessfulAnalyses.Should().Be(1);
+        dto.Results.Should().HaveCount(1);
+        dto.AverageScore.Should().Be(80);
+    }
+
+    [Fact]
+    public void ToBatchResponseDto_EmptyResults_MapsCountsAndAverageToZero()
+    {
+        var dto = _mapper.ToBatchResponseDto([], [], 10);
+
+        dto.TotalQueries.Should().Be(0);
+        dto.Results.Should().BeEmpty();
+        dto.NPlusOnePatterns.Should().BeEmpty();
+        dto.AverageScore.Should().Be(0);
+        dto.TotalAnalysisTimeMs.Should().Be(10);
     }
 }

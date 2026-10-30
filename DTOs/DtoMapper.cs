@@ -26,15 +26,17 @@ public class DtoMapper : IDtoMapper
     public AnalysisResponseDto ToResponseDto(QueryAnalysisResult analysis, long analysisTimeMs)
     {
         ArgumentNullException.ThrowIfNull(analysis);
+        var issues = NonNullItems(analysis.Issues);
+        var suggestions = NonNullItems(analysis.IndexSuggestions);
         return new AnalysisResponseDto
         {
-            QueryId = analysis.QueryId,
+            QueryId = analysis.QueryId ?? string.Empty,
             PerformanceScore = analysis.PerformanceScore,
             ComplexityLevel = analysis.Complexity.ToString(),
-            IssueCount = analysis.Issues.Count,
-            CriticalIssueCount = analysis.Issues.Count(i => i.Severity == Constants.IssueSeverity.Critical),
-            Issues = analysis.Issues.Select(ToIssueDto).ToList(),
-            IndexSuggestions = analysis.IndexSuggestions.Select(ToSuggestionDto).ToList(),
+            IssueCount = issues.Count,
+            CriticalIssueCount = issues.Count(i => i.Severity == Constants.IssueSeverity.Critical),
+            Issues = issues.Select(ToIssueDto).ToList(),
+            IndexSuggestions = suggestions.Select(ToSuggestionDto).ToList(),
             Summary = GetSummary(analysis),
             AnalysisTimeMs = analysisTimeMs
         };
@@ -51,9 +53,9 @@ public class DtoMapper : IDtoMapper
         {
             IssueType = issue.IssueType.ToString(),
             Severity = issue.Severity.ToString(),
-            Description = issue.Description,
+            Description = issue.Description ?? string.Empty,
             EstimatedImpact = issue.EstimatedPerformanceImpact,
-            RecommendedFix = issue.RecommendedFix,
+            RecommendedFix = issue.RecommendedFix ?? string.Empty,
             Priority = issue.Priority
         };
     }
@@ -67,12 +69,12 @@ public class DtoMapper : IDtoMapper
         ArgumentNullException.ThrowIfNull(suggestion);
         return new IndexSuggestionDto
         {
-            TableName = suggestion.TableName,
-            IndexName = suggestion.IndexName,
-            Columns = suggestion.IndexColumns,
-            IncludeColumns = suggestion.IncludeColumns,
+            TableName = suggestion.TableName ?? string.Empty,
+            IndexName = suggestion.IndexName ?? string.Empty,
+            Columns = CopyOrEmpty(suggestion.IndexColumns),
+            IncludeColumns = CopyOrEmpty(suggestion.IncludeColumns),
             EstimatedGain = suggestion.EstimatedPerformanceGain,
-            CreateScript = suggestion.GeneratedCreateScript,
+            CreateScript = suggestion.GeneratedCreateScript ?? string.Empty,
             AffectedQueries = suggestion.AffectedQueries
         };
     }
@@ -86,9 +88,12 @@ public class DtoMapper : IDtoMapper
         ArgumentNullException.ThrowIfNull(index);
         return new IndexDetailDto
         {
-            IndexName = index.IndexName,
+            IndexName = index.IndexName ?? string.Empty,
             Type = index.IndexType.ToString(),
-            Columns = index.Columns.OrderBy(c => c.KeyOrdinal).Select(c => c.ColumnName).ToList(),
+            Columns = NonNullItems(index.Columns)
+                .OrderBy(c => c.KeyOrdinal)
+                .Select(c => c.ColumnName ?? string.Empty)
+                .ToList(),
             SizeKB = index.SizeInBytes / 1024,
             FragmentationPercent = index.FragmentationPercentage,
             TotalUsageCount = index.TotalUsageCount,
@@ -111,15 +116,16 @@ public class DtoMapper : IDtoMapper
         ArgumentNullException.ThrowIfNull(indexes);
         ArgumentNullException.ThrowIfNull(suggestions);
         ArgumentNullException.ThrowIfNull(scripts);
+        var indexList = NonNullItems(indexes);
         return new IndexAnalysisResponseDto
         {
             TableName = tableName,
-            TotalIndexes = indexes.Count,
-            UnusedCount = indexes.Count(i => i.IsCandidateForRemoval),
-            FragmentedCount = indexes.Count(i => i.IsFragmented),
-            Indexes = indexes.Select(ToIndexDetailDto).ToList(),
-            Suggestions = suggestions.Select(ToSuggestionDto).ToList(),
-            MaintenanceScripts = scripts
+            TotalIndexes = indexList.Count,
+            UnusedCount = indexList.Count(i => i.IsCandidateForRemoval),
+            FragmentedCount = indexList.Count(i => i.IsFragmented),
+            Indexes = indexList.Select(ToIndexDetailDto).ToList(),
+            Suggestions = NonNullItems(suggestions).Select(ToSuggestionDto).ToList(),
+            MaintenanceScripts = CopyOrEmpty(scripts)
         };
     }
 
@@ -130,15 +136,16 @@ public class DtoMapper : IDtoMapper
     public QueryDetailDto ToQueryDetailDto(DatabaseQuery query)
     {
         ArgumentNullException.ThrowIfNull(query);
+        var tables = CopyOrEmpty(query.ReferencedTables);
         return new QueryDetailDto
         {
-            QueryId = query.QueryId,
-            QueryText = query.QueryText,
+            QueryId = query.QueryId ?? string.Empty,
+            QueryText = query.QueryText ?? string.Empty,
             QueryType = query.QueryType.ToString(),
-            TableCount = query.ReferencedTables.Count,
-            Tables = query.ReferencedTables,
-            JoinCount = query.JoinConditions.Count,
-            ParameterCount = query.Parameters.Count,
+            TableCount = tables.Count,
+            Tables = tables,
+            JoinCount = query.JoinConditions?.Count ?? 0,
+            ParameterCount = query.Parameters?.Count ?? 0,
             LineCount = query.LineCount
         };
     }
@@ -154,16 +161,17 @@ public class DtoMapper : IDtoMapper
     {
         ArgumentNullException.ThrowIfNull(results);
         ArgumentNullException.ThrowIfNull(nPlusOnePatterns);
-        var responses = results.Select(r => ToResponseDto(r, 0)).ToList();
+        var analyses = NonNullItems(results);
+        var responses = analyses.Select(r => ToResponseDto(r, 0)).ToList();
 
         return new BatchAnalysisResponseDto
         {
-            TotalQueries = results.Count,
-            SuccessfulAnalyses = results.Count,
+            TotalQueries = analyses.Count,
+            SuccessfulAnalyses = analyses.Count,
             FailedAnalyses = 0,
             Results = responses,
-            NPlusOnePatterns = nPlusOnePatterns,
-            AverageScore = results.Count > 0 ? results.Average(r => r.PerformanceScore) : 0,
+            NPlusOnePatterns = CopyOrEmpty(nPlusOnePatterns),
+            AverageScore = analyses.Count > 0 ? analyses.Average(r => r.PerformanceScore) : 0,
             TotalAnalysisTimeMs = totalTimeMs
         };
     }
@@ -171,15 +179,24 @@ public class DtoMapper : IDtoMapper
     // Create summary text
     private string GetSummary(QueryAnalysisResult analysis)
     {
-        var criticalCount = analysis.Issues.Count(i => i.Severity == Constants.IssueSeverity.Critical);
-        var warningCount = analysis.Issues.Count(i => i.Severity == Constants.IssueSeverity.Warning);
-        var infoCount = analysis.Issues.Count(i => i.Severity == Constants.IssueSeverity.Info);
+        var issues = NonNullItems(analysis.Issues);
+        var suggestions = NonNullItems(analysis.IndexSuggestions);
+        var criticalCount = issues.Count(i => i.Severity == Constants.IssueSeverity.Critical);
+        var warningCount = issues.Count(i => i.Severity == Constants.IssueSeverity.Warning);
+        var infoCount = issues.Count(i => i.Severity == Constants.IssueSeverity.Info);
 
         return $"Score: {analysis.PerformanceScore:F0}/100 | " +
-               $"Issues: {analysis.Issues.Count} ({criticalCount} critical, {warningCount} warnings, {infoCount} info) | " +
-               $"Suggestions: {analysis.IndexSuggestions.Count} | " +
-               $"Optimization Potential: {analysis.TotalOptimizationPotential:F1}%";
+               $"Issues: {issues.Count} ({criticalCount} critical, {warningCount} warnings, {infoCount} info) | " +
+               $"Suggestions: {suggestions.Count} | " +
+               $"Optimization Potential: {suggestions.Sum(s => s.EstimatedPerformanceGain):F1}%";
     }
+
+    // Null collections become empty lists; null entries are skipped
+    private static List<T> NonNullItems<T>(IEnumerable<T?>? items) where T : class
+        => items?.Where(item => item is not null).Select(item => item!).ToList() ?? [];
+
+    // Null collections become empty lists; copies so DTOs never alias model state
+    private static List<T> CopyOrEmpty<T>(IEnumerable<T>? items) => items?.ToList() ?? [];
 }
 
 /// <summary>
