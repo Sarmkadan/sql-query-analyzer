@@ -31,6 +31,7 @@ public class StatisticsAggregator
     /// </summary>
     public void AddResults(IEnumerable<QueryAnalysisResult> results)
     {
+        ArgumentNullException.ThrowIfNull(results);
         _results.AddRange(results);
     }
 
