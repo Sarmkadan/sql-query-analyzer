@@ -25,6 +25,8 @@ public class PerformanceMetricCollector
     /// </summary>
     public PerformanceMetricCollector(ILogger<PerformanceMetricCollector> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+
         _logger = logger;
     }
 
@@ -38,6 +40,8 @@ public class PerformanceMetricCollector
         bool cacheHit,
         bool successful)
     {
+        ArgumentNullException.ThrowIfNull(queryId);
+
         _logger.LogInformation("Recording analysis metric for {QueryId}: {ExecutionTimeMs}ms, {IssueCount} issues, cache hit: {CacheHit}, successful: {Successful}",
             queryId, executionTimeMs, issueCount, cacheHit, successful);
 
