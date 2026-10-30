@@ -166,3 +166,12 @@ The `IssueType` enum (`Constants/IssueTypes.cs`) lists every performance issue t
 | `JoinOnDifferentTypes` | 18 | Join on different data types |
 | `InefficientUnion` | 19 | Inefficient UNION instead of UNION ALL |
 | `ClusteredIndexIssue` | 20 | Clustered index on non-unique column |
+
+## Analysis Plugins
+
+Detector plugins in `Plugins/` contribute `PerformanceIssue` entries to each analysis run.
+
+- **`CartesianJoinPlugin`**: Flags Cartesian products: comma-separated tables in the FROM clause without join conditions, and explicit `CROSS JOIN`s.
+- **`DistinctAbusePlugin`**: Flags `SELECT DISTINCT` over multiple joined tables as a possible join-fanout smell, and suggests checking that join keys are properly constrained.
+- **`SelectStarPlugin`**: Flags `SELECT *` (case-insensitive) and recommends an explicit column list. `COUNT(*)` and stars inside comments or string literals are ignored.
+- **`UnboundedOrderByPlugin`**: Flags `ORDER BY` without `TOP`, `LIMIT`, or `OFFSET ... FETCH`, which may indicate sorting the full result set.
