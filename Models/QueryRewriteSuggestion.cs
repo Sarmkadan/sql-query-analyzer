@@ -105,6 +105,11 @@ public sealed class QueryRewriteSuggestion
     public string GetSummary() =>
         $"[{RewriteType}] {Rationale} — Est. improvement: {EstimatedImprovementPercent:F1}%";
 
+    /// <summary>Returns a concise summary of the suggestion's key properties.</summary>
+    public override string ToString() =>
+        $"{SuggestionId}: {RewriteType}, priority {Priority}, risk {GetRiskLevel()}, " +
+        $"est. improvement {EstimatedImprovementPercent:F1}%, affects {AffectedClause}";
+
     /// <summary>Gets a structured dictionary suitable for JSON serialization.</summary>
     public Dictionary<string, object> ToJsonDictionary() =>
         new()
