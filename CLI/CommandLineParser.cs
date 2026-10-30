@@ -20,6 +20,8 @@ public static class CommandLineParser
     /// </summary>
     public static CommandLineArguments Parse(string[] args)
     {
+        ArgumentNullException.ThrowIfNull(args);
+
         var arguments = new CommandLineArguments();
 
         for (int i = 0; i < args.Length; i++)
