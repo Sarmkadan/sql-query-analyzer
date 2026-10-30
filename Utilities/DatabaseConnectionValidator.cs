@@ -15,7 +15,7 @@ namespace SqlQueryAnalyzer.Utilities;
 /// Checks connectivity, version compatibility, required permissions.
 /// Provides detailed diagnostic information for connection failures.
 /// </summary>
-public class DatabaseConnectionValidator
+public class DatabaseConnectionValidator : IEquatable<DatabaseConnectionValidator>
 {
     private readonly ILogger<DatabaseConnectionValidator> _logger;
 
@@ -32,6 +32,42 @@ public class DatabaseConnectionValidator
     /// </summary>
     public override string ToString() => 
         $"DatabaseConnectionValidator {{ IsValid = {false}, IsConnectionAlive = {false}, Message = {string.Empty}, DatabaseVersion = {string.Empty}, Errors = System.Collections.Generic.List<string>, Success = {false} }}";
+
+    /// <summary>
+    /// Determines whether the specified validator has the same value as the current one.
+    /// </summary>
+    public bool Equals(DatabaseConnectionValidator? other)
+    {
+        if (other is null)
+            return false;
+
+        if (ReferenceEquals(this, other))
+            return true;
+
+        return Equals(_logger, other._logger);
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current validator.
+    /// </summary>
+    public override bool Equals(object? obj) => Equals(obj as DatabaseConnectionValidator);
+
+    /// <summary>
+    /// Returns the hash code for this validator.
+    /// </summary>
+    public override int GetHashCode() => HashCode.Combine(_logger);
+
+    /// <summary>
+    /// Determines whether two validators have the same value.
+    /// </summary>
+    public static bool operator ==(DatabaseConnectionValidator? left, DatabaseConnectionValidator? right) =>
+        left is null ? right is null : left.Equals(right);
+
+    /// <summary>
+    /// Determines whether two validators have different values.
+    /// </summary>
+    public static bool operator !=(DatabaseConnectionValidator? left, DatabaseConnectionValidator? right) =>
+        !(left == right);
 
     /// <summary>
     /// Validates a connection string format and optionally tests the connection.
