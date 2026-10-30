@@ -102,6 +102,8 @@ public class CartesianJoinPlugin : AnalysisPluginBase
     /// </summary>
     public override async Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         if (result.Query == null || string.IsNullOrWhiteSpace(result.Query))
         {
             _logger?.LogDebug("Query is null or empty, skipping Cartesian join detection");
