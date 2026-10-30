@@ -142,4 +142,11 @@ public sealed class PerformanceIssue
         // Then by impact
         return other.EstimatedPerformanceImpact.CompareTo(EstimatedPerformanceImpact);
     }
+
+    /// <summary>
+    /// Returns a concise, human-readable summary of the performance issue.
+    /// </summary>
+    /// <returns>A string in the form "[IssueType] Severity: Description (line N, impact X, priority P)".</returns>
+    public override string ToString() =>
+        $"[{IssueType}] {Severity}: {Description} (line {LineNumber}, impact {EstimatedPerformanceImpact:0.##}, priority {Priority})";
 }
