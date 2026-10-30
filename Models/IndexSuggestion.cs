@@ -230,6 +230,19 @@ public sealed class IndexSuggestion
         $"{IndexName} on {TableName} ({string.Join(", ", IndexColumns)}) - " +
         $"Est. gain: {EstimatedPerformanceGain:F1}%";
 
+    /// <summary>
+    /// Returns a concise, human-readable summary of the suggestion.
+    /// </summary>
+    public override string ToString()
+    {
+        var include = IncludeColumns.Count > 0
+            ? $" INCLUDE ({string.Join(", ", IncludeColumns)})"
+            : string.Empty;
+
+        return $"{IndexType} {IndexName} on {TableName} ({string.Join(", ", IndexColumns)}){include}" +
+            $" - Gain: {EstimatedPerformanceGain:F1}%, Risk: {GetRiskLevel()}, Queries: {AffectedQueries}";
+    }
+
     // Check risk level for creating this index
     /// <summary>
     /// Get risk level.
