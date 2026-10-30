@@ -143,4 +143,13 @@ public sealed class QueryAnalysisResult
             { "optimizationPotential", TotalOptimizationPotential },
             { "complexityScore", ComplexityScore }
         };
+
+    /// <summary>
+    /// Returns a concise, human-readable summary of the key analysis result properties.
+    /// </summary>
+    /// <returns>A single-line summary string.</returns>
+    public override string ToString() =>
+        $"QueryId: {QueryId} | Complexity: {Complexity} (score {ComplexityScore}) | " +
+        $"Performance: {PerformanceScore:F1}/100 | Issues: {Issues.Count} | " +
+        $"Index suggestions: {IndexSuggestions.Count}";
 }
