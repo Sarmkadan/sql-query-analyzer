@@ -34,4 +34,15 @@ public sealed class AnalysisDiagnostic
     /// Gets or sets the UTC timestamp at which the failure was recorded.
     /// </summary>
     public DateTime OccurredAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Returns a concise, single-line summary of the diagnostic: rule identifier, message,
+    /// timeout flag (when set), and the UTC timestamp of the failure.
+    /// </summary>
+    /// <returns>A human-readable summary of this diagnostic.</returns>
+    public override string ToString()
+    {
+        var timeoutMarker = TimedOut ? " [timed out]" : string.Empty;
+        return $"{RuleId}: {Message}{timeoutMarker} at {OccurredAt:yyyy-MM-dd HH:mm:ss} UTC";
+    }
 }
