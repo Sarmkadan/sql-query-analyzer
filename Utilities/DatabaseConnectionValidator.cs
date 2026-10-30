@@ -24,6 +24,8 @@ public class DatabaseConnectionValidator : IEquatable<DatabaseConnectionValidato
     /// </summary>
     public DatabaseConnectionValidator(ILogger<DatabaseConnectionValidator> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+
         _logger = logger;
     }
 
@@ -78,6 +80,9 @@ public class DatabaseConnectionValidator : IEquatable<DatabaseConnectionValidato
         string databaseType = "SqlServer",
         bool testConnection = true)
     {
+        ArgumentNullException.ThrowIfNull(connectionString);
+        ArgumentNullException.ThrowIfNull(databaseType);
+
         _logger.LogInformation("Validating connection string for {DatabaseType} (testConnection: {TestConnection})", databaseType, testConnection);
         var result = new ConnectionValidationResult();
 
