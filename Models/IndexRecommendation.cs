@@ -51,6 +51,15 @@ public sealed class IndexRecommendation
         var name = $"IX_{TableName}_{string.Join("_", KeyColumns)}";
         GeneratedScript = $"CREATE NONCLUSTERED INDEX {name} ON {TableName} ({cols}){include};";
     }
+
+    /// <summary>
+    /// Returns a concise summary of the recommendation's key properties.
+    /// </summary>
+    public override string ToString()
+    {
+        var include = IncludeColumns.Count > 0 ? $" INCLUDE ({string.Join(", ", IncludeColumns)})" : string.Empty;
+        return $"{IndexType} index on {TableName} ({string.Join(", ", KeyColumns)}){include} [impact {ImpactScore:0.##}, source {Source}]";
+    }
 }
 
 /// <summary>
