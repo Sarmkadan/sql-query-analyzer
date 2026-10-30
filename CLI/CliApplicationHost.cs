@@ -60,6 +60,8 @@ public class CliApplicationHost
     /// </summary>
     public CliApplicationHost(IServiceProvider serviceProvider)
     {
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+
         _serviceProvider = serviceProvider;
         _logger = serviceProvider.GetRequiredService<ILogger<CliApplicationHost>>();
         _analyzer = serviceProvider.GetRequiredService<IQueryAnalyzerService>();
@@ -72,6 +74,8 @@ public class CliApplicationHost
     /// </summary>
     public async Task<int> RunAsync(CommandLineArguments args)
     {
+        ArgumentNullException.ThrowIfNull(args);
+
         try
         {
             if (args.ShowHelp)
