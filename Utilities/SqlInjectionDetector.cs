@@ -23,6 +23,8 @@ public class SqlInjectionDetector
     /// </summary>
     public SqlInjectionDetector(ILogger<SqlInjectionDetector> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+
         _logger = logger;
     }
 
@@ -32,6 +34,8 @@ public class SqlInjectionDetector
     /// </summary>
     public List<SqlInjectionIssue> DetectVulnerabilities(string query)
     {
+        ArgumentNullException.ThrowIfNull(query);
+
         var issues = new List<SqlInjectionIssue>();
 
         if (string.IsNullOrEmpty(query))
