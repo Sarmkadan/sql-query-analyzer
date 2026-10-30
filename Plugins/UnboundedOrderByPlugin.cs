@@ -94,6 +94,8 @@ public class UnboundedOrderByPlugin : AnalysisPluginBase, IDetectorPlugin
     /// <inheritdoc />
     public override async Task<QueryAnalysisResult> ProcessAsync(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         if (string.IsNullOrWhiteSpace(result.Query))
         {
             _logger?.LogDebug("Query is null or empty, skipping Unbounded ORDER BY detection");
