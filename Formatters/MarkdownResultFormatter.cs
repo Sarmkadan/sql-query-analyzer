@@ -20,6 +20,8 @@ public class MarkdownResultFormatter : IResultFormatter
     /// </summary>
     public string Format(QueryAnalysisResult result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         var lines = new List<string>();
 
         // Header
@@ -126,6 +128,8 @@ public class MarkdownResultFormatter : IResultFormatter
     /// </summary>
     public string FormatBatch(IEnumerable<QueryAnalysisResult> results)
     {
+        ArgumentNullException.ThrowIfNull(results);
+
         var resultsList = results.ToList();
         var lines = new List<string>();
 
