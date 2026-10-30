@@ -55,4 +55,8 @@ public sealed class SlowQueryEntry
     /// </summary>
     public string GetSummary() =>
         $"[{LogSource}] {Duration.TotalMilliseconds:F0}ms | rows: {RowsSent}/{RowsExamined} | {QueryText.Substring(0, Math.Min(60, QueryText.Length))}";
+
+    /// <inheritdoc />
+    public override string ToString() =>
+        $"SlowQueryEntry {EntryId} | {Timestamp:yyyy-MM-dd HH:mm:ss} | {Duration.TotalMilliseconds:F0}ms | lock {LockTime.TotalMilliseconds:F0}ms | rows: {RowsSent}/{RowsExamined} | db: {Database}";
 }
